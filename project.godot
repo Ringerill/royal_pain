@@ -1,0 +1,65 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Royal Pain"
+run/main_scene="uid://brpqws88wqht0"
+config/features=PackedStringArray("4.7", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+GameData="*uid://dtdvk15fkfguo"
+CreationState="*uid://cae177tg6a5vb"
+CombatSetup="*uid://caukhjd85i8i5"
+GameManager="*uid://kihvwyjrsou5"
+MapData="*uid://bo7ni712xogui"
+ArmyData="*res://scripts/autoload/army_data.gd"
+RelationsData="*res://scripts/autoload/relations_data.gd"
+MissionData="*res://scripts/autoload/mission_data.gd"
+WorldEvents="*res://scripts/autoload/world_events.gd"
+DynastyData="*res://scripts/autoload/dynasty_data.gd"
+ExplorationData="*res://scripts/autoload/exploration_data.gd"
+TravelData="*res://scripts/autoload/travel_data.gd"
+AchievementData="*res://scripts/autoload/achievement_data.gd"
+CaptureData="*res://scripts/autoload/capture_data.gd"
+AmbitionData="*res://scripts/autoload/ambition_data.gd"
+StoryData="*res://scripts/autoload/story_data.gd"
+Settings="*res://scripts/autoload/settings.gd"
+Sfx="*res://scripts/autoload/sfx.gd"
+Music="*res://scripts/autoload/music.gd"
+Ambience="*res://scripts/autoload/ambience.gd"
+SceneFade="*res://scripts/autoload/scene_fade.gd"
+TravelerData="*res://scripts/autoload/traveler_data.gd"
+SocialEvents="*res://scripts/autoload/social_events.gd"
+LoyaltyData="*res://scripts/autoload/loyalty_data.gd"
+PartyData="*res://scripts/autoload/party_data.gd"
+
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[editor]
+
+version_control/autoload_on_startup=true
+
+[gui]
+
+theme/custom="res://ui/theme/royal_theme.tres"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"

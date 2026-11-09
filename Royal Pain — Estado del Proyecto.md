@@ -1,0 +1,388 @@
+# ⚔️ Royal Pain — Reinos de Destino
+
+Estado del proyecto · estrategia 2D histórico-medieval en Godot 4.7
+
+[Visión y pretensiones](#vision) [Arquitectura técnica](#arquitectura) [Lo realizado](#realizado) [Lo pendiente](#pendiente) [Roadmap sugerido](#roadmap)
+
+## Visión y pretensiones generales
+
+"Reinos de Destino" es un juego de estrategia en pixel art ambientado en una Europa medieval sin fantasía (siglos X–XV). No hay niveles ni experiencia: la progresión es puramente **social**. El jugador elige un rol dentro de la jerarquía feudal —de Campesino a Regente— y asciende o desciende según sus decisiones, hazañas y fracasos.
+
+La promesa central: tu historia personal es el juego. Cada decisión puede catapultarte al poder o arruinarte.
+
+El diseño se apoya en tres capas de juego interconectadas, cada una a una escala distinta de conflicto:
+
+- **Mapa geopolítico** — gestión de reinos, movimiento de ejércitos, diplomacia, visión limitada según el rol.
+- **Batalla táctica** — resolución de conflictos a escala de pelotones, con terreno y tipos de unidad.
+- **Duelo por turnos** — combate personal entre dos personajes, con posturas, honor y consecuencias de carrera.
+
+Pilares de diseño que guían cada decisión técnica tomada hasta ahora:
+
+- **Sin fantasía:** todo históricamente creíble — nada de magia ni criaturas.
+- **El rol lo determina casi todo:** visión del mapa, acciones disponibles, participación en combate y caminos de victoria.
+- **Movilidad vertical real:** ascender y descender de rango son mecánicas igual de desarrolladas, no solo narrativa.
+- **Sistemas con dueño claro:** cada pieza de datos (personaje, castillo, ejército) es un `Resource` de Godot, reutilizable entre las tres interfaces.
+
+## Arquitectura técnica
+
+Patrón consistente en todo el proyecto: **Resource de datos → Manager de lógica pura (señales, sin nodos) → Escena de UI que escucha esas señales**. Así la lógica de combate, duelo o batalla se puede probar y ajustar sin tocar una sola línea de interfaz.
+
+**Autoloads activos:** `GameData` (catálogo de habilidades/ventajas/equipo), `CreationState`, `CombatSetup`, `GameManager` (partida activa, castillo de origen, turno mensual, acciones, eventos, victoria), `MapData` (12 castillos, reinos, conexiones), `ArmyData` (ejércitos, IA de reinos y resolución de batallas), `RelationsData` (relaciones con señores y rivales).
+
+**Regla de dependencias:** los autoloads no pueden referenciarse en ciclo (rompe la compilación). Orden permitido: `RelationsData`/`ArmyData` → `GameManager` → `MapData`. La lógica de reglas vive en clases puras sin autoloads (`KingdomAI`, `EventCatalog`, `VictoryRules`, `BattleManager`, `DuelManager`).
+
+**Managers de lógica pura:** `DuelManager` (duelo) y `BattleManager` (batalla táctica) — ambos `RefCounted` con señales, sin nodos.
+
+**Repositorio:** versionado en Git/GitHub, con historial de commits por entrega.
+
+## Lo realizado
+
+### Flujo de partida
+
+NewGameReinicio del mundo
+
+- Menú principal con **Nueva Partida**: se elige un personaje guardado, el **castillo de origen** y el **rol inicial** (Campesino a Nobleza Alta; Regente queda reservado para la sucesión).
+- `GameManager.start_new_game()` reinicia castillos y ejércitos, así una partida nueva no hereda el estado de la anterior; el personaje se carga como copia fresca con vida/resistencia/moral al máximo.
+- El mapa usa el **personaje real** (rol y castillo de origen) para la visión limitada y para decidir a qué castillo se puede entrar. Sin partida activa funciona como vista previa ("Ver Mapa").
+- "Continuar Partida" en el menú y botón "Menú Principal" en el mapa; desde el resumen de creación se puede pasar directo a Nueva Partida.
+- **Guardar / cargar partida** (`SaveSystem` + `SaveGame`): guarda el estado completo — personaje con su progreso, fecha, acciones, castillo de origen y reino, castillos, ejércitos, noticias, relaciones, población, guerras entre reinos, edicto, matrimonio, etc.
+  - **Ranuras**: un **autoguardado** (se escribe solo al comenzar cada mes) y **3 ranuras manuales** en `user://saves/`.
+  - Pantalla **Partidas guardadas**: desde el mapa para guardar ("Guardar aquí"; sobrescribir pide confirmación) y desde el menú para cargar; las ranuras manuales se pueden borrar (con confirmación). Cada ranura muestra personaje, rango, fecha del juego y fecha real del guardado.
+  - En el menú, si no hay partida activa y existe algún guardado, el botón **Continuar** carga el más reciente.
+  - El guardado de la versión anterior (`partida.tres`) se convierte solo en el autoguardado.
+
+### Sistema de personajes
+
+Character.gdCreación completaGuardado persistente
+
+- Identidad (nombre, apellido, sexo), retrato con sistema de fallback (propio → por rol/sexo → genérico).
+- 5 estadísticas base repartibles: Liderazgo, Carisma, Estrategia, Combate, Defensa.
+- Personalidad, Alineación y Tipo de Luchador — cada uno aporta bonos de stats concretos y predefinidos.
+- Sistema de puntos: base fija por las 3 elecciones anteriores + 10 puntos libres siempre.
+- Ventajas (mín. 3) y Desventajas (mín. 2) obligatorias, con modificadores reales a stats.
+- Habilidades en 3 categorías, **todas con efecto mecánico real** (`SkillEffects`):
+  - *Generales*: **Administrador** (+25% en impuestos, gobierno, impuestos reales y edicto de impuestos), **Reclutador Nato** (milicia un tercio más barata y +50% de soldados; +10% al movilizar), **Viajero** (marchas a 2 saltos en un turno), **Paso Invernal** (tus ejércitos no se frenan en invierno).
+  - *Combate (duelo)*: **Golpe Certero** (20% de golpe crítico ×1.5, frente al 5% base), **Piel de Hierro** (−30% de daño recibido estando herido), **Desarme Fulminante** (golpe inmediato tras desarmar).
+  - *Batalla*: **Grito de Guerra**, **Táctica Defensiva**, **Carga Letal** (ver Batalla táctica).
+  - Los personajes del mundo también tienen habilidades y las usan (rivales en duelo, señores al mando de sus ejércitos).
+- **Invierno** (diciembre a febrero): las marchas tardan 2 turnos salvo con Paso Invernal; el mapa indica "Invierno" junto a la fecha. La partida empieza en enero, así que las primeras marchas son lentas.
+- Equipamiento (máx. 2 piezas) con bonos que aplican tanto en combate como en política.
+- Biografía opcional. Pantalla de resumen final antes de guardar como `.tres` en `user://characters/`.
+- Botón **Aleatorio** en el editor: rellena todo el personaje al azar (sexo, nombre, retrato de su género, personalidad, alineación, tipo, reparto de los 10 puntos, 3 ventajas, 2 desventajas, una habilidad por categoría, equipo y biografía) usando los mismos controles, así se puede retocar después.
+- Corregido: los botones Hombre/Mujer estaban en grupos distintos y podían quedar marcados a la vez.
+
+### Combate por turnos (duelo)
+
+DuelManager.gdTurnos reales con pausa
+
+- 5 posturas, 8 acciones (atacar, defender, esquivar, contraatacar, desarmar, empujar, rendirse, retirarse), 5 estados (herido, fatigado, desarmado, desmoralizado, inspirado).
+- Postura y acción separadas: elegir postura no gasta turno, la acción sí.
+- Turnos alternos con pausa visual real (no simultáneos), indicador de turno, botones bloqueados fuera de tu turno.
+- Selector de combatientes: personajes guardados o generados de prueba.
+- Resultado del duelo alimenta **honor, oro y contador de victorias/derrotas** del personaje — conecta directo con la progresión social.
+- **Duelos en la campaña**: acción "Retar a Duelo" en el castillo (Soldado, Caballero, Nobleza Baja y Alta; gasta 1 acción) contra un rival generado de tu mismo rango y fuerza parecida, con nombre y retrato al azar. El duelo usa tu personaje real: honor, oro, duelos ganados y posible descenso por deshonra se aplican a la partida, y al volver el castillo muestra el resumen. En campaña no se puede abandonar a mitad (solo rendirse o retirarse). Esto hace alcanzable el ascenso Soldado → Caballero jugando.
+- Corregido: un golpe que conecta siempre hace al menos 1 de daño (antes, con moral baja podía redondear a 0 y el duelo no terminaba).
+- **Heridas**: la vida perdida en un duelo ya no se cura al terminar; se recuperan 25 de vida por mes. Si terminas bajo el 30% de vida quedas **gravemente herido** 2 meses (3 si caes): no puedes retar a duelo ni ir a torneos. El **médico** del castillo (30 de oro, 1 acción) cura 50 y acorta la herida un mes. Algunos eventos de riesgo (bandidos, torneo local) también hieren. La vida y la herida se ven en el castillo.
+- **Torneos** (Caballero, Nobleza Baja y Alta; de abril a septiembre, uno por año, 50 de inscripción): 3 duelos seguidos contra caballeros de la corte cada vez más fuertes, con 30 de vida recuperada entre rondas. Cada ronda ganada da +3 de honor; el campeón gana 300 de oro y 15 de honor. Si quedas malherido debes retirarte. Los duelos del torneo cuentan para la victoria "Campeón".
+
+### Mapa geopolítico
+
+12 castillosMapVision.gdTurno mensual
+
+- Imagen única del mundo con 12 castillos clicables (Area2D) y rutas dinámicas entre ellos (grafo de conexiones, no pathfinding automático).
+- Cámara con zoom/pan y límites ajustados al tamaño real de la imagen.
+- Panel de detalles por castillo: reino, gobernante, guarnición, oro, comida.
+- **Visión limitada por rol**: Campesino ve solo su aldea; Soldado, 1 salto; Caballero, 2 saltos; Nobleza Baja, su reino completo; Nobleza Alta, su reino + vecinos; Regente, el mapa entero. Castillos fuera de visión se ven atenuados con datos ocultos.
+- **Turno mensual real**: fecha (mes/año), acciones limitadas por turno (fórmula: base según rol + liderazgo/10), botón de avance que resuelve movimiento de ejércitos.
+
+### Progresión social (ascenso y descenso)
+
+RoleProgression.gdAutomático
+
+- Ascenso Campesino → Soldado → Caballero → Nobleza Baja → Nobleza Alta, cada uno con requisitos concretos (duelos ganados, honor, oro, liderazgo).
+- Descenso automático por deshonra (honor bajo tras perder duelos repetidamente) para Caballero en adelante.
+- Nobleza Alta → Regente por herencia (matrimonio con la casa real) o usurpación (ver "Matrimonios políticos y sucesión").
+- Interfaz de castillo con **acciones específicas por rol** (2 por rol: una funcional usando datos reales, otra marcada "Próximamente" donde falta un sistema mayor).
+
+### Ejércitos
+
+ArmyData.gdFuncional
+
+- Movilización de tropas desde la guarnición de un castillo (disponible desde Caballero en adelante, proporcional al rol).
+- Movimiento por el grafo de rutas: 1 salto conectado = 1 turno, resuelto automáticamente al avanzar el mes.
+- Llegada a territorio aliado refuerza la guarnición; llegada a territorio enemigo marca "batalla pendiente" (círculo rojo en el mapa) y habilita **Iniciar Batalla** en el panel del ejército.
+- Marcador visual en el mapa (azul: estacionado, amarillo: en marcha, rojo: batalla pendiente) con línea de ruta mientras marcha.
+- Cada ejército recuerda su castillo de origen para poder replegarse tras una derrota.
+
+### Batalla táctica (v1)
+
+BattleManager.gdTablero 12×8Conquista
+
+- Tablero de 12×8 casillas con terreno: **llano**, **bosque** (defensa +25%), **colina** (defensa +20%, arqueros +1 de alcance) y **muralla** del castillo defensor (defensa +50%). Bosque, colina y muralla cuestan más movimiento (la caballería sufre más en bosque y muralla).
+- Pelotones generados desde el tamaño del ejército y de la guarnición (≈20 soldados por pelotón, máx. 6 por bando): 50% infantería, 30% arqueros, 20% caballería.
+- Ventajas de tipo: caballería > arqueros, infantería > caballería, arqueros > infantería a distancia (y débiles cuerpo a cuerpo). Respuesta automática en cuerpo a cuerpo.
+- **Moral y fatiga**: las bajas bajan la moral, bajo 25 el pelotón huye y desmoraliza a sus aliados; moverse y atacar cansa, descansar recupera. El liderazgo y la estrategia del comandante potencian a sus tropas.
+- **Habilidades de batalla conectadas**: *Grito de Guerra* (+moral inicial), *Táctica Defensiva* (menos daño en colina/muralla), *Carga Letal* (+25% daño de caballería).
+- IA del defensor: espera tras la muralla hasta que el enemigo se acerca (la caballería sale a cazar), elige el objetivo con mayor daño esperado.
+- Fin: aniquilación o huida de un bando, retirada voluntaria, o 12 turnos sin tomar el castillo (gana el defensor).
+- **Conquista**: si gana el atacante, el castillo cambia de reino y gobernante, la guarnición pasa a ser los sobrevivientes y el jugador gana honor y saquea oro. Si pierde, el castillo conserva a sus defensores sobrevivientes, el ejército se repliega a su origen (o se disuelve) y el jugador pierde honor — con posible descenso por deshonra.
+
+### Reinos con IA
+
+KingdomAI.gdAuto-resoluciónDefensa jugable
+
+- Los 11 reinos que no son del jugador actúan cada mes: todas las guarniciones reclutan (+2/mes, tope 200) y, pasados 3 meses de gracia, un castillo con 60+ soldados puede movilizar un 40% de su guarnición contra el vecino más débil de otro reino (máx. 2 ejércitos de IA a la vez, solo si cree que puede ganar).
+- `KingdomAI` es lógica pura (recibe castillos y ejércitos, devuelve decisiones) para evitar ciclos entre autoloads.
+- Batallas IA contra IA se **auto-resuelven** con una fórmula (tropas × muralla × azar); los castillos cambian de reino y los restos derrotados vuelven a su guarnición.
+- Si atacan **tu** castillo (el de origen o uno que conquistaste): aviso en el mapa y botón **Defender Castillo** — juegas la batalla táctica como defensor, con tus habilidades de batalla. Si avanzas el turno sin defender, la batalla se libra sola.
+- Defender con éxito da honor; perder resta honor (con posible deshonra). Si cae tu castillo de origen te refugias en otro castillo tuyo; si no tienes ninguno, **fin de la partida** (primera condición de derrota).
+- Mapa: panel **Noticias del reino** con los sucesos del mes que tu rol te permite ver, ejércitos enemigos en púrpura (solo los que están dentro de tu visión) y la visión se recalcula tras las conquistas.
+- **Diplomacia entre reinos de la IA** (`KingdomDiplomacy`): cada mes los reinos pueden declararse la guerra (prefieren al vecino más débil, máx. 2 guerras a la vez), firmar la paz (tras 6 meses de guerra) o sellar alianzas. Todo sale en las noticias y se ve en la pantalla de Relaciones. El reino del jugador no entra en esta diplomacia: la suya la decide él.
+- **Los ataques entre reinos de la IA requieren guerra** (nunca entre aliados). En guerra la IA ataca más a menudo y se arriesga con menos ventaja. Las tierras sin señor (Isla Neutral) se pueden tomar sin declarar guerra. Perder un castillo ante otro reino es casus belli: queda declarada la guerra.
+- **Reconquista**: cada castillo recuerda su reino y señor de origen; un reino prioriza recuperar los castillos que perdió, aunque no haya guerra declarada.
+- **Rebeliones**: los castillos que conquistaste pueden sublevarse cada mes y volver a su señor original (3% base; +5% si tu honor es menor a 40; +5% si la guarnición es menor a 30; la Tregua del Rey lo reduce a la mitad). Tu castillo de origen nunca se rebela.
+- Balance medido en 20 partidas simuladas de 36 meses: ~5,5 ejércitos de la IA, ~10 guerras y ~1,4 castillos que cambian de manos por partida.
+
+### Eventos mensuales y anuales
+
+EventCatalog.gd14 eventos + 5 anuales
+
+- Cada mes hay un 60% de probabilidad de un **evento con decisión**, elegido según tu **rol** (cada evento declara qué roles lo pueden vivir) y ponderado por tu **personalidad** (un Piadoso encuentra más peregrinos; un Ambicioso, más sobornos).
+- 14 eventos históricamente creíbles: recaudador abusivo, bandidos, peregrino enfermo, maestro de armas, soborno, insulto en la taberna, disputa de tierras, incendio del granero, torneo local, vendedor de reliquias, voluntarios, tratado de guerra, buena cosecha, rumores de conspiración.
+- Cada opción tiene efectos concretos (oro, honor, stats, oro/comida/guarnición del castillo). Algunas tienen requisitos (se muestran deshabilitadas si no alcanza el oro) y otras son **de riesgo**, con probabilidad que depende de una stat (p. ej. Combate para enfrentar bandidos) y se muestra en el botón.
+- Los efectos sobre el honor pueden provocar descenso por deshonra.
+- Cada enero, un **evento anual** afecta a todos los castillos: cosecha abundante, mala cosecha, peste, auge comercial o año tranquilo. Aparece en las Noticias del reino.
+- En el mapa el evento se muestra en una ventana; hay que decidir antes de avanzar el turno. El evento pendiente se conserva al guardar/cargar.
+- Los eventos son datos (`EventCatalog.EVENTS`): agregar uno nuevo es añadir un diccionario, sin tocar lógica.
+
+### Población del mundo
+
+PortraitPool.gdCharacterLoader.make_random_character
+
+- Al iniciar una partida se generan **personajes aleatorios** que pueblan el mundo: una ficha completa para cada uno de los **11 señores** (género según su título: Lord/Rey o Lady) y **2 cortesanos por castillo** (22 en total; Soldado, Caballero o Nobleza Baja).
+- Cada personaje recibe un **retrato único**: los retratos se reparten sin repetirse, separados por género (`male/`, `female/`), excluyendo el del jugador. El género de los cortesanos se elige en proporción a los retratos libres de cada género, para no agotar uno antes de tiempo (hoy hay 15 masculinos y 96 femeninos).
+- Los personajes tienen stats, rasgos, habilidades y equipo generados con las mismas reglas que la creación del jugador.
+- Usos: los **rivales de duelo** salen de la corte (un cortesano con quien te bates pasa a ser tu rival); los **señores comandan sus tropas** en la batalla táctica con su liderazgo, estrategia y habilidades de batalla; la pantalla de Relaciones muestra los retratos y la **corte de tu reino**.
+- La población y los retratos usados se guardan con la partida.
+
+### Relaciones
+
+RelationsData.gdPantalla de Relaciones
+
+- Cada partida empieza con una relación (afinidad −100 a 100) con los **11 señores** de los reinos. Se consulta en la pantalla **Relaciones** (botón en el mapa, o "Negociar Alianza Regional" desde el castillo de Nobleza Alta).
+- **Enviar presentes** (50 de oro, 1 acción) sube la afinidad según tu Carisma. Con 40+ de afinidad y rango de Nobleza puedes **pactar una alianza** (1 acción).
+- Efectos en la IA de reinos: un señor **aliado nunca ataca tus castillos**; un señor **hostil** (afinidad ≤ −20) los prefiere como blanco.
+- Las relaciones reaccionan al mundo: quien marcha contra tu castillo pierde afinidad; conquistar el castillo de un señor la hunde (−40) y rompe la alianza si la había.
+- **Rivales de duelo recurrentes**: cada rival al que te enfrentas queda registrado (con su ficha), y al retar a duelo hay un 50% de que vuelva uno conocido buscando revancha. Vencer de nuevo a un rival da +3 de honor extra.
+- Las relaciones se guardan con la partida.
+
+### Matrimonios políticos y sucesión al trono
+
+RelationsData.gdRoleProgression.gd
+
+- **Matrimonio**: desde Relaciones, con un señor de afinidad 60+ y siendo Caballero o más, puedes pedir la mano de alguien de su casa (dote de 100 de oro, 1 acción). Su familia queda **aliada**, ganas honor y el cónyuge lleva el apellido de la casa. Solo un matrimonio por partida.
+- Cada partida registra al **soberano de tu reino** (el señor de tu castillo de origen al empezar).
+- **Nobleza Alta → Regente** ya es posible con 80+ de honor y uno de dos caminos:
+  - **Herencia**: estar casado con la familia de tu soberano → sucesión pacífica (mejora la relación con el antiguo rey).
+  - **Usurpación**: controlar 4 castillos de tu reino (el de origen y los conquistados a tu nombre) → depones al rey, que jura venganza (afinidad −50, rompe alianza).
+- Al coronarte pasas a gobernar tu castillo de origen y desbloqueas las acciones de Regente (impuestos reales, ejército real, visión total del mapa).
+- Matrimonio, cónyuge y soberano se guardan con la partida.
+
+### Diplomacia y edictos
+
+RelationsData.gdEdictCatalog.gd
+
+- **Declarar guerra** (Nobleza Alta y Regente, 1 acción): el señor pasa a "En guerra", su reino te prefiere como blanco, y marchar contra él **no tiene penalización**.
+- **Tratado de paz** (tributo de 100 de oro, 1 acción): el enemigo acepta salvo que su afinidad sea menor a −60.
+- **Agresión sin declarar**: marchar contra un señor sin guerra declarada lo ofende (−15 de afinidad).
+- **Traición**: marchar contra un aliado rompe la alianza, cuesta 15 de honor y todos los demás señores pierden confianza en ti (−5). Sale en las Noticias del reino.
+- **Edictos del Regente** (desde el castillo, 1 acción; uno vigente a la vez, efecto mensual):
+  - *Leva*: +5 soldados por mes en cada castillo de tu reino, a costa de comida.
+  - *Impuestos Altos*: +40 de oro al mes, −1 de honor.
+  - *Tregua del Rey*: +1 de honor y +2 de afinidad con todos los señores cada mes.
+- Guerras y edicto vigente se guardan con la partida.
+
+### Victoria y derrota
+
+VictoryRules.gdMeta por rol inicial
+
+- La **meta depende del rol con el que empiezas**: elegir el rol en Nueva Partida es elegir tu camino a la victoria (y no cambia al ascender).
+
+| Rol inicial | Objetivo |
+| --- | --- |
+| Campesino | *De la nada*: llegar a Nobleza Baja |
+| Soldado | *Campeón*: ser Caballero y haber ganado 10 duelos |
+| Caballero | *Conquistador*: gobernar 2 castillos conquistados por ti |
+| Nobleza Baja | *Señor de la guerra*: 3 castillos a tu nombre (el de origen cuenta) |
+| Nobleza Alta | *Hegemonía*: que tu reino controle 6 de los 12 castillos |
+
+- El objetivo y su progreso se ven en el panel de turno del mapa y en Nueva Partida. Al cumplirlo se anuncia la victoria una sola vez y se puede **seguir jugando** o volver al menú.
+- **Derrotas**: perder tu último castillo, o que tu honor llegue a 0 (destierro).
+- El rol inicial y la victoria se guardan con la partida.
+
+### Efectos de combate y sonido (v1)
+
+- **Sonidos sintetizados** con `tools/generate_sfx.py` (no hacen falta muestras externas), guardados en `assets/sfx/`: choque de espadas, golpe, crítico, esquiva, guardia, desarme, empujón, clic de botón, victoria, derrota, cuerno de guerra, andanada de flechas, choque de pelotones y retirada. Para cambiar un sonido basta con **reemplazar el `.wav` del mismo nombre**.
+- Autoload **`Sfx`**: `Sfx.play("clash")` con leve variación de tono; todos los botones del juego suenan al pulsarse. El **volumen** se ajusta en el menú principal y se guarda en `user://settings.cfg`.
+- **Duelo**: `DuelManager` emite `combat_event` (golpe, crítico, contraataque, esquiva, desarme, empujón, fallo…). La escena muestra números de daño flotantes, destello rojo y retroceso del retrato, chispas, temblor de pantalla, *hit-stop* en los críticos y barras que bajan animadas.
+- **Batalla táctica**: `BattleManager` emite `unit_attacked` y `unit_routed`. El tablero anima flechas en arco (ataques a distancia), embestidas (cuerpo a cuerpo), destellos con el número de bajas y el pelotón que se desvanece al huir o ser aniquilado. Los ataques de la IA se reproducen uno tras otro, y el cartel de resultado espera a que terminen.
+
+### Música, opciones e interfaz (v2)
+
+- **Música de ambiente** compuesta por síntesis con `tools/generate_music.py` (numpy + soundfile), en `assets/music/` como bucles `.ogg` sin corte: menú (Re dórico), mapa (Sol mixolidio), castillo (La eólico), duelo (Mi frigio) y batalla (Re eólico), más ambientes de viento y chimenea. Autoload **`Music`**: cambia de pista sola según la escena con fundido cruzado; el duelo y la batalla tienen una **capa de tensión** (tambores) que sube cuando el combate se pone feo (`Music.set_intensity`).
+- **Buses de audio** (`default_bus_layout.tres`): Master (con limitador), Música, Ambiente y Efectos. Autoload **`Settings`** guarda el volumen de cada bus (deslizador con curva perceptual) y la pantalla completa en `user://settings.cfg`. Ventana **Opciones** reutilizable (`OptionsPanel.open(nodo)`) en el menú y en el mapa.
+- **Tema visual único** (`ui/theme/royal_theme.tres`, generado por `tools/build_theme.gd`): madera oscura, bronce, oro y pergamino; carmesí para la acción principal. Variaciones: `TitleLabel`, `HeaderLabel`, `SubheaderLabel`, `MutedLabel`, `InkLabel`, `PrimaryButton`, `FlatButton`, `MenuButtonLarge`, `CardPanel`, `HighlightPanel`, `ParchmentPanel`, `BarPanel`. Tipografía: Cinzel para títulos y botones, **EB Garamond** (OFL) para el texto.
+- **Pantallas rediseñadas**: menú principal, nueva partida (tarjetas de personaje, castillo y destino), duelo de práctica, duelo, mapa (barra superior, destino, crónica, botón de turno que late sin acciones), castillo (ficha, acciones con descripción visible, ascenso), relaciones (pestañas), guardar/cargar y creación de personaje. Animaciones de entrada (`UiAnim`).
+
+### Duelo (v2)
+
+- **Daño proporcional** `24 × A/(A+D)` (±20%): duelos de 6–19 acciones en vez de ~20 clics idénticos; una ventaja de +3 en combate da ~70% de victorias en lugar de 100%.
+- **Aliento** con efecto: atacar cansa, Defender recupera; con Fatiga el daño baja un 30% y no se puede desarmar ni empujar.
+- **Piedra-papel-tijera**: Contraatacar es una **parada** (55%: no recibes nada y devuelves el golpe ×1,25); Empujar **rompe la guardia**; Esgrima esquiva sola un 15%; Ofensiva deja algo más expuesto.
+- **IA por personalidad** (`DuelAI`): Arrogante ataca sin pausa, Prudente se cubre y para, Astuto desarma y empuja, Leal y Piadoso pelean defensivos, Ambicioso aprieta cuando va ganando. Recuerda tus últimas acciones: si solo atacas, aprende a parar.
+- Previsiones en la interfaz (daño esperado, probabilidades), guardia del rival visible, atajos de teclado (1–8, Q–T), iniciativa al azar. Rendirse cuesta −3 de honor extra y un rescate de 25 de oro; huir, −3 de honor.
+
+### Personalidad, rivalidad y romance (v1)
+
+- **`DialogueCatalog`**: frases por personalidad (6 tipos) para duelos, rivalidad, cortejo, cónyuge y señores. Concuerdan con el **género** de quien habla y de quien escucha (`{a:digno|digna}`, `{s:listo|lista}`). En el duelo aparecen como globos de diálogo; en los eventos, con el retrato de quien habla.
+- **Rivalidad**: cada relación guarda un **rencor** que sube al vencer (más con Arrogantes y Ambiciosos) y baja al perder. Etapas: Conocido → Rival → **Némesis**, o **Respeto** (Leales y Piadosos vencidos dos veces). Los rivales toman la iniciativa con eventos (retos públicos, rumores, robos de los Astutos, ofertas de entrenamiento) y reaccionan a tus victorias en la crónica. Vencer a un rival da +3/+6/+10 de honor según la etapa.
+- **Romance**: se puede cortejar a cortesanos y rivales (Conversar, Regalo, Versos, Dedicar una victoria); cada personalidad agradece gestos distintos. El afecto se enfría sin cortejo; aparecen **pretendientes rivales** (a veces tus propios rivales de duelo) que puedes retar a duelo; cartas de amor; boda por amor al llegar a 70 de afecto.
+- **Cónyuge** con ficha propia (también en el matrimonio político): eventos mensuales según su carácter.
+
+### Reequilibrio del mundo (v2, tras la auditoría de diseño)
+
+- **Conquista posible**: movilizar da el 40% de la guarnición (Regente 60%) y se suma al ejército que ya esté en el castillo; los ejércitos propios se **reúnen** al coincidir (botones «Reunir ejércitos» y «Volver a la guarnición» en el mapa). Acción **Contratar Mercenarios** (4 de oro por soldado, hasta 40). **Asedio**: un castillo sitiado pierde un 8% de guarnición al mes (15% sin comida) y el sitiador paga 1 de oro por cada 10 soldados.
+- **La IA amenaza al jugador**: cuenta tus guerras, los reinos hostiles movilizan más y hay incursiones de vecinos no aliados (≈1 ataque cada 8 meses a un jugador pasivo).
+- **Economía con gastos**: Recaudar/Gobernar reparten 60/40 entre tú y el castillo; los castillos pagan a la tropa y consumen comida (sin comida o sin paga pierden soldados); Mejorar Tierras da una renta mensual permanente.
+- **Progresión**: Alistarse cuesta 60 de oro (o Combate 9); Cazar Furtivo para el Campesino; Desertar solo herido o con honor bajo; Entrenar cuesta 15 de oro, una vez al mes y con rendimiento decreciente; **Ejercer el Mando** sube Liderazgo (evita el bloqueo de Nobleza Baja); la visión del mapa crece con el rango. Los rivales de duelo tienen fuerza parecida a la tuya y el honor por victoria depende de la diferencia de fuerza.
+- **Metas de victoria** reajustadas: Caballero (1 conquista + Nobleza Baja), Nobleza Baja (2 castillos + Nobleza Alta), Nobleza Alta («La Corona»: ser Regente o 5 castillos).
+- **Batalla**: habilidades reequilibradas, bajas previstas al pasar el ratón sobre un objetivo, la caballería que carga no recibe respuesta, y pantalla rediseñada.
+
+### Mundo vivo, contenido y compañeros (v3)
+
+- **Contenido** (`content_catalog.gd`): 12 personalidades (se suman Valiente, Cruel, Generoso, Cobarde, Romántico y Honorable), 16 habilidades generales, 17 de combate y 15 de batalla, 22 ventajas, 22 desventajas y 30 piezas de equipo por ranuras (arma, armadura, escudo, montura, accesorio) con nivel y precio. Todo tiene efecto real a través de `SkillEffects.fx()` en duelo, batalla, economía y trato social.
+- **Mundo nuevo en cada partida**: señores, casas, recursos, guerras y alianzas iniciales al azar; botón «Otro mundo» en Nueva Partida. Ningún PNJ comparte retrato con el jugador.
+- **Vida del mundo** (`WorldEvents`): sucesos globales (con y sin decisión), señores que se casan y mueren (con heredero), guerras y paces; las noticias importantes se anuncian en el mapa.
+- **Encargos** (`MissionData`): tareas por rol con plazo, recompensa y penalización; duelos de exhibición contra caballeros de otros reinos y bodas políticas ofrecidas por tu señor.
+- **Trato social**: pestaña «Tu zona» con cortesanos, campesinos y soldados; intimidad por niveles (el saludo cambia con la confianza); conversar, regalar y charla íntima (romance solo entre hombre y mujer); retos a duelo que pueden rechazarse por rango o miedo; fichas de personaje con opción de guardarlos en el editor.
+- **Fama**: sube con duelos, torneos, batallas y encargos; atrae eventos, encargos y seguidores, y abre retos con gente de más rango.
+- **Séquito**: compañeros reclutados por intimidad, honor y fama; lideran pelotones en batalla y pueden batirse en duelo como campeones. Sin séquito, tu señor presta compañeros de facción (menos leales).
+- **Más dificultad**: IA de duelo más hábil según el rango, IA de batalla que concentra el fuego y aprovecha el terreno, agresividad de los reinos creciente con los años, economía y eventos más duros.
+- **Tutorial de combate** (11 lecciones con casos reales) y **Glosario** con buscador, desde el menú y el mapa.
+- **Guardado** con versión (`SAVE_VERSION = 2`) y módulos que guardan su propio estado (`SaveSystem.MODULES`).
+
+### Dinastía, obras, conversaciones y combate (v4)
+
+- **Experiencia y nivel** (`xp_rules.gd`, `level_up_panel.gd`): duelos, batallas, torneos, encargos y exploraciones dan experiencia; cada nivel (máx. 20) da 2 puntos de atributo y cada 3 niveles se elige una habilidad entre tres. Botón «Nivel N» en el mapa.
+- **Dinastía** (`DynastyData`, escena `succession`): edad por rango al empezar, cumpleaños cada enero, muerte por vejez desde los 55, hijos que heredan rasgos y son adultos a los 16, sucesión eligiendo heredero (oro, castillos, séquito, rango, parte del honor y la fama) y fin del linaje sin herederos. Opción en Nueva Partida para que los personajes no envejezcan (los hijos sí crecen).
+- **Obras del castillo** (`building_catalog.gd`, panel «Obras»): herrería, establos, murallas, mercado, capilla y cuartel, con 3 niveles; solo la nobleza construye, los caballeros y soldados aprovechan los de su señor. La IA también construye.
+- **Exploración** (`ExplorationData`, `site_catalog.gd`): ruinas, campamentos bandidos, cuevas, monasterios, minas y la Torre del Caballero Negro aparecen y desaparecen junto a los castillos; explorarlos acaba en duelo, escaramuza o tesoro.
+- **Conversaciones por actitud** (`conversation_panel.gd`): Amable, Halagador, Franco, Amenazante y Charla íntima, con probabilidades según la personalidad, el Carisma, el honor y el rango; rumores sobre otros castillos y duelos a muerte contra némesis.
+- **Duelo (v3)**: combos (contra tras parar, acecho tras esquivar, desequilibrio tras empujar, penalización por atacar tres veces seguidas) y duelos a muerte con aviso.
+- **Batalla táctica (v2)**: órdenes (mantener, cargar, replegarse), clima y hora del día con niebla de guerra, habilidades de mando una vez por batalla, mapas variados por región (río con vados, aldea, bosque espeso, loma) y murallas solo en asedios. Las murallas y los establos del castillo cuentan en combate; el comandante puede morir si todo su bando cae.
+- **Guardado**: `SAVE_VERSION = 3`, con `DynastyData` y `ExplorationData` entre los módulos.
+
+### Viaje y roles nuevos (v5)
+
+- **Viaje** (`TravelData`, `player_token.gd`, `road_encounter_catalog.gd`, `audience_panel.gd`): la ficha del jugador viaja por las rutas (1 acción por tramo, 2 en invierno salvo Paso Invernal; si el destino está lejos se avanza un tramo por el camino más corto). «Tu zona» es la gente del lugar donde estás. Encuentros en el camino (8 tipos, algunos con combate), más probables en invierno y en guerra.
+- **Castillos ajenos**: gente del lugar, armería local, torneo local (uno por castillo y año), retos y audiencia con el señor (respetos, noticias, encargos o jurar lealtad). Jurar lealtad cambia tu reino y tu hogar, cuesta honor y la enemistad del antiguo señor; los campesinos simplemente se establecen («Migrar a Otro Reino» desbloqueado).
+- **Gobernar desde lejos**: las gestiones por carta (✉) cuestan 1 acción más; entrenar, reclutar, justar y contratar exigen estar presente.
+- **Rangos**: el orden del enum `Character.Role` ya no es el rango; se compara con `rank()` / `Character.rank_of()`. Títulos con género con `role_title()`.
+- **Duque** entre Nobleza Alta y Regente: 2 castillos, 70 de honor y 14 de liderazgo; 4 acciones, 5 plazas de séquito, «Gobernar el Ducado», obras de nivel 3 y «La corona vacante» (reclamar el trono si el rey muere sin hijos).
+- **Camino mercenario** (Mercenario → Capitán de compañía → Condotiero): elegible al empezar o alcanzable abandonando a tu señor o al perder tu último castillo. Contratos con plazo y paga, infamia y traición, compañía con soldada mensual (deserción si no se paga) y castillos propios para el Condotiero; jurar lealtad lo devuelve a la escalera noble.
+- **Derrota**: perder el último castillo ya no termina la partida; se sigue como mercenario.
+- **Guardado**: `TravelData` entre los módulos; infamia, contratos y vetos en `MissionData`.
+
+### Mundo europeo, guerra a fondo, séquito y final abierto (v6)
+
+- **Culturas** (`name_catalog.gd`): 9 culturas europeas (franca, anglonormanda, castellanoleonesa, aragonesa y catalana, imperial, romana, prusiana, italiana, borgoñona), una por reino; nombres, casas, patronímicos, sobrenombres y nombres de reino generados en cada mundo.
+- **Trato con señores**: Campesino y Soldado no pueden dirigirse a ningún señor (solo responder); a los señores de otras tierras se les escribe por carta (✉, +1 acción).
+- **Piezas únicas** (★★★★): 12 objetos con habilidad propia (Durandal, Oriflama, Olifante, Babieca, Sello del Emperador…), raros pero repetibles: exploración, torneos, herrería de nivel 3 y trofeo de duelo.
+- **Batalla v3**: llamada a filas (te unes al ejército de un NPC y mueves solo tus pelotones; IA aliada), campesinos solo van a la guerra si los llaman, lazos de batalla, duelo singular entre jefes (los de tus pelotones los juegas tú) y traición a mitad de combate.
+- **Tropas y mando**: 4 familias (infantería, arquería, caballería, piqueros) con versión avanzada, círculo de ventajas, maestría por familia (1–10), general por bando (si cae, su bando pierde; solo él ordena retirarse), negociación de tropa, Consejo de guerra y Estrategia que lee al rival y mejora el terreno.
+- **Duelo v4**: las posturas bloquean acciones, «leer al rival» por Estrategia, experiencia según el tipo de luchador y por cualquier duelo, «Entrenar» como acción.
+- **Séquito**: nivel Íntimo/Íntima (sustituye a «Amante»), 2 plazas extra para íntimos, ocupaciones mensuales (Administrar, Entrenar, Estudiar, Descansar), equipar a los tuyos, duelos de práctica, campeón designado y elección de quién te acompaña a cada batalla (cada uno con su pelotón).
+- **Prisioneros** (`CaptureData`): capturas tras batallas y duelos hostiles; reclutar, esclavizar (siervos), vender, liberar o ejecutar; rescates; cautiverio del jugador con fuga, rescate o ejecución.
+- **Hazañas y final** (`AchievementData`): el destino del rol es una hazaña más del Libro de hazañas (27 por partida, con recompensas). La partida solo termina al dominar el mundo, unificar por matrimonio los dos últimos reinos o morir/ser ejecutado sin heredero. Honor 0 = deshonra (pierdes rango), no derrota.
+- **Interfaz**: menos texto (las explicaciones van en tooltips, glosario y tutorial), acciones del castillo en rejilla con una sola línea de ayuda, ayuda del duelo de altura fija; sonda automática de desbordes (73 pantallas y paneles caben en 1152×648).
+
+### Intrigas, historias, sensación y sonido (v7)
+
+- **Ambiciones de los PNJ** (`AmbitionData`, IA de utilidad): poder y rango, amor y familia, venganza y rivalidad, riqueza y fe. Complots y ofertas que te buscan como aliado o víctima (conjuras, bodas entre casas, negocios, torneos, chantajes) e intrigas entre PNJ en la crónica.
+- **Historias encadenadas** (`StoryData`): 13 historias de 3–6 pasos con 43 finales (herejía, pretendiente, peste, bastardo, reliquia, revueltas, cruzada, torneo amañado, boda envenenada…), decisiones recordadas, pasos con combate o viaje y finales que cambian el mundo.
+- **Cola de eventos** (`GameManager.queue_event`): las decisiones de todos los sistemas esperan su turno sin pisarse; se guarda con la partida. Eventos aleatorios al 20% mensual (≈55% de meses con alguna decisión).
+- **Equilibrio de la guerra**: al caer la noche gana quien sufrió menos bajas (con desempate por moral), las guarniciones diezmadas se rinden, la escolta del general lucha cuerpo a cuerpo y los capitanes heredan la mitad del mando. 120 contra 100 en campo: ≈66%; asedio 135 contra 90: ≈39%; caída del general decide 4–15%.
+- **Sensación de golpe** (`CombatFx`): niveles de respuesta, pausa de impacto, sacudida, embestidas, cámara lenta final, estela de caballería, cartel de general caído y efectos del mapa. Opciones de sacudida y «efectos reducidos».
+- **Audio**: banda sonora por contexto (mapa, viaje, castillo, corte, duelo, batalla, luto, cautiverio, fanfarrias) y por cultura (9 variaciones de mapa y castillo), sin repeticiones; variantes de golpes; ambientes de lugar (`Ambience`); avisos de interfaz.
+- **Rendimiento**: retratos con compresión de vídeo de alta calidad (empezar partida: de 3,9 s a 0,4 s).
+- **Exportación**: preajuste «Windows Desktop» (`builds/windows/RoyalPain.exe`); faltan las plantillas de exportación de Godot.
+
+### Gran revisión: social, combate RPG y campales (v8)
+
+Plan completo en `docs/plan_revision.md`; lo que queda, en `docs/PENDIENTE.md`.
+
+- **Fase 1 — Arreglos:**
+  - registros de altura fija (duelo, batalla, noticias, crónica);
+  - la gente de un reino caído pasa al vencedor o se refugia en otros reinos;
+  - la tropa elegida se respeta;
+  - fuera la carrera de mercenario (las partidas antiguas pasan a No afiliado; se mantiene "Contratar Mercenarios" para nobles).
+- **Rol No afiliado** y trabajos a jornal; ascenso Campesino → Soldado más caro (150 de oro o Combate 12).
+- **Fase 2 — Vida social:**
+  - varios cónyuges según rango y amantes; los hijos naturales heredan solo sin legítimos adultos;
+  - lealtad (0–100) con avisos, remedios y traiciones (`LoyaltyData`);
+  - más acciones y eventos con siervos y prisioneros;
+  - sucesos sociales por cercanía, rivalidad, señores y facción (`SocialEvents`);
+  - historias con huella duradera;
+  - viajeros en el mapa con su cara (`TravelerData`);
+  - gestor "Mis personajes";
+  - eventos aleatorios filtrados según la situación (gobernar castillo, tener tierras, ir errante).
+- **Fase 3 — Combate RPG** (`scenes/rpg_battle/`, `RpgBattleManager`):
+  - **Pantalla:** vista frontal; hasta 5 enemigos contra tus 4 activos; línea de turnos por Agilidad; menú Atacar, Técnicas, Defender, Objeto, Cambiar y Abandonar.
+  - **Debilidades:** tabla arma × armadura en círculo (×1,4 / ×0,6, solo daño). El turno extra solo llega con "Aprovechar la brecha", el Estoque o la Misericordia de Toledo.
+  - **Habilidades:** 24 árboles (tipo de luchador, personalidad, alineación) con 538 habilidades; 1 punto cada 3 niveles más algunos por logros.
+  - **Personaje:** 6.º atributo, Agilidad. En la creación se elige 1 habilidad básica por rama, 2 ventajas como máximo y 2 desventajas como mínimo (fijas), y un equipo básico (arma, escudo, armadura y un accesorio de +1).
+  - **Grupo:** gestor de grupo (G) con 4 activos y reserva.
+  - **Enemigos:** 17 tipos genéricos, mini jefes incluidos, con retratos al azar por tipo.
+  - **Consumibles:** 10, en la tienda y como botín.
+  - **Fondos:** según el bioma del lugar.
+  - **Final:** al terminar, un cartel con "Continuar" te saca de la pantalla.
+  - El duelo antiguo deja de usarse.
+- **Fase 4 — Batallas campales:**
+  - oficiales en cada pelotón;
+  - cada choque cuerpo a cuerpo es un combate RPG ("Luchar / Resolver"), con tropas que dan estadísticas extra y técnicas que piden tropa o moral;
+  - traición en batalla y botín;
+  - IA que flanquea, protege al general, guarda reservas y se repliega (dificultad Fácil, Normal o Difícil);
+  - orientación con flancos y espalda, y formaciones Línea, Cuña y Cuadro.
+- **Retratos:** 62 de hombre y 111 de mujer (unos 142 personajes por mundo, con 31 de reserva) y retratos de enemigos en `assets/portraits/enemies/<tipo>/`.
+- **Otros:** `.exe` de Windows (`builds/windows/RoyalPain.exe`), pruebas en `tests/` y guía para continuar en `docs/CONTINUAR.md`.
+
+## Lo pendiente
+
+| Sistema | Estado | Notas |
+| --- | --- | --- |
+| Batalla táctica — mejoras | v2 hecha | Hechos: campo abierto, órdenes, clima, habilidades de mando, mapas variados. Pendiente: asedios de varios turnos de mapa y arte de unidades. |
+| Conquista de castillos | Hecha (v1) | Falta: efectos sobre la lealtad/relaciones del reino conquistado y recuperación por el reino original. |
+| Sucesión — ampliación | v2 hecha | Hechos: hijos, vejez, muerte del personaje y elección de heredero. Falta: reclamar el trono como Duque. |
+| Relaciones — ampliación | v2 hecha | Hechos: lealtad y traiciones, sucesos por cercanía, rivalidad, señores y facción, viajeros. Pendiente: quitar el evento "Celos" (decisión del usuario, más adelante). |
+| Eventos — ampliación | v1 hecha | Faltan eventos encadenados, eventos ligados a relaciones entre personajes y efectos del alineamiento. |
+| Matrimonios — ampliación | v3 hecha | Hechos: hijos, viudez, varios cónyuges según rango y amantes. Falta: divorcio y matrimonios entre PNJ. |
+| Diplomacia — ampliación | v1 hecha | La IA ya declara guerras, paces y alianzas entre reinos. Falta: que la IA proponga tratados al jugador y más tipos de tratados/edictos. |
+| Equilibrio de la guerra | v2 hecha | Con la IA nueva, el ejército mayor gana >90% y las batallas igualadas quedan entre 40–65% (pocas simulaciones): afinar jugando. |
+| Combate RPG — equilibrio | v1 hecha | El Defensor gana ~34% en espejo (los demás tipos, 46–55%); contra 5 enemigos de nivel alto los combates duran 8–11 rondas (aceptado: hay que saber huir). |
+| Versión móvil | Pendiente | Android viable; requiere adaptar la interfaz al tacto (ayudas sin ratón, botones grandes, gestos en mapa y batalla). |
+| Condiciones de victoria/derrota — ampliación | v1 hecha | Victoria por rol inicial y dos derrotas implementadas; falta la victoria del Regente (requiere sucesión) y ajustar metas con el documento de diseño original. |
+| Cierre inesperado al salir | Investigado | Godot se cierra con error a veces al salir (también en el commit anterior y con el proyecto vacío de escenas); depende de los scripts cargados por GameData, sin causa única. No afecta a las partidas: se guardan antes. |
+| Arte y sonido final | SFX y música v2 | Retratos de personajes y enemigos integrados; fondos de combate por bioma (`assets/backgrounds/<bioma>/`, se pueden añadir más). Falta: más retratos para enemigos con 1–2 imágenes, fondos propios de montaña y bosque, arte de unidades. |
+
+## Roadmap sugerido
+
+1. ~~**Terminar la batalla táctica** y conectarla con el resultado de "batalla pendiente"~~ ✅ v1 hecha.
+2. ~~**Conquista de castillos**: cambio de reino/dueño tras una victoria~~ ✅ hecha.
+3. ~~**Duelos en la campaña y reinos con IA**~~ ✅ hechos (IA de reinos v1: ataques, auto-resolución, defensa jugable).
+4. ~~**Eventos y relaciones**~~ ✅ (v1 de ambos): dan vida al mundo entre turnos.
+5. ~~**Diplomacia y matrimonios**~~ ✅ (v1 de ambos).
+6. ~~**Sucesión / Regente**~~ ✅ (v1): el ciclo completo de movilidad social Campesino → Regente ya existe.
+7. ~~**Condiciones de victoria y guardado de partida completa**~~ ✅ hechos: el juego es jugable de principio a fin.
+8. **Pulido**: arte final, sonido, balance general.
+
+Documento generado como resumen de estado — refleja el trabajo hasta el cierre de la última sesión de desarrollo.

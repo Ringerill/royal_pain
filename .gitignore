@@ -1,0 +1,29 @@
+# Godot 4+ specific ignores
+/android/
+
+# Carpetas de Godot generadas automáticamente
+.godot/
+.import/
+export.cfg
+
+# Archivos temporales del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Builds/exportaciones (si exportas el juego, no subas los ejecutables pesados)
+/export/
+/builds/
+
+# Logs
+*.log
+# Ejecutables del editor de Godot (pesan >100 MB, no van al repositorio)
+Godot_v*.exe
+
+# Visual Studio
+.vs/
+
+# Python
+__pycache__/
+
+# Capturas de pruebas
+tests/_shots/

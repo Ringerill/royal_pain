@@ -1,0 +1,191 @@
+[gd_scene format=3 uid="uid://bfsewlkktikkj"]
+
+[ext_resource type="Script" uid="uid://cbniuq8pl7uu7" path="res://scenes/combat/combat.gd" id="1_5vqsm"]
+[ext_resource type="Texture2D" uid="uid://ddp5jumithj2k" path="res://assets/TurnFight-Trining_Ground.png" id="2_6aonj"]
+
+[sub_resource type="Gradient" id="Gradient_floor"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.04, 0.03, 0.02, 0.35, 0.04, 0.03, 0.02, 0.05, 0.04, 0.025, 0.015, 0.85)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_floor"]
+gradient = SubResource("Gradient_floor")
+fill_from = Vector2(0, 0)
+fill_to = Vector2(0, 1)
+
+[node name="Control" type="Control" unique_id=394767764]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_5vqsm")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1950708207]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_6aonj")
+expand_mode = 3
+stretch_mode = 6
+
+[node name="Shade" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_floor")
+expand_mode = 1
+
+[node name="ScreenMargin" type="MarginContainer" parent="." unique_id=968818066]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 14
+
+[node name="RootVBox" type="VBoxContainer" parent="ScreenMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TopBar" type="HBoxContainer" parent="ScreenMargin/RootVBox"]
+layout_mode = 2
+
+[node name="BtnVolverMenu" type="Button" parent="ScreenMargin/RootVBox/TopBar" unique_id=2077085288]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_type_variation = &"FlatButton"
+text = "← Volver al menú"
+alignment = 0
+
+[node name="TurnIndicatorLabel" type="Label" parent="ScreenMargin/RootVBox/TopBar" unique_id=2113994125]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeaderLabel"
+text = "Tu turno"
+horizontal_alignment = 1
+
+[node name="KeysLabel" type="Label" parent="ScreenMargin/RootVBox/TopBar"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 14
+text = "Teclas: 1–7 acciones · Q–R posturas"
+horizontal_alignment = 2
+
+[node name="ArenaHBox" type="HBoxContainer" parent="ScreenMargin/RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="PlayerColumn" type="VBoxContainer" parent="ScreenMargin/RootVBox/ArenaHBox" unique_id=656091009]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PortraitPlayer" type="TextureRect" parent="ScreenMargin/RootVBox/ArenaHBox/PlayerColumn" unique_id=1873183201]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 160)
+layout_mode = 2
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlayerCard" type="PanelContainer" parent="ScreenMargin/RootVBox/ArenaHBox/PlayerColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"CardPanel"
+
+[node name="CenterColumn" type="VBoxContainer" parent="ScreenMargin/RootVBox/ArenaHBox" unique_id=315604893]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LogPanel" type="PanelContainer" parent="ScreenMargin/RootVBox/ArenaHBox/CenterColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"CardPanel"
+
+[node name="LogLabel" type="Label" parent="ScreenMargin/RootVBox/ArenaHBox/CenterColumn/LogPanel" unique_id=1026799183]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 60)
+layout_mode = 2
+size_flags_vertical = 1
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+text_overrun_behavior = 3
+
+[node name="ActionPanel" type="PanelContainer" parent="ScreenMargin/RootVBox/ArenaHBox/CenterColumn"]
+layout_mode = 2
+
+[node name="ActionVBox" type="VBoxContainer" parent="ScreenMargin/RootVBox/ArenaHBox/CenterColumn/ActionPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PostureLabel" type="Label" parent="ScreenMargin/RootVBox/ArenaHBox/CenterColumn/ActionPanel/ActionVBox"]
+layout_mode = 2
+theme_type_variation = &"SubheaderLabel"
+text = "Postura"
+
+[node name="PostureRow" type="HBoxContainer" parent="ScreenMargin/RootVBox/ArenaHBox/CenterColumn/ActionPanel/ActionVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ActionLabel" type="Label" parent="ScreenMargin/RootVBox/ArenaHBox/CenterColumn/ActionPanel/ActionVBox"]
+layout_mode = 2
+theme_type_variation = &"SubheaderLabel"
+text = "Acción"
+
+[node name="ActionGrid" type="GridContainer" parent="ScreenMargin/RootVBox/ArenaHBox/CenterColumn/ActionPanel/ActionVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 4
+
+[node name="HintLabel" type="Label" parent="ScreenMargin/RootVBox/ArenaHBox/CenterColumn/ActionPanel/ActionVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="EnemyColumn" type="VBoxContainer" parent="ScreenMargin/RootVBox/ArenaHBox"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PortraitEnemy" type="TextureRect" parent="ScreenMargin/RootVBox/ArenaHBox/EnemyColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 160)
+layout_mode = 2
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 5
+flip_h = true
+
+[node name="EnemyCard" type="PanelContainer" parent="ScreenMargin/RootVBox/ArenaHBox/EnemyColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"CardPanel"

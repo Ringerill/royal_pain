@@ -6,7 +6,7 @@ Este documento resume dónde quedó el trabajo y cómo retomarlo, tanto para ti 
 ## 1. Preparar el PC nuevo
 
 1. **Clonar el repositorio:**
-   `git clone https://github.com/CristopherSantibanez/royal_pain` (ideal en `C:\otros`, la misma ruta que antes; así las rutas de las notas coinciden).
+   `git clone https://github.com/Ringerill/royal_pain` (ideal en `C:\otros`, la misma ruta que antes; así las rutas de las notas coinciden).
 2. **Godot 4.7.2 estable (64 bits):**
    - **Editor:** descárgalo de godotengine.org y usa el `..._console.exe` para las pruebas.
    - **Plantillas de exportación:** son necesarias para generar el `.exe`. En el editor: *Editor → Administrar plantillas de exportación → Descargar e instalar*.

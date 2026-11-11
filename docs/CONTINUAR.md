@@ -33,6 +33,29 @@ La conversación y la memoria de Claude están en `C:\Users\<usuario>\.claude\pr
 - **Pendiente:** ver **`docs/PENDIENTE.md`**: repasos pequeños de la fase 2, fase 3 (gestor de grupo y combate RPG con árbol de habilidades y enemigos genéricos) y fase 4 (batallas campales). El detalle está en `docs/plan_revision.md`.
 - **Imágenes de enemigos** (las genera el usuario): PNG de 1024×1536 con fondo transparente en `assets/portraits/enemies/<tipo>/`. La lista de tipos está en el plan, fase 3.
 
+## Dos repositorios: PC y móvil
+
+El código es uno solo para las dos versiones: los controles táctiles (`TouchSupport`, la cámara del mapa) solo se activan en pantallas táctiles.
+
+- **PC:** https://github.com/Ringerill/royal_pain
+- **Móvil (Android):** https://github.com/Ringerill/royal_pain_movil
+
+En la carpeta local, `origin` sube a los dos a la vez: un solo `git push` actualiza ambos repositorios. Para configurarlo en un PC nuevo, tras clonar el de PC:
+
+```
+git remote add movil https://github.com/Ringerill/royal_pain_movil.git
+git remote set-url --add --push origin https://github.com/Ringerill/royal_pain.git
+git remote set-url --add --push origin https://github.com/Ringerill/royal_pain_movil.git
+```
+
+Si algún día la versión móvil necesita algo exclusivo, va en una rama `movil` que se sube solo a `movil` (`git push movil movil:main`) y recibe los cambios comunes con `git merge main`.
+
+**Exportar:**
+- **Windows:** `--export-release "Windows Desktop" builds/windows/RoyalPain.exe`.
+- **Android:** `--export-debug "Android" builds/android/RoyalPain.apk`. Hace falta el SDK de Android, Java 17 y las plantillas de exportación de Godot 4.7.2; las rutas van en los ajustes del editor de Godot.
+
+**Godot:** el ejecutable está en la raíz del proyecto (`Godot_v4.7.2-stable_win64_console.exe`), excluido por `.gitignore`.
+
 ## 3. Cómo se trabaja (convenciones)
 
 - **Pruebas:** están en `tests/` (scripts `SceneTree`). Se ejecutan así:

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://d0sb6xde4u7wt"
 path.bptc="res://.godot/imported/woman73.png-c56e9a27a2364b97fae0b8b9a5804ec0.bptc.ctex"
+path.astc="res://.godot/imported/woman73.png-c56e9a27a2364b97fae0b8b9a5804ec0.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/portraits/enemies/caballero_orden/woman73.png"
-dest_files=["res://.godot/imported/woman73.png-c56e9a27a2364b97fae0b8b9a5804ec0.bptc.ctex"]
+dest_files=["res://.godot/imported/woman73.png-c56e9a27a2364b97fae0b8b9a5804ec0.bptc.ctex", "res://.godot/imported/woman73.png-c56e9a27a2364b97fae0b8b9a5804ec0.astc.ctex"]
 
 [params]
 
@@ -37,5 +38,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
+process/size_limit=1024
 detect_3d/compress_to=1

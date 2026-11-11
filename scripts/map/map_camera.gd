@@ -1,5 +1,5 @@
 extends Camera2D
-# Cámara del mapa: arrastre (botón derecho), rueda (zoom hacia el cursor), WASD/stick y +/− o L1/R1.
+# Cámara del mapa: arrastre (botón derecho o un dedo), rueda o pellizco (zoom hacia el cursor), WASD/stick y +/− o L1/R1.
 # Los límites tienen en cuenta la interfaz: los bordes del mapa pueden quedar a la vista entre la
 # barra superior y los paneles inferiores (hud_top / hud_bottom, en píxeles de pantalla).
 
@@ -82,6 +82,42 @@ func _unhandled_input(event: InputEvent) -> void:
 		position = drag_start_camera - delta * pan_speed
 		_clamp_position()
 		reset_smoothing()   # el arrastre sigue al ratón sin retraso
+	# --- Táctil (móvil y tablet): un dedo arrastra, dos dedos pellizcan para el zoom ---
+	elif event is InputEventScreenTouch:
+		if event.pressed:
+			_touches[event.index] = event.position
+		else:
+			_touches.erase(event.index)
+		_pinch_dist = _touch_distance()
+	elif event is InputEventScreenDrag:
+		_touches[event.index] = event.position
+		if _touches.size() == 1:
+			position -= event.relative / zoom.x * pan_speed
+			_clamp_position()
+			reset_smoothing()
+		elif _touches.size() >= 2:
+			var d := _touch_distance()
+			if _pinch_dist > 0.0 and d > 0.0:
+				_zoom_at(d / _pinch_dist, _touch_center())
+			_pinch_dist = d
+	elif event is InputEventMagnifyGesture:   # trackpads y algunos Android
+		_zoom_at(event.factor, event.position)
+	elif event is InputEventPanGesture:
+		position += event.delta * 8.0 / zoom.x
+		_clamp_position()
+
+var _touches := {}       # índice del dedo -> posición en pantalla
+var _pinch_dist := 0.0   # distancia entre los dos primeros dedos al último movimiento
+
+func _touch_distance() -> float:
+	if _touches.size() < 2:
+		return 0.0
+	var pts: Array = _touches.values()
+	return (pts[0] as Vector2).distance_to(pts[1])
+
+func _touch_center() -> Vector2:
+	var pts: Array = _touches.values()
+	return ((pts[0] as Vector2) + (pts[1] as Vector2)) / 2.0
 
 # Zoom manteniendo fijo el punto del mapa que hay bajo el cursor.
 func _zoom_at(factor: float, screen_point: Vector2) -> void:

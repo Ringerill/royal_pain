@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ck77t5s8qbad2"
 path.bptc="res://.godot/imported/regente.png-50f46014469efb29d43343eb686b7ffd.bptc.ctex"
+path.astc="res://.godot/imported/regente.png-50f46014469efb29d43343eb686b7ffd.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/portraits/roles/regente.png"
-dest_files=["res://.godot/imported/regente.png-50f46014469efb29d43343eb686b7ffd.bptc.ctex"]
+dest_files=["res://.godot/imported/regente.png-50f46014469efb29d43343eb686b7ffd.bptc.ctex", "res://.godot/imported/regente.png-50f46014469efb29d43343eb686b7ffd.astc.ctex"]
 
 [params]
 
@@ -37,5 +38,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
+process/size_limit=1024
 detect_3d/compress_to=1

@@ -47,11 +47,13 @@ TreatyData="*res://scripts/autoload/treaty_data.gd"
 ReputationEvents="*res://scripts/autoload/reputation_events.gd"
 WorldGrowth="*res://scripts/autoload/world_growth.gd"
 RoyalCourt="*res://scripts/autoload/royal_court.gd"
+TouchSupport="*res://scripts/autoload/touch_support.gd"
 
 [display]
 
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/handheld/orientation=6
 
 [editor]
 
@@ -68,3 +70,5 @@ theme/custom="res://ui/theme/royal_theme.tres"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

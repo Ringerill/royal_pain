@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bfq8ise1qvd10"
 path.bptc="res://.godot/imported/male1.png-46837248019a03732376a4f19f071bdd.bptc.ctex"
+path.astc="res://.godot/imported/male1.png-46837248019a03732376a4f19f071bdd.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/portraits/characters/male/male1.png"
-dest_files=["res://.godot/imported/male1.png-46837248019a03732376a4f19f071bdd.bptc.ctex"]
+dest_files=["res://.godot/imported/male1.png-46837248019a03732376a4f19f071bdd.bptc.ctex", "res://.godot/imported/male1.png-46837248019a03732376a4f19f071bdd.astc.ctex"]
 
 [params]
 
@@ -37,5 +38,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
+process/size_limit=1024
 detect_3d/compress_to=1

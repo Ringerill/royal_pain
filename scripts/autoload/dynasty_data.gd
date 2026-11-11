@@ -35,6 +35,7 @@ var _deceased_name := ""
 var aging_enabled := true
 
 signal family_changed
+signal heir_succeeded(old_role: int, heir: Character)   # un heredero toma el relevo (AchievementData: final de dinastía)
 
 func _ready() -> void:
 	GameManager.game_started.connect(func(_character: Character): reset())
@@ -243,6 +244,7 @@ func succeed(heir: Character) -> String:
 	WorldEvents.record(text, "", true)
 	family_changed.emit()
 	ArmyData.armies_changed.emit()
+	heir_succeeded.emit(int(heir.role), heir)
 	return text
 
 ## Sin hijos adultos que hereden: la partida termina.

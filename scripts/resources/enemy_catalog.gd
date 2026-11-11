@@ -21,8 +21,8 @@ const BOSS_ACTIONS := 2
 const BOSS_ATTR_PER_LEVEL := 0.15   # Combate/Defensa extra por nivel de los jefes (a nivel alto el grupo tiene más técnicas)
 const BOSS_PV_MULT := 1.8
 const BOSS_PV_PER_LEVEL := 0.075   # los jefes crecen más deprisa que los genéricos
-const GENERIC_PV_MULT := 1.12       # los genéricos no tienen árbol: algo más de aguante...
-const GENERIC_PV_PER_LEVEL := 0.035 # ...que crece con el nivel (el grupo gana 1 punto de árbol cada 3 niveles)
+const GENERIC_PV_MULT := 0.85       # los genéricos ya tienen técnicas de arma (por rango): sin extra de base...
+const GENERIC_PV_PER_LEVEL := 0.05  # ...que crece con el nivel (el grupo gana 1 punto de árbol cada 3 niveles)
 const XP_PER_LEVEL := 6              # experiencia que da cada enemigo por nivel
 const BOSS_XP_MULT := 3
 const MAX_LEVEL := 20
@@ -52,6 +52,33 @@ const TYPES := {
 	"caballero_orden": {"name": "Caballero de la orden", "armor": A.PLACAS, "dmg": DT.CONTUNDENTE, "role": "jefe", "type": FT.DEFENSOR, "attrs": [8, 9, 5, 6, 5], "tech": ["jef_carga_sagrada", "def_vendaje", "tan_mazazo"], "fallback": "caballero", "pers": P.HONORABLE, "boss": true, "family": "caballería pesada"},
 	"jefe_descalzos": {"name": "Jefe de los descalzos", "armor": A.SIN, "dmg": DT.CONTUNDENTE, "role": "jefe", "type": FT.BERSERKER, "attrs": [8, 6, 4, 8, 5], "tech": ["jef_turba", "ber_furia"], "fallback": "campesino", "pers": P.VALIENTE, "boss": true, "family": ""},
 	"guardian_torre": {"name": "Guardián de la torre", "armor": A.PLACAS, "dmg": DT.CONTUNDENTE, "role": "jefe", "type": FT.TANQUE, "attrs": [8, 10, 4, 5, 3], "tech": ["jef_vigilia", "tan_provocar", "tan_mazazo"], "fallback": "caballero", "pers": P.PRUDENTE, "boss": true, "family": ""},
+}
+
+# Equipo de cada tipo: [armas posibles, clases de armadura posibles]; se elige uno de cada al azar al crearlo
+# (variedad en los encuentros). El arma fija su tipo de daño y sus técnicas de arma por nivel
+# (SkillTreeCatalog.weapon_ids); "armor"/"dmg" de TYPES quedan como respaldo. Los jefes llevan arma fija.
+const META_WEAPON := "rpg_weapon_item"
+const META_WEAPON_TIER := "rpg_weapon_tier"   # escalón de arma máximo: normal II, veterano III, élite y jefes IV (+1 desde VETERAN_TIER_LEVEL)
+const GENERIC_WEAPON_TIER := 2
+const VETERAN_TIER_LEVEL := 10   # desde este nivel los genéricos suben un escalón de arma
+const GEAR := {
+	"miliciano": [["Garrote", "Lanza", "Arco Corto"], [A.SIN, A.CUERO]],
+	"bandido": [["Espada Corta", "Hacha de Guerra", "Garrote", "Daga de Misericordia", "Arco Corto"], [A.SIN, A.CUERO]],
+	"soldado": [["Espada Corta", "Espada Larga", "Lanza", "Maza de Armas", "Hacha de Guerra"], [A.CUERO, A.MALLA]],
+	"infanteria_pesada": [["Maza de Armas", "Hacha de Guerra", "Mandoble", "Pica de Fresno"], [A.MALLA, A.PLACAS]],
+	"arquero": [["Arco Corto", "Arco Largo"], [A.SIN, A.CUERO]],
+	"ballestero": [["Ballesta de Cranequín", "Arco Largo"], [A.CUERO, A.MALLA]],
+	"piquero": [["Pica de Fresno", "Lanza"], [A.CUERO, A.MALLA]],
+	"caballero_montado": [["Lanza", "Espada Larga", "Maza de Armas"], [A.MALLA, A.PLACAS]],
+	"caballero_pesado": [["Maza de Armas", "Mandoble", "Espada Larga", "Lanza"], [A.MALLA, A.PLACAS]],
+	"explorador": [["Daga de Misericordia", "Estoque", "Arco Corto", "Espada Corta"], [A.SIN, A.CUERO]],
+	"capellan": [["Maza de Armas", "Garrote"], [A.CUERO, A.MALLA]],
+	"capitan_bandido": [["Hacha de Guerra"], [A.CUERO]],
+	"sargento_veterano": [["Espada Larga"], [A.MALLA]],
+	"campeon_torneo": [["Lanza"], [A.PLACAS]],
+	"caballero_orden": [["Maza de Armas"], [A.PLACAS]],
+	"jefe_descalzos": [["Garrote"], [A.SIN]],
+	"guardian_torre": [["Maza de Armas"], [A.PLACAS]],
 }
 
 # Plantillas de grupo por contexto: [tipos, desfase de nivel].
@@ -120,9 +147,16 @@ static func make_enemy(type_id: String, level: int, rank: int = 0, used: Diction
 	c.strategy = clampi(roundi(d.attrs[2] + minor), ATTR_MIN, ATTR_MAX)
 	c.leadership = clampi(roundi(d.attrs[3] + minor), ATTR_MIN, ATTR_MAX)
 	c.charisma = clampi(roundi(d.attrs[4] + minor), ATTR_MIN, ATTR_MAX)
-	c.set_meta(RpgStats.META_ARMOR, d.armor)
-	c.set_meta(RpgStats.META_DAMAGE, d.dmg)
+	# Equipo al azar de su lista (arma con sus técnicas de arma y clase de armadura).
+	var gear: Array = GEAR.get(type_id, [[], []])
+	var weapon: String = gear[0].pick_random() if not gear[0].is_empty() else ""
+	var armor: int = gear[1].pick_random() if not gear[1].is_empty() else d.armor
+	c.set_meta(RpgStats.META_ARMOR, armor)
+	c.set_meta(RpgStats.META_DAMAGE, RpgStats.WEAPON_BY_ITEM.get(weapon, d.dmg))
+	if weapon != "":
+		c.set_meta(META_WEAPON, weapon)
 	c.set_meta("enemy_type", type_id)
+	c.set_meta(META_WEAPON_TIER, 4 if d.get("boss", false) else mini(4, GENERIC_WEAPON_TIER + rank + (1 if lv >= VETERAN_TIER_LEVEL else 0)))
 	if d.get("boss", false):
 		c.set_meta(RpgStats.META_ACTIONS, BOSS_ACTIONS)
 		c.set_meta(RpgStats.META_PV_MULT, BOSS_PV_MULT + BOSS_PV_PER_LEVEL * lv)

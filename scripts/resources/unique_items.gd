@@ -58,7 +58,7 @@ static func claim_trophy(winner: Character, loser: Character) -> String:
 		return ""
 	loser.unequip(item)
 	var text := give(winner, item)
-	winner.honor = clampi(winner.honor - TROPHY_HONOR_COST, 0, 100)
+	winner.honor = clampi(winner.honor - TROPHY_HONOR_COST, Character.HONOR_MIN, Character.HONOR_MAX)
 	var tree := Engine.get_main_loop() as SceneTree
 	var relations := tree.root.get_node_or_null("RelationsData") if tree != null else null
 	if relations != null:

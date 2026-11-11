@@ -334,7 +334,7 @@ func enslave(p: Dictionary) -> String:
 	var r := relation_of(p)
 	_release_record(p)
 	p.temp = false
-	player.honor = maxi(0, player.honor - ENSLAVE_HONOR)
+	player.honor = maxi(Character.HONOR_MIN, player.honor - ENSLAVE_HONOR)
 	_kingdom_affinity(int(p.kingdom), -ENSLAVE_AFFINITY)
 	r.affection = maxi(0, r.affection - ENSLAVE_AFFECTION)
 	r.adjust_grudge(ENSLAVE_GRUDGE)
@@ -395,7 +395,7 @@ func execute(p: Dictionary) -> String:
 	var outlaw: bool = p.temp
 	Sfx.stinger("execution", -2.0, 2.0)
 	_release_record(p)
-	player.honor = maxi(0, player.honor - (EXECUTE_HONOR_OUTLAW if outlaw else EXECUTE_HONOR))
+	player.honor = maxi(Character.HONOR_MIN, player.honor - (EXECUTE_HONOR_OUTLAW if outlaw else EXECUTE_HONOR))
 	if not outlaw:
 		_kingdom_affinity(int(p.kingdom), -EXECUTE_AFFINITY)
 		_house_grudge(who)
@@ -427,7 +427,7 @@ func sell_serf(person_name: String) -> String:
 	var player: Character = GameManager.player_character
 	var price := serf_price(r)
 	player.gold += price
-	player.honor = maxi(0, player.honor - SERF_SELL_HONOR)
+	player.honor = maxi(Character.HONOR_MIN, player.honor - SERF_SELL_HONOR)
 	serfs.erase(person_name)
 	RelationsData.retinue.erase(person_name)
 	RelationsData.occupations.erase(person_name)

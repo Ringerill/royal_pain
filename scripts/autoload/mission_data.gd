@@ -417,7 +417,7 @@ func desert_liege(player: Character) -> String:
 	var liege: Relationship = RelationsData.get_relation(old_liege)
 	if liege != null:
 		liege.adjust(DESERT_LIEGE_AFFINITY)
-	player.honor = clampi(player.honor + DESERT_LIEGE_HONOR, 0, 100)
+	player.honor = clampi(player.honor + DESERT_LIEGE_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 	player.role = Character.Role.INAFILIADO
 	leave_liege()   # los encargos de tu antiguo señor ya no te atan
 	GameManager.refresh_actions_for_role_change()

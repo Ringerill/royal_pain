@@ -1,0 +1,15 @@
+Iconos de https://game-icons.net, bajo licencia Creative Commons BY 3.0
+(https://creativecommons.org/licenses/by/3.0/). Se usan teñidos en el juego.
+
+lorc: barbed-spear, beveled-star, breastplate, broadsword, checked-shield, crossed-swords, flying-flag, high-shot, leather-vest, muscle-up, spiked-mace
+
+lucasms: shirt
+
+sbed: help
+
+skoll: knockout
+
+willdabeast: chain-mail, round-shield
+
+zeromancer: heart-plus
+

@@ -20,6 +20,16 @@ var visited_kingdoms: Array[int] = []
 var generation := 1              # 1 = el fundador; sube con cada heredero que toma el relevo
 var ending_done := ""            # final ya alcanzado (no se repite)
 var pending_ending: Dictionary = {}   # final por mostrar en el mapa
+
+# Finales del Regente: reinado próspero (REIGN_MONTHS sin perder castillos de tu reino y con honor) y
+# dinastía asentada (tu heredero hereda la corona; se sigue jugando con él).
+const ENDING_REIGN := "reinado"
+const ENDING_DYNASTY := "dinastia"
+const REIGN_MONTHS := 120
+const REIGN_MIN_HONOR := 60
+const NOT_REIGNING := -99999
+var reign_start := NOT_REIGNING   # mes en que empezó el reinado sin pérdidas
+var reign_castles := 0    # castillos de tu reino al empezar (perder alguno reinicia la cuenta)
 var _player_name := ""
 var _check_queued := false
 
@@ -31,9 +41,12 @@ func _ready() -> void:
 	MissionData.missions_changed.connect(queue_check)
 	ArmyData.armies_changed.connect(queue_check)
 	DynastyData.family_changed.connect(queue_check)
+	DynastyData.heir_succeeded.connect(_on_heir_succeeded)
 	TravelData.location_changed.connect(_on_location_changed)
 
 func reset() -> void:
+	reign_start = NOT_REIGNING
+	reign_castles = 0
 	achieved.clear()
 	visited_castles.clear()
 	visited_kingdoms.clear()
@@ -225,12 +238,45 @@ func check_endings() -> Dictionary:
 		if _married_into(other):
 			ending = _unification_ending(other)
 	if ending.is_empty():
+		ending = _reign_ending()
+	if ending.is_empty():
 		return {}
+	return _reach(ending)
+
+func _reach(ending: Dictionary) -> Dictionary:
 	ending_done = ending.id
 	pending_ending = ending
 	WorldEvents.record(ending.text, "", true)
 	ending_reached.emit(ending)
 	return ending
+
+## Reinado próspero: lleva la cuenta del reinado y devuelve el final si se cumple ({} si no).
+func _reign_ending() -> Dictionary:
+	var player: Character = GameManager.player_character
+	if player.role != Character.Role.REGENTE:
+		reign_start = NOT_REIGNING
+		return {}
+	var now := GameManager.months_elapsed()
+	var castles := 0
+	for c: Castle in MapData.castles:
+		if c.kingdom == GameManager.player_kingdom:
+			castles += 1
+	if reign_start == NOT_REIGNING or castles < reign_castles:   # empieza el reinado o se perdió un castillo: la cuenta vuelve a cero
+		reign_start = now
+	reign_castles = castles
+	if now - reign_start < REIGN_MONTHS or player.honor < REIGN_MIN_HONOR:
+		return {}
+	var text := "Durante %d años %s reina sobre %s sin perder un solo castillo. Las cosechas llenan los graneros, los caminos son seguros y el pueblo habla de una edad dorada." % [
+		REIGN_MONTHS / 12, player.full_name(), KingdomEnums.kingdom_name(GameManager.player_kingdom)]
+	return {"id": ENDING_REIGN, "title": "Una corona en paz", "text": text, "victory": true}
+
+## Dinastía asentada: un Regente muere y su heredero hereda la corona. La partida sigue con el heredero.
+func _on_heir_succeeded(old_role: int, heir: Character) -> void:
+	if not ending_done.is_empty() or old_role != Character.Role.REGENTE:
+		return
+	var text := "La corona pasa de padres a hijos sin derramar sangre: %s ciñe la corona de %s y tu casa queda asentada en el trono. Puedes seguir gobernando con tu heredero." % [
+		heir.full_name(), KingdomEnums.kingdom_name(GameManager.player_kingdom)]
+	_reach({"id": ENDING_DYNASTY, "title": "Una dinastía en el trono", "text": text, "victory": true})
 
 ## Casado con alguien de la casa del señor de ese reino.
 func _married_into(kingdom: int) -> bool:
@@ -283,7 +329,7 @@ func summary() -> Dictionary:
 func save_state() -> Dictionary:
 	return {"achieved": achieved.duplicate(), "visited_castles": visited_castles.duplicate(),
 		"visited_kingdoms": visited_kingdoms.duplicate(), "generation": generation,
-		"ending_done": ending_done, "player_name": _player_name}
+		"ending_done": ending_done, "player_name": _player_name, "reign_start": reign_start, "reign_castles": reign_castles}
 
 func load_state(data: Dictionary) -> void:
 	achieved.clear()
@@ -297,6 +343,8 @@ func load_state(data: Dictionary) -> void:
 		visited_kingdoms.append(int(k))
 	generation = int(data.get("generation", 1))
 	ending_done = str(data.get("ending_done", ""))
+	reign_start = int(data.get("reign_start", NOT_REIGNING))
+	reign_castles = int(data.get("reign_castles", 0))
 	pending_ending = {}
 	var player: Character = GameManager.player_character
 	_player_name = str(data.get("player_name", player.full_name() if player != null else ""))

@@ -127,7 +127,7 @@ func eligible(c: Dictionary) -> bool:
 		return false
 	if cond.has("max_rank") and p.rank() > int(cond.max_rank):
 		return false
-	if cond.has("min_fame") and p.fame < int(cond.min_fame):
+	if cond.has("min_fame") and p.renown() < int(cond.min_fame):
 		return false
 	if cond.has("min_honor") and p.honor < int(cond.min_honor):
 		return false

@@ -8,11 +8,33 @@ Resumen de las fases que faltan del plan de revisión. El detalle completo, con 
 | 2. Vida social | ✅ Hecha (con algunos repasos abajo) |
 | 3. Gestor de grupo y combate RPG | ✅ Hecha |
 | 4. Batallas campales con profundidad | ✅ Hecha (4A: oficiales, choques RPG, traición, botín · 4B: IA, dificultad, flancos y formaciones) |
+| 5. Sesión de noviembre de 2026 (v9–v10) | ✅ Hecha — detalle en «Royal Pain — Estado del Proyecto.md» |
+
+**Hecho en la sesión de noviembre de 2026** (resumen; el detalle está en el documento del proyecto):
+- **Combate y personajes:**
+  - técnicas con el tipo de daño del arma, árboles de arma por nivel y equipo al azar de los enemigos genéricos;
+  - iconos por tipo de daño y categoría, y conocimiento del rival (`IntelData`).
+- **Diplomacia y corte:**
+  - tratados propuestos por la IA, divorcio y bodas entre PNJ;
+  - reclamar el trono con guerra civil (el rey contraataca) y victorias del Regente;
+  - audiencias con el gobernante, pestaña «Reinos» con economía mensual e integrantes.
+- **Reputación y vida social:**
+  - honor y fama de −100 a 100 (camino villano), afinidad por honor y sucesos de reputación;
+  - interacciones voluntarias (con límites mensuales guardados en la partida) y diálogos sueltos con rótulo en el mapa.
+- **Mundo, acciones y batallas:**
+  - crecimiento del mundo (`WorldGrowth`);
+  - más acciones por nivel, Cancillería y cargo en la corte;
+  - campales con más pelotones (mínimo 4), más escolta y choques más decisivos;
+  - evento «Celos» retirado.
 
 **Lo que queda:**
-- **Quitar el evento "Celos"**, cuando el usuario lo pida.
-- **Reforzar el árbol del Defensor:** gana un 34% en espejo.
-- **Afinar el equilibrio de las campales jugando:** se midió con pocas simulaciones.
+- **Probarlo todo jugando:** nada de la sesión de noviembre se ha probado a mano todavía.
+- **Equilibrio** (medido con simulaciones cortas, afinar jugando):
+  - Estratega algo fuerte (56%) y Defensor algo flojo (41%) en espejo;
+  - nivel 14 contra 5 enemigos, más fácil que antes (66% frente a 31%);
+  - cuántos choques hacen falta para deshacer un pelotón (`WIN_DMG` y `ROUT_DMG` en `campal_encounters.gd`);
+  - ritmo de subida del mundo (`MONTHLY_XP` en `world_growth.gd`).
+- **Guerra civil:** el rey solo ataca castillos tuyos vecinos de los suyos.
 - **Probar a mano:** "Luchar / Resolver", el encuentro con viajeros y exportar/importar en "Mis personajes".
 - **Arte:** más retratos para los enemigos con 1–2 imágenes y fondos propios de montaña y bosque (`assets/backgrounds/`).
 - **Cierre inesperado de Godot al salir:** conocido, sin efecto en las partidas.
@@ -22,8 +44,8 @@ El resto de este documento es el detalle original de las fases (ya hechas), úti
 ---
 
 ## Repasos pequeños de la fase 2
-- **Celos:** el evento "Celos" (`soc_celos` en `scripts/resources/social_event_catalog.gd`) se mantiene por ahora; el usuario quiere quitarlo más adelante. Cuando se quite, en `tests/phase2b_test.gd` la comprobación "amante: puede haber celos" pasa a "sin celos".
-- **Frecuencia de decisiones:** con todos los sistemas, el 61% de los meses trae alguna decisión (objetivo ≤ 60%). Si se nota pesado, bajar un poco `MONTHLY_EVENT_CHANCE` en `event_catalog.gd` (hoy 0,2).
+- **Celos:** ✅ el evento "Celos" se retiró a petición del usuario; `tests/phase2b_test.gd` comprueba que ya no aparece.
+- **Frecuencia de decisiones:** ✅ 58% de los meses (objetivo ≤ 60%), con `MONTHLY_EVENT_CHANCE` en 0,1 tras añadir tratados y sucesos de reputación.
 - **Botín y lealtad:** ✅ conectado en la fase 4 (las batallas ganadas reparten botín).
 - **Por probar a mano:** el encuentro con un viajero en el juego y las ventanas de exportar e importar de "Mis personajes".
 

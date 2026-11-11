@@ -194,14 +194,30 @@ func resolve_pending_event(option_index: int, relation: Relationship = null) -> 
 	event_resolved.emit(text)
 	return text
 
+const LEVELS_PER_ACTION := 5      # +1 acción cada 5 niveles...
+const LEVEL_ACTIONS_MAX := 3      # ...hasta +3
+const COURT_POST_ACTIONS := 1     # un cargo en alguna corte (RoyalCourt)
+
+## Acciones extra del mes, por fuente: liderazgo, nivel, cancillería y cargo en la corte.
+func action_bonuses() -> Dictionary:
+	var out := {}
+	if player_character == null:
+		return out
+	out["liderazgo"] = int(player_character.leadership / 10)
+	out["nivel"] = mini(LEVEL_ACTIONS_MAX, player_character.level / LEVELS_PER_ACTION)
+	var home := MapData.get_castle_by_id(home_castle_id)
+	out["cancillería"] = int(home.building_value("cancilleria", "actions")) if home != null else 0
+	var court := get_node_or_null("/root/RoyalCourt")   # por ruta: RoyalCourt depende de GameManager
+	out["cargo en la corte"] = COURT_POST_ACTIONS if court != null and not court.posts.is_empty() else 0
+	return out
+
 func _recalculate_actions_per_turn() -> void:
 	if player_character == null:
 		actions_per_turn = 0
 		actions_remaining = 0
 		return
 	var base: int = ACTIONS_BASE_BY_ROLE.get(player_character.role, 1)
-	var bonus: int = int(player_character.leadership / 10)
-	actions_per_turn = base + bonus
+	actions_per_turn = base + action_bonuses().values().reduce(func(a, b): return a + b, 0)
 	actions_remaining = actions_per_turn
 	actions_changed.emit(actions_remaining, actions_per_turn)
 

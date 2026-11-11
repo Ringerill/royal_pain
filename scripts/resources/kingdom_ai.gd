@@ -159,11 +159,20 @@ static func recruit(castles: Array[Castle]) -> void:
 # deserciones este mes: [{castle, lost, reason}] (para las noticias).
 # player_castle_ids / player_upkeep: los castillos del jugador pagan su tropa con el multiplicador
 # de sus rasgos y habilidades (ver SkillEffects.upkeep_multiplier).
+## Previsión mensual de un castillo (las mismas cuentas que castle_economy, sin aplicarlas):
+## {"income": oro que recauda, "upkeep": paga de la tropa, "food": comida neta del mes}.
+static func castle_forecast(c: Castle, winter: bool, upkeep_factor: float = 1.0) -> Dictionary:
+	return {
+		"income": CASTLE_TAX_INCOME + int(c.building_value("mercado", "income")) + int(c.building_value("cancilleria", "income")),
+		"upkeep": ceili(c.garrison_size / float(UPKEEP_PER_SOLDIERS) * upkeep_factor),
+		"food": (WINTER_FOOD_PRODUCTION if winter else FOOD_PRODUCTION) - c.garrison_size / FOOD_PER_SOLDIERS,
+	}
+
 static func castle_economy(castles: Array[Castle], winter: bool, player_castle_ids: Array = [],
 		player_upkeep: float = 1.0) -> Array[Dictionary]:
 	var troubles: Array[Dictionary] = []
 	for c: Castle in castles:
-		c.gold += CASTLE_TAX_INCOME + int(c.building_value("mercado", "income"))   # el Mercado recauda más
+		c.gold += CASTLE_TAX_INCOME + int(c.building_value("mercado", "income")) + int(c.building_value("cancilleria", "income"))   # el Mercado (y la Cancillería) recaudan más
 		var factor := player_upkeep if c.castle_id in player_castle_ids else 1.0
 		var upkeep: int = ceili(c.garrison_size / float(UPKEEP_PER_SOLDIERS) * factor)
 		var unpaid := upkeep > c.gold

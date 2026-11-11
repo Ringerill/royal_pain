@@ -73,10 +73,10 @@ func _build_lessons() -> Array:
 			"intro": "Arriba, la línea de turnos: el más ágil actúa antes. PV = vida; PT = puntos de técnica (Atacar y Defender los recuperan).",
 			"steps": [{"text": "Prueba: tú y un compañero contra dos bandidos. Atacar → elige objetivo (←/→ o ratón).", "demo": "fight", "a": 2, "b": ["bandido", "bandido"]}]},
 		{"title": "Debilidades", "kind": "rpg",
-			"intro": "Cada arma hace un tipo de daño y cada armadura lo sufre o lo resiste: Débil ×1,4, Resiste ×0,6.",
+			"intro": "Tu arma marca tu tipo de daño (y el de tus técnicas); cada armadura lo sufre o lo resiste: Débil ×1,4, Resiste ×0,6.",
 			"steps": [
 				{"text": "La tabla (fila: tu daño; columna: su armadura).", "demo": "table"},
-				{"text": "Al elegir objetivo verás «Débil» o «Resiste» sobre cada rival.", "demo": "fight", "a": 1, "b": ["bandido", "infanteria_pesada"]},
+				{"text": "Del rival no sabes nada: golpéale, recibe sus golpes o analízalo. Lo descubierto se marca en su tarjeta (dorado = Débil, azul = Resiste).", "demo": "fight", "a": 1, "b": ["bandido", "infanteria_pesada"]},
 			]},
 		{"title": "Técnicas, cambiar y abandonar", "kind": "rpg",
 			"intro": "Técnicas: gastan PT (salen del árbol de habilidades). Cambiar: entra alguien de la reserva. Abandonar: rendirse (derrota sin heridas) o retirarse (puede fallar).",

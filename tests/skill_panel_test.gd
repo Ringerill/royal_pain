@@ -34,7 +34,7 @@ func _run() -> void:
 	for c: Character in [player, npc]:
 		var p: Control = Panel.open(root, c)
 		await process_frame
-		check(p._tabs.get_tab_count() == 3, "3 pestañas")
+		check(p._tabs.get_tab_count() == 4, "3 árboles + pestaña de arma")
 		var ok := true
 		for t in 3:
 			var cols := _cols(p, t)

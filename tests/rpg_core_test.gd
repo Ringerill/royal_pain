@@ -99,6 +99,7 @@ func _run() -> void:
 		var b := _char(F.DUELISTA, 5, 8)
 		b.set_meta(RpgStats.META_DAMAGE, DT.TAJO)
 		var e2 := EnemyCatalog.make_enemy("caballero_pesado", 5)
+		e2.set_meta(RpgStats.META_ARMOR, RpgStats.ArmorClass.PLACAS)   # el equipo es al azar: se fija Placas
 		var bm2 := _bm([b], [e2], {"seed": i})
 		var fb: RpgBattleManager.Fighter = bm2.fighter_of(b)
 		fb.next_time = 0.0

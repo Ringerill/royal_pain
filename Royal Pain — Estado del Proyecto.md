@@ -356,6 +356,107 @@ Plan completo en `docs/plan_revision.md`; lo que queda, en `docs/PENDIENTE.md`.
 - **Retratos:** 62 de hombre y 111 de mujer (unos 142 personajes por mundo, con 31 de reserva) y retratos de enemigos en `assets/portraits/enemies/<tipo>/`.
 - **Otros:** `.exe` de Windows (`builds/windows/RoyalPain.exe`), pruebas en `tests/` y guía para continuar en `docs/CONTINUAR.md`.
 
+### Tipos de daño, iconos y conocimiento del rival (v9)
+
+- **Las técnicas golpean con el tipo de daño del arma.** Solo fijan el suyo las que usan otro objeto: Disparo, Honda, Tirar piedras y Dardos emponzoñados (Proyectil), y Golpe y Empujón de escudo (Contundente).
+- **Iconos** (game-icons.net, CC BY 3.0; créditos en el glosario y en `assets/icons/game-icons/CREDITOS.txt`):
+  - **técnicas de daño:** el icono de su tipo de daño, que es el del arma de quien la usa: espada (Tajo), punta de lanza (Estocada), maza (Contundente) o arco (Proyectil);
+  - **el resto, por categoría:** Curación, Mejora, Protección, Debilitación, Mando y moral, y Pasiva (`SkillIcons.category_of`);
+  - se ven en el menú de técnicas, el árbol de habilidades y el gestor de grupo; en la creación de personaje, las de daño llevan un icono genérico porque el arma aún puede cambiar;
+  - también hay iconos de las armaduras;
+  - **para regenerarlos:** `python -I tools/build_skill_icons.py <carpeta icons del zip>`.
+- **Conocimiento del rival** (`IntelData`, se guarda con la partida):
+  - si te golpea, conoces su tipo de daño;
+  - si le golpeas, sabes cómo encaja ese tipo (Débil, Normal o Resiste);
+  - Analizar y técnicas parecidas lo revelan todo;
+  - los enemigos genéricos se recuerdan por tipo y equipo (un bandido con hacha y cuero), y los personajes con nombre, uno a uno; si cambian de equipo, lo que ya no es cierto se olvida.
+  - **En su tarjeta:** el icono de su arma y un marco por tipo de daño (dorado = Débil, azul = Resiste, oscuro = Normal, apagado = sin descubrir). Los avisos de «Débil» o «Resiste» al apuntar solo aparecen si ya lo sabes.
+- **Técnicas de arma** (`SkillTreeCatalog.WEAPON_TREES`):
+  - 7 familias: espada, hacha, estoque y daga, lanza y pica, maza, arco y ballesta;
+  - cada una tiene 4–5 técnicas en 4 escalones, que se desbloquean por nivel: 1, 4, 8 y 12 (`WEAPON_TIER_LEVEL`);
+  - no cuestan puntos y se tienen mientras se lleva un arma de esa familia; sin arma, cuenta la familia del tipo de luchador;
+  - se ven en la pestaña «Arma» del panel de habilidades.
+  - **Técnicas que pasaron a las armas:** 13 que nombraban un arma (Estocada al corazón, Hachazo, Martillazo, Puñalada…).
+  - **Lo que las sustituye en los árboles de luchador:** técnicas de estilo, apoyo o postura en el mismo sitio (Lectura perfecta, Guardia alta, Desafío, Postura inamovible, Aullido, Marcar presa…).
+  - **Partidas antiguas:** lo aprendido pasa al nodo nuevo, que cuesta lo mismo (`MOVED_TO_WEAPON`).
+  - **Maestrías:** las de un tipo de daño ahora dan daño con el arma que se lleve (`dmg_arma`).
+  - **Enemigos genéricos:** llevan un arma y una armadura al azar de la lista de su tipo (`EnemyCatalog.GEAR`; un arquero siempre lleva arco), con las técnicas de esa arma según su nivel y rango (normal hasta el escalón II, veterano III, élite IV; +1 desde el nivel 10), además de su kit fijo. Los jefes llevan un arma fija y todos los escalones. Su vida extra bajó (0,95 + 0,04 por nivel) porque ya tienen técnicas.
+  - **Prueba:** `tests/weapon_skills_test.gd`.
+- **Corrección:** el gestor de grupo no mostraba las técnicas de nadie; ahora salen con sus iconos.
+- **Prueba:** `tests/intel_icons_test.gd`. Las capturas salen con `tests/intel_shots.gd`.
+
+### Tratados de la IA, divorcio, bodas en la corte y el trono (v10)
+
+- **Tratados propuestos por la IA** (`TreatyData`): como mucho uno cada 4 meses, en forma de evento con opciones.
+  - **Paz:** un señor en guerra contigo te la ofrece. Si su reino es más débil, paga él 100 de oro; si no, te los pide.
+  - **Alianza:** un señor con afinidad 45 o más te la ofrece (desde Nobleza Baja).
+  - **Tributo:** un reino más fuerte y hostil exige 80 de oro. Si te niegas, te declara la guerra.
+  - Rechazar una propuesta enfría la relación.
+- **Divorcio:** botón «Divorciarse» en Relaciones.
+  - Cuesta 10 de honor y 1 acción.
+  - En una boda política, la casa del cónyuge rompe la alianza (afinidad −40); en una boda por amor, el señor de su reino lo desaprueba.
+  - Los hijos siguen siendo tuyos.
+- **Bodas entre PNJ:** cada mes hay un 6% de que dos personajes de la corte de un mismo reino se casen.
+  - Sale en las noticias y en su ficha («Casada con…»).
+  - A un casado no se le corteja.
+- **Reclamar el trono** (Duque, honor 50 o más, acción en el castillo):
+  - los señores de tu reino eligen bando por su afinidad contigo (apoyan con 20 o más);
+  - con más apoyos que rechazos te coronan sin lucha;
+  - si no, estalla una **guerra civil**: los castillos del rey pasan a ser atacables aunque sean de tu reino (`ArmyData.is_hostile`), y te coronas cuando no le queda ninguno.
+- **Victorias del Regente**, además de la conquista total:
+  - **«Una corona en paz»:** 10 años como Regente sin perder ningún castillo de tu reino, con honor 60 o más;
+  - **«Una dinastía en el trono»:** un Regente muere y su heredero hereda la corona. Sigues jugando con el heredero.
+- **Honor y fama de −100 a 100** (camino villano):
+  - con honor negativo, las hazañas dan **mala fama** (`Character.infamy()`);
+  - la mala fama baja la moral enemiga en combate (hasta −20) y sube la recaudación (hasta +20%);
+  - los señores honorables rechazan alianzas y bodas con un deshonrado (`RelationsData.refuses_dishonored`);
+  - el descenso por deshonor es por debajo de −50 y la deshonra total, a −100 (el honor se rehace en −60);
+  - los requisitos de ser conocido usan el renombre: |fama| (`Character.renown()`).
+  - **Prueba:** `tests/honor_fame_test.gd`.
+- **Afinidad por honor:** lo que ganas al tratar con alguien (regalos, conversaciones) se multiplica por ×1,5 con honor parecido y ×0,5 con honor opuesto (`RelationsData.honor_affinity_mult`). El honor de los PNJ sale de su personalidad: honorables y piadosos, alto; crueles, astutos y arrogantes, a veces negativo (`CharacterLoader.honor_for_personality`).
+- **Sucesos de reputación** (`ReputationEvents`, como mucho uno cada 3 meses):
+  - **intento de asesinato**, con mala fama o un señor muy enemistado: luchas, llamas a la guardia o pagas, y si vences sabes quién lo envió;
+  - **mala fama:** encargos sucios, campesinos que huyen, bandidos que ofrecen tributo;
+  - **buena fama:** te piden justicia, llegan voluntarios, los bardos cantan tus hazañas;
+  - **conflictos:** alguien de honor opuesto te desprecia en público (retarle, replicar o ignorarle).
+- **Ritmo de decisiones:** con los sucesos nuevos, los eventos genéricos bajan a 0,1 al mes; los meses con decisión quedan en un 58%.
+- **El mundo crece** (`WorldGrowth`):
+  - **nivel inicial** según rango, edad y poder del reino, con algo de azar: la corte empieza en torno al nivel 2 y los señores, al 6; quien aparece más tarde (herederos, señores nuevos) también recibe el suyo;
+  - **cada mes**, experiencia según rango × poder del reino × azar (la corte sube ~1 nivel al año al principio);
+  - **el séquito** gana la mitad de toda la experiencia que ganas tú (`Character.xp_hook`);
+  - los PNJ reparten solos sus puntos de atributo, y los de árbol se gastan al combatir;
+  - **partidas antiguas:** la primera vez que se cargan, el mundo se pone al día con los meses jugados.
+- **Rivales a tu altura:** el rival con nombre de un encuentro tiene tu nivel ±1, y la dificultad del evento lo sube o lo baja; los soldados genéricos de una batalla campal van **2 niveles por debajo de su comandante**.
+- **Prueba:** `tests/world_growth_test.gd`.
+- **Reinos** (botón «Reinos» o tecla K en el mapa, `scripts/ui/kingdom_panel.gd`): una pestaña por reino con su gobernante, su diplomacia (guerras y alianzas), sus castillos (guarnición, oro y comida) con los totales, y sus integrantes (rango, nivel, honor, afinidad o intimidad). De los demás reinos solo se ve lo que alcanzas a ver.
+- **Audiencia con el gobernante** (`RoyalCourt`), para cualquier rol:
+  - **cómo pedirla:** en persona en su castillo (1 acción) o por carta desde cualquier sitio (2 acciones, menos probable);
+  - **aceptación:** según afinidad, renombre, rango y suerte; si te rechaza, esperas 3 meses;
+  - **en la asamblea, un gesto:** presentar respetos, ofrecer un presente o halagar;
+  - **y un favor:** oro, tropas, perdón (por oro), clemencia (honor +10 a un deshonrado), un cargo en la corte (+20 de oro al mes), una boda con su casa o una alianza (si es de otro reino).
+- **Interacciones voluntarias** (`PersonalInteractions`, botones en Relaciones; una por persona al mes):
+  - **cónyuge:** pasar la velada; **amante:** encuentro discreto;
+  - **séquito:** entrenar juntos; **siervo:** mejorar su trato o hacerle trabajar duro;
+  - **prisionero:** interrogar (con o sin dureza); **rival:** provocarle o proponer una tregua;
+  - **conocido:** invitar a cenar.
+  - **beneficiosas:** pedir consejo al cónyuge (experiencia), llevar la casa juntos (oro), paseo a caballo con tu amante (vida y ánimo), encargar recados al séquito (oro) o pedirle que te enseñe (+1 a un atributo en que te supere), poner a cultivar a un siervo (comida), ganarte la confianza de un prisionero (más fácil reclutarlo), estudiar a un rival (experiencia y conoces sus debilidades) y pedir a un conocido que te presente a su señor (afinidad).
+- **Diálogos sueltos:** cada mes, con un 45% de probabilidad, alguien cercano te dice algo según vuestro lazo e intimidad (`DialogueCatalog.AMBIENT`, 124 frases); queda en las noticias.
+- **Más contenido:** 28 sucesos de lazo nuevos (4 por cónyuge, séquito, siervo, prisionero, amante, conocido y amigo), 4 de rivalidad y 6 de reputación (héroe y villano).
+- **Prueba:** `tests/court_test.gd`.
+- **Más acciones por mes** (`GameManager.action_bonuses`): además del rango y +1 por cada 10 de Liderazgo, +1 cada 5 niveles (hasta +3), la **Cancillería** (edificio nuevo del castillo de origen: +1, +1 y +2 acciones según el nivel, y desde el nivel 2, +15 de oro al mes para el castillo) y +1 por tener un cargo en alguna corte. La primera interacción del mes con tu cónyuge o tu séquito es gratis.
+- **Choques de las campales, más duros y decisivos** (`CampalEncounters`):
+  - **al menos 4 pelotones por bando** si cada uno puede tener 8 soldados o más (`BattleManager.MIN_UNITS_PER_SIDE`): un ejército de 40 forma 4 pelotones de 10 en vez de 2 de 20; los grandes siguen formando uno por cada 20 soldados, hasta 6;
+  - un escolta genérico por cada 5 soldados (antes 10), hasta 5 por grupo;
+  - el ganador causa ×1,6 bajas, más ×1,9 según la parte del grupo rival que cayó (arrasarlo: ×3,5); el perdedor sufre lo mismo;
+  - las tropas dan más vida a sus personajes (+2% por soldado, hasta +80%);
+  - el capitán genérico va 2 niveles por encima de la referencia, así sus soldados (2 por debajo de él) quedan al nivel de la batalla.
+- **Guerra civil, el rey contraataca:** cada mes, con un 35% de probabilidad, el rey moviliza la mitad de la guarnición de uno de sus castillos contra un castillo tuyo vecino; antes, un ejército suyo se habría unido a tu guarnición (`ArmyData.is_hostile`, `_civil_war_offensive`).
+- **Reinos con economía mensual:** ingresos, paga de la tropa y comida al mes de cada castillo, y el balance del reino (`KingdomAI.castle_forecast`).
+- **Diálogos sueltos con rótulo:** aparecen abajo en el mapa y se desvanecen solos, sin ventana.
+- **Los límites mensuales de las interacciones se guardan con la partida.**
+- **Evento «Celos» retirado**, a petición del usuario.
+- **Prueba:** `tests/treaty_marriage_test.gd`.
+
 ## Lo pendiente
 
 | Sistema | Estado | Notas |
@@ -363,7 +464,7 @@ Plan completo en `docs/plan_revision.md`; lo que queda, en `docs/PENDIENTE.md`.
 | Batalla táctica — mejoras | v2 hecha | Hechos: campo abierto, órdenes, clima, habilidades de mando, mapas variados. Pendiente: asedios de varios turnos de mapa y arte de unidades. |
 | Conquista de castillos | Hecha (v1) | Falta: efectos sobre la lealtad/relaciones del reino conquistado y recuperación por el reino original. |
 | Sucesión — ampliación | v2 hecha | Hechos: hijos, vejez, muerte del personaje y elección de heredero. Falta: reclamar el trono como Duque. |
-| Relaciones — ampliación | v2 hecha | Hechos: lealtad y traiciones, sucesos por cercanía, rivalidad, señores y facción, viajeros. Pendiente: quitar el evento "Celos" (decisión del usuario, más adelante). |
+| Relaciones — ampliación | v2 hecha | Hechos: lealtad y traiciones, sucesos por cercanía, rivalidad, señores y facción, viajeros. El evento "Celos" se retiró. |
 | Eventos — ampliación | v1 hecha | Faltan eventos encadenados, eventos ligados a relaciones entre personajes y efectos del alineamiento. |
 | Matrimonios — ampliación | v3 hecha | Hechos: hijos, viudez, varios cónyuges según rango y amantes. Falta: divorcio y matrimonios entre PNJ. |
 | Diplomacia — ampliación | v1 hecha | La IA ya declara guerras, paces y alianzas entre reinos. Falta: que la IA proponga tratados al jugador y más tipos de tratados/edictos. |

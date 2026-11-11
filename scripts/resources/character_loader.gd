@@ -142,7 +142,7 @@ static func make_random_character(role: int, gender: int, portrait_path: String 
 	c.apply_trait_and_equipment_modifiers()
 	c.pick_random_basics()   # una habilidad básica por rama de sus tres árboles
 
-	c.honor = randi_range(40, 70)
+	c.honor = honor_for_personality(c.personality)
 	c.gold = GOLD_BY_ROLE.get(role, 100)
 	c.age = random_age_for_role(role)
 	if portrait_path == "":
@@ -284,6 +284,7 @@ static func make_rival(player: Character, portrait_path: String = "", gender: in
 	c.combat = clampi(player.combat + randi_range(-RIVAL_STAT_SPREAD, RIVAL_STAT_SPREAD), 1, 20)
 	c.defense = clampi(player.defense + randi_range(-RIVAL_STAT_SPREAD, RIVAL_STAT_SPREAD), 1, 20)
 	c.agility = clampi(player.agility + randi_range(-RIVAL_STAT_SPREAD, RIVAL_STAT_SPREAD), 1, 20)
+	c.level = clampi(player.level + randi_range(-1, 1), 1, Character.MAX_LEVEL)   # a la altura del jugador, con azar
 	c.honor = randi_range(35, 65)
 	return c
 
@@ -295,3 +296,16 @@ static func make_test_character(char_name: String, role: int) -> Character:
 	c.defense = 5
 	c.agility = 5
 	return c
+
+## Honor de un personaje del mundo según su carácter: los honorables y piadosos, alto; los crueles,
+## arrogantes, astutos y ambiciosos pueden no tener ninguno (camino villano y afinidad por honor).
+const HONOR_BY_PERSONALITY := {
+	Character.Personality.HONORABLE: [60, 95], Character.Personality.PIADOSO: [50, 90], Character.Personality.LEAL: [40, 85],
+	Character.Personality.GENEROSO: [30, 80], Character.Personality.VALIENTE: [30, 80], Character.Personality.ROMANTICO: [20, 70],
+	Character.Personality.PRUDENTE: [20, 70], Character.Personality.COBARDE: [-30, 40], Character.Personality.AMBICIOSO: [-40, 50],
+	Character.Personality.ASTUTO: [-50, 40], Character.Personality.ARROGANTE: [-40, 40], Character.Personality.CRUEL: [-80, 10],
+}
+
+static func honor_for_personality(p: int) -> int:
+	var r: Array = HONOR_BY_PERSONALITY.get(p, [30, 70])
+	return randi_range(r[0], r[1])

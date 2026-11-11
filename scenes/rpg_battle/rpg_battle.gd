@@ -27,6 +27,7 @@ const PT_COLOR := Color("3f78a8")
 const TO_DEATH_COLOR := Color("e0503c")
 const WEAK_COLOR := Color("ffd25a")
 const RESIST_COLOR := Color("9fb4c8")
+const MENU_ICON := 16   # icono de las órdenes y técnicas (más grande alargaría los botones)
 const TGT_NAMES := {"enemy": "1 enemigo", "enemies": "todos", "random3": "al azar", "ally": "1 aliado",
 	"allies": "aliados", "self": "tú", "ko_ally": "caído"}
 
@@ -130,7 +131,7 @@ func _begin() -> void:
 	var keeper: Character = _owner if _owner != null else player_character
 	var bag: Dictionary = {} if keeper == null else (keeper.consumables.duplicate() if _practice else keeper.consumables)
 	var opts := {"to_the_death": CombatSetup.duel_to_death and is_campaign and not _practice, "can_flee": true,
-		"bag": bag, "enemy_bag": ConsumableCatalog.enemy_bag()}
+		"bag": bag, "enemy_bag": ConsumableCatalog.enemy_bag(), "intel_hook": IntelData.record}
 	if is_campaign and not _practice:
 		opts["loot_hook"] = func(r: Dictionary) -> void: ConsumableCatalog.grant_loot(bag, r)
 	mgr.setup(a, b, opts)
@@ -342,8 +343,7 @@ func _make_card(f, enemy: bool) -> Dictionary:
 	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	panel.gui_input.connect(_on_card_input.bind(f))
 	panel.mouse_entered.connect(_on_card_hover.bind(f))
-	panel.tooltip_text = "%s · Nv %d\nArma: %s · Armadura: %s%s" % [f.c.full_name(), f.c.level,
-		RpgStats.DAMAGE_NAMES[int(f.s.weapon)], RpgStats.ARMOR_NAMES[int(f.s.armor)], " + escudo" if f.s.shield else ""]
+	panel.tooltip_text = _card_tip(f)
 	var d := {"root": panel, "style": style}
 	var tag := Label.new()
 	tag.add_theme_font_size_override("font_size", 15)
@@ -370,6 +370,14 @@ func _make_card(f, enemy: bool) -> Dictionary:
 		tag.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 		d.portrait = tex
 		d.name = _small_label(box, 13)
+		# Lo que se sabe del rival: su tipo de daño y cómo encaja cada tipo (se rellena en _refresh_intel).
+		var intel := HBoxContainer.new()
+		intel.add_theme_constant_override("separation", 2)
+		intel.alignment = BoxContainer.ALIGNMENT_CENTER
+		intel.mouse_filter = Control.MOUSE_FILTER_PASS
+		box.add_child(intel)
+		d.intel = intel
+		d.intel_sig = ""
 		var hp := _bar(box, HP_COLOR)
 		d.hp = hp[0]
 		d.hp_label = hp[1]
@@ -395,7 +403,14 @@ func _make_card(f, enemy: bool) -> Dictionary:
 		row.add_child(info)
 		d.name = _small_label(info, 13)
 		d.name.custom_minimum_size.x = 80
-		d.level = _small_label(info, 11)
+		var lv_row := HBoxContainer.new()
+		lv_row.add_theme_constant_override("separation", 4)
+		lv_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		info.add_child(lv_row)
+		var w := int(f.s.weapon)
+		lv_row.add_child(SkillIcons.damage_icon(w, 16))
+		d.level = _small_label(lv_row, 11)
+		d.level.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var hp := _bar(col, HP_COLOR)
 		d.hp = hp[0]
 		d.hp_label = hp[1]
@@ -404,6 +419,56 @@ func _make_card(f, enemy: bool) -> Dictionary:
 		d.pt_label = pt[1]
 		d.status = _small_label(col, 11)
 	return d
+
+## Lo que el jugador sabe de un combatiente: los suyos, todo; los rivales, lo descubierto (IntelData).
+func _intel(f) -> Dictionary:
+	if f.side == 0:
+		var aff := []
+		for dt in 4:
+			aff.append(RpgStats.affinity(dt, int(f.s.armor), bool(f.s.shield)))
+		return {"weapon": int(f.s.weapon), "armor": int(f.s.armor), "shield": bool(f.s.shield), "aff": aff}
+	return IntelData.view(f.c, f.s)
+
+func _card_tip(f) -> String:
+	var v := _intel(f)
+	var lines := ["%s · Nv %d" % [f.c.full_name(), f.c.level]]
+	lines.append("Arma: %s" % (RpgStats.DAMAGE_NAMES[v.weapon] if v.weapon >= 0 else "?"))
+	var armor := "?"
+	if v.armor >= 0:
+		armor = RpgStats.ARMOR_NAMES[v.armor] + (" + escudo" if v.shield else "")
+	lines.append("Armadura: %s" % armor)
+	var weak := []
+	var resist := []
+	for dt in 4:
+		if v.aff[dt] == RpgStats.Affinity.DEBIL:
+			weak.append(RpgStats.DAMAGE_NAMES[dt])
+		elif v.aff[dt] == RpgStats.Affinity.RESISTE:
+			resist.append(RpgStats.DAMAGE_NAMES[dt])
+	if not weak.is_empty():
+		lines.append("Débil a: " + ", ".join(weak))
+	if not resist.is_empty():
+		lines.append("Resiste: " + ", ".join(resist))
+	if f.side == 1 and -1 in v.aff:
+		lines.append("Descubre más golpeándole, recibiendo sus golpes o analizándolo.")
+	return "\n".join(lines)
+
+func _refresh_intel(f, d: Dictionary) -> void:
+	var v := _intel(f)
+	var sig := str(v)
+	if sig == d.intel_sig:
+		return
+	d.intel_sig = sig
+	for ch in d.intel.get_children():
+		ch.queue_free()
+	var w := SkillIcons.damage_icon(v.weapon, 18)
+	w.tooltip_text = "Ataca con: " + (RpgStats.DAMAGE_NAMES[v.weapon] if v.weapon >= 0 else "?")
+	d.intel.add_child(w)
+	var sep := VSeparator.new()
+	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	d.intel.add_child(sep)
+	for dt in 4:
+		d.intel.add_child(SkillIcons.affinity_badge(dt, v.aff[dt], 22))
+	d.root.tooltip_text = _card_tip(f)
 
 const PARTY_PORTRAIT_SIZE := Vector2(84, 84)
 const UPPER_BODY_WIDTH := 2.4    # ancho del recorte en «caras» (hombros incluidos)
@@ -484,6 +549,8 @@ func _refresh() -> void:
 			d.pt.value = f.pt
 			d.pt_label.text = "%d PT" % f.pt
 			d.level.text = "Nv %d · %s" % [f.c.level, RpgStats.DAMAGE_NAMES[int(f.s.weapon)]]
+		if d.has("intel"):
+			_refresh_intel(f, d)
 		var st := _status_short(f)
 		if not f.up():
 			st = "Muerto" if f.dead else "Fuera de combate"
@@ -623,6 +690,7 @@ func _show_main_menu() -> void:
 	var dt := int(f.s.weapon)
 	var first := _cmd(grid, "Atacar (A)", KEY_A, "Golpe con el arma (%s). Recupera PT." % RpgStats.DAMAGE_NAMES[dt],
 		func(): _choose_target({"type": "atacar"}, mgr.active_of(1), dt, {}))
+	SkillIcons.set_button_icon(first, SkillIcons.texture(SkillIcons.DAMAGE[dt]), SkillIcons.DAMAGE_COLORS[dt], MENU_ICON)
 	var techs: Array = mgr.techniques_of(f)
 	_cmd(grid, "Técnicas (T)", KEY_T, "%d técnicas · %d PT" % [techs.size(), f.pt], _show_techniques, techs.is_empty())
 	_cmd(grid, "Defender (D)", KEY_D, "Menos daño hasta tu turno y recuperas PT.", func(): _player_do({"type": "defender"}))
@@ -640,6 +708,8 @@ func _back_button() -> void:
 func _aff_hint(f, t, dt: int, fx: Dictionary) -> String:
 	if t == null or t.side == f.side or dt < 0:   # dt < 0: objeto, sin afinidad
 		return ""
+	if t.side == 1 and int(_intel(t).aff[dt]) < 0:   # aún no sabes cómo encaja ese tipo
+		return "?"
 	match mgr.affinity_of(f, t, dt, fx):
 		RpgStats.Affinity.DEBIL:
 			return "Débil"
@@ -673,7 +743,9 @@ func _show_techniques() -> void:
 		if pow > 0.0 and tgt in ["enemy", "enemies", "random3"]:
 			var ref = _ref_target(f)
 			var hint := _aff_hint(f, ref, dt, fx)
-			if not hint.is_empty():
+			if hint == "?":
+				tip += " Aún no sabes cómo lo encaja %s." % ref.c.full_name()
+			elif not hint.is_empty():
 				tip += " %s ante %s." % [hint, ref.c.full_name()]
 		var ok: bool = f.pt >= int(n.get("pt", 0)) and not mgr.valid_targets(f, n).is_empty()
 		var id: String = n.id
@@ -683,6 +755,7 @@ func _show_techniques() -> void:
 			else:
 				_player_do({"type": "tecnica", "node": id})
 		var b := _cmd(cmd_box, text, KEY_NONE, tip, cb, not ok)
+		SkillIcons.set_node_button_icon(b, id, f.c, MENU_ICON)
 		if ok and first == null:
 			first = b
 	_back_button()
@@ -768,7 +841,12 @@ func _mark_targets() -> void:
 		d.tag.text = ("▼ " + hint) if t == cur else hint
 		d.tag.add_theme_color_override("font_color", WEAK_COLOR if hint == "Débil" else (RESIST_COLOR if hint == "Resiste" else Color.WHITE))
 	var h := _aff_hint(_acting, cur, _targeting.dt, _targeting.fx) if _acting != null else ""
-	hint_label.text = "%s%s · ←/→ cambia, Aceptar confirma." % [cur.c.full_name(), (": " + h + (" (×1,4)" if h == "Débil" else " (×0,6)")) if not h.is_empty() else ""]
+	var aff_txt := ""
+	if h == "?":
+		aff_txt = ": efecto desconocido"
+	elif not h.is_empty():
+		aff_txt = ": " + h + (" (×1,4)" if h == "Débil" else " (×0,6)")
+	hint_label.text = "%s%s · ←/→ cambia, Aceptar confirma." % [cur.c.full_name(), aff_txt]
 
 func _cycle_target(step: int) -> void:
 	var n: int = _targeting.targets.size()

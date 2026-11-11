@@ -513,7 +513,7 @@ func _do_push(actor: Character, target: Character) -> String:
 
 func _do_retreat(actor: Character, target: Character, prefix: String) -> void:
 	if randf() < retreat_chance(actor, target):
-		actor.honor = clampi(actor.honor - RETREAT_HONOR_COST, 0, 100)
+		actor.honor = clampi(actor.honor - RETREAT_HONOR_COST, Character.HONOR_MIN, Character.HONOR_MAX)
 		_end_duel(null, "%s logra huir del combate (−%d de honor)." % [actor.full_name(), RETREAT_HONOR_COST])
 	else:
 		combat_event.emit("retreat_fail", actor, actor, 0)
@@ -598,7 +598,7 @@ func _apply_duel_results(winner: Character, surrendered: bool = false) -> void:
 	loser.register_duel_loss()
 	# Rendirse evita la herida de caer, pero cuesta más honor y un rescate.
 	if surrendered:
-		loser.honor = clampi(loser.honor - SURRENDER_EXTRA_HONOR_COST, 0, 100)
+		loser.honor = clampi(loser.honor - SURRENDER_EXTRA_HONOR_COST, Character.HONOR_MIN, Character.HONOR_MAX)
 		var ransom: int = mini(SURRENDER_RANSOM, loser.gold)
 		loser.gold -= ransom
 		winner.gold += ransom

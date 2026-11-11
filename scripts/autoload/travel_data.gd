@@ -295,7 +295,7 @@ func audience_blocker(castle: Castle) -> String:
 		return "Estáis en guerra: %s no te recibiría más que encadenado." % lord.person_name
 	if lord.affinity < AUDIENCE_MIN_AFFINITY:
 		return "%s no quiere ni oír tu nombre (afinidad %d)." % [lord.person_name, lord.affinity]
-	if player.rank() < Character.rank_of(Character.Role.CABALLERO) and player.fame < AUDIENCE_LOW_RANK_FAME:
+	if player.rank() < Character.rank_of(Character.Role.CABALLERO) and player.renown() < AUDIENCE_LOW_RANK_FAME:
 		return "Un señor no recibe a cualquiera: necesitas %d de fama (tienes %d) o ser Caballero." % [AUDIENCE_LOW_RANK_FAME, player.fame]
 	return ""
 
@@ -364,7 +364,7 @@ func fealty_blocker(castle: Castle) -> String:
 		return "No puedes cambiar de bando en mitad de un asedio."
 	if lord.at_war:
 		return "Estás en guerra con %s." % lord.person_name
-	if not player.role in [Character.Role.CAMPESINO, Character.Role.INAFILIADO] and lord.affinity < FEALTY_MIN_AFFINITY and player.fame < FEALTY_MIN_FAME:
+	if not player.role in [Character.Role.CAMPESINO, Character.Role.INAFILIADO] and lord.affinity < FEALTY_MIN_AFFINITY and player.renown() < FEALTY_MIN_FAME:
 		return "%s no se fía de ti: necesitas %d de afinidad (tienes %d) o %d de fama." % [
 			lord.person_name, FEALTY_MIN_AFFINITY, lord.affinity, FEALTY_MIN_FAME]
 	return ""
@@ -408,7 +408,7 @@ func swear_fealty(castle: Castle) -> Dictionary:
 	var old_kingdom := GameManager.player_kingdom
 	var text := "Hincas la rodilla ante %s y le juras lealtad." % lord.person_name
 	if cost > 0:
-		player.honor = clampi(player.honor - cost, 0, 100)
+		player.honor = clampi(player.honor - cost, Character.HONOR_MIN, Character.HONOR_MAX)
 		text += " Rompes tu juramento anterior: −%d de honor." % cost
 	var old_liege := RelationsData.get_relation(old_liege_name)
 	if old_liege != null and old_liege != lord and cost > 0:

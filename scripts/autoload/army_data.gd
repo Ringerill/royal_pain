@@ -147,6 +147,42 @@ func is_player_defended(castle: Castle) -> bool:
 	var home := castle.castle_id == GameManager.home_castle_id and player.role != Character.Role.INAFILIADO
 	return home or castle.owner_name == player.full_name()
 
+## Castillo enemigo para ese ejército: de otro reino o, en una guerra civil, del rey al que disputas la corona.
+func is_hostile(army: Army, castle: Castle) -> bool:
+	if castle == null:
+		return false
+	if castle.kingdom != army.kingdom:
+		return true
+	if is_player_army(army):
+		return RelationsData.is_rebel_target(castle)
+	# Guerra civil: los ejércitos del rey atacan los castillos del jugador aunque sean del mismo reino.
+	return not RelationsData.civil_war_against.is_empty() and army.owner_name == RelationsData.civil_war_against \
+		and is_player_defended(castle)
+
+const CIVIL_WAR_ATTACK_CHANCE := 0.35   # por mes, si el rey tiene tropa y ningún ejército en marcha
+const CIVIL_WAR_MIN_GARRISON := 40
+const CIVIL_WAR_ARMY_SHARE := 0.5
+
+## Guerra civil: el rey contraataca desde sus castillos contra los tuyos vecinos.
+func _civil_war_offensive() -> void:
+	var king := RelationsData.civil_war_against
+	if king.is_empty() or armies.any(func(a: Army) -> bool: return a.owner_name == king) or randf() >= CIVIL_WAR_ATTACK_CHANCE:
+		return
+	for origin: Castle in RelationsData.castles_of(king):
+		if origin.garrison_size < CIVIL_WAR_MIN_GARRISON:
+			continue
+		for cid in origin.connected_castle_ids:
+			var target: Castle = MapData.get_castle_by_id(cid)
+			if target == null or not is_player_defended(target):
+				continue
+			var size := int(origin.garrison_size * CIVIL_WAR_ARMY_SHARE)
+			origin.garrison_size -= size
+			var army := create_army(king, origin.kingdom, size, origin.castle_id)
+			set_destination(army, target.castle_id)
+			_add_event("Guerra civil: %s moviliza %d soldados desde %s contra tu castillo de %s. ¡Va hacia tu castillo!" % [
+				king, size, origin.castle_name, target.castle_name], target.castle_id)
+			return
+
 func set_destination(army: Army, destination_castle_id: String) -> bool:
 	if not army.is_idle():
 		return false
@@ -155,7 +191,7 @@ func set_destination(army: Army, destination_castle_id: String) -> bool:
 		return false
 	# Un campesino no lleva ejércitos contra nadie (solo lucha si lo llaman a filas).
 	var target_castle: Castle = MapData.get_castle_by_id(destination_castle_id)
-	if is_player_army(army) and target_castle != null and target_castle.kingdom != army.kingdom \
+	if is_player_army(army) and target_castle != null and is_hostile(army, target_castle) \
 			and not CombatSetup.battle_blocker(GameManager.player_character).is_empty():
 		return false
 	# Habilidades del comandante: Viajero permite marchar a 2 saltos; Paso Invernal evita
@@ -171,7 +207,7 @@ func set_destination(army: Army, destination_castle_id: String) -> bool:
 
 	# Diplomacia: marchar contra un señor sin guerra declarada (o contra un aliado) tiene consecuencias.
 	var target: Castle = MapData.get_castle_by_id(destination_castle_id)
-	if is_player_army(army) and target != null and target.kingdom != army.kingdom:
+	if is_player_army(army) and target != null and is_hostile(army, target):
 		var note: String = RelationsData.on_player_marches_against(target.owner_name)
 		if not note.is_empty():
 			_add_event(note, target.castle_id)
@@ -302,6 +338,7 @@ func _run_kingdom_ai() -> void:
 			RelationsData.on_attacked_by(origin.owner_name)
 		_add_event("%s moviliza %d soldados desde %s hacia %s.%s" % [
 			origin.owner_name, plan.size, origin.castle_name, target.castle_name, warning], target.castle_id)
+	_civil_war_offensive()
 
 func _resolve_arrival(army: Army) -> void:
 	var destination: Castle = MapData.get_castle_by_id(army.destination_castle_id)
@@ -313,7 +350,7 @@ func _resolve_arrival(army: Army) -> void:
 	army.current_castle_id = destination.castle_id
 	army.destination_castle_id = ""
 
-	if destination.kingdom == army.kingdom:
+	if not is_hostile(army, destination):
 		if is_player_army(army):
 			# El jugador conserva su ejército (para reunir fuerzas); si ya tenía otro allí, se juntan.
 			merge_armies(destination.castle_id)
@@ -397,7 +434,7 @@ func resolve_battle(army: Army, attacker_won: bool, attacker_survivors: int, def
 			var loot := int(castle.gold * LOOT_FRACTION)
 			castle.gold -= loot
 			player.gold += loot
-			player.honor = clamp(player.honor + VICTORY_HONOR, 0, 100)
+			player.honor = clamp(player.honor + VICTORY_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 			player.add_fame(FAME_CONQUEST)
 			lines.append("Ganas %d de honor y %d de fama, y saqueas %d de oro." % [VICTORY_HONOR, FAME_CONQUEST, loot])
 			var grudge: String = RelationsData.on_player_conquered(old_owner)
@@ -414,7 +451,7 @@ func resolve_battle(army: Army, attacker_won: bool, attacker_survivors: int, def
 		if player_attacking:
 			_apply_player_defeat(lines)
 		elif player_defending and player != null:
-			player.honor = clamp(player.honor + VICTORY_HONOR, 0, 100)
+			player.honor = clamp(player.honor + VICTORY_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 			player.add_fame(FAME_DEFENSE)
 			lines.append("Defendiste tu castillo: ganas %d de honor y %d de fama." % [VICTORY_HONOR, FAME_DEFENSE])
 			_grant_command_experience(lines)
@@ -475,7 +512,7 @@ func _apply_player_defeat(lines: Array[String]) -> void:
 	if player == null:
 		return
 	LoyaltyData.note_all("defeat")
-	player.honor = clamp(player.honor - DEFEAT_HONOR, 0, 100)
+	player.honor = clamp(player.honor - DEFEAT_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 	player.add_fame(FAME_DEFEAT)
 	lines.append("Pierdes %d de honor y algo de fama." % DEFEAT_HONOR)
 	if RoleProgression.check_dishonor_demotion(player):
@@ -610,7 +647,7 @@ func _inviter_for(lord: String, lord_kingdom: int, enemy_kingdom: int) -> Dictio
 		score = 100.0 + r.affinity
 	elif r.affinity >= INVITE_MIN_AFFINITY or r.affection >= INVITE_MIN_INTIMACY:
 		score = 50.0 + r.affinity
-	elif lord_kingdom == _zone_kingdom() and (player.fame >= INVITE_MIN_FAME or player.role == Character.Role.INAFILIADO):
+	elif lord_kingdom == _zone_kingdom() and (player.renown() >= INVITE_MIN_FAME or player.role == Character.Role.INAFILIADO):
 		score = 10.0 + player.fame
 	# Alguien de su corte que te conoce bien puede hablar por ti.
 	for c: Relationship in RelationsData.courtiers(lord_kingdom):
@@ -751,7 +788,7 @@ func apply_betrayal(witnesses: Array[Character], new_commander: Character) -> St
 		if welcome != null:
 			welcome.adjust(BETRAYAL_NEW_SIDE)
 			welcome.adjust_affection(BETRAYAL_NEW_SIDE)
-	player.honor = clampi(player.honor - BETRAYAL_HONOR, 0, 100)
+	player.honor = clampi(player.honor - BETRAYAL_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 	player.add_fame(-BETRAYAL_FAME)
 	var text := "Traicionas a tu bando: honor −%d, fama −%d." % [BETRAYAL_HONOR, BETRAYAL_FAME]
 	if not names.is_empty():

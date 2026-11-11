@@ -162,6 +162,7 @@ func make_event_foe(spec: Dictionary, player: Character) -> Character:
 	var power := int(spec.get("power", 0))
 	foe.combat = clampi(foe.combat + power, 1, 20)
 	foe.defense = clampi(foe.defense + power, 1, 20)
+	foe.level = clampi(foe.level + power, 1, Character.MAX_LEVEL)   # la dificultad del evento también sube o baja su nivel
 	if spec.has("name"):
 		foe.first_name = str(spec.name)
 		foe.last_name = ""

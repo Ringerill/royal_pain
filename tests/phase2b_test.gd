@@ -60,7 +60,7 @@ func _run() -> void:
 	check(not "soc_momento_intimo" in low and "soc_momento_intimo" in high, "momento íntimo solo con Íntimos")
 	check(not "soc_confidencia" in low and "soc_confidencia" in high, "confidencias desde Confidente")
 	check(high.size() > low.size(), "más intimidad, más sucesos (%d > %d)" % [high.size(), low.size()])
-	check(not "soc_celos" in high, "celos solo con cónyuge o amante")
+	check(not "soc_celos" in high, "el evento «Celos» ya no existe")
 	var e = SE.bond_event(r, "soc_momento_intimo")
 	var before: int = r.affection
 	r.affection = 80; before = 80
@@ -71,7 +71,7 @@ func _run() -> void:
 	_resolve(e, 1)
 	check(p.gold > g0 and r.affection < 90, "vender una confidencia da oro y enfría")
 	r.romance = true
-	check(SE.bond_kinds(r).has("lover") and not SE.bond_event(r, "soc_celos").is_empty(), "amante: puede haber celos")
+	check(SE.bond_kinds(r).has("lover") and SE.bond_event(r, "soc_celos").is_empty(), "amante: sin celos (evento retirado)")
 	r.romance = false
 	r.affection = 50
 	e = SE.bond_event(r, "soc_regalo")

@@ -30,7 +30,7 @@ var last_event_month := -1000
 var cooldowns: Dictionary = {}       # nombre -> mes del último suceso que protagonizó
 var deeds: Array = []                # [{type: victoria|deshonra|boda, m}]
 var seen_victory := -1
-var last_honor := -1
+var last_honor := -999   # -999: aún sin medir (el honor va de −100 a 100)
 var was_married := false
 var last_battle: Dictionary = {}     # {names[], won, m}
 var scheduled_duels: Array = []      # [{name, due}]
@@ -48,7 +48,7 @@ func reset() -> void:
 	deeds = []
 	seen_victory = RelationsData.last_victory_month
 	var p: Character = GameManager.player_character
-	last_honor = p.honor if p != null else -1
+	last_honor = p.honor if p != null else -999
 	was_married = RelationsData.is_married()
 	last_battle = {}
 	scheduled_duels = []
@@ -60,11 +60,44 @@ func _now() -> int:
 
 # --- Mes ---
 
+## Diálogos sueltos: cada mes, con cierta probabilidad, alguien cercano te dice algo según vuestro lazo
+## y vuestra intimidad (DialogueCatalog.AMBIENT). No pide decisión: queda en las noticias.
+const AMBIENT_CHANCE := 0.45
+signal ambient_said(text: String)
+
+func ambient_chatter(force := false) -> String:
+	var p: Character = GameManager.player_character
+	if p == null or (not force and randf() >= AMBIENT_CHANCE):
+		return ""
+	var pool: Array = []
+	for r: Relationship in RelationsData.relations:
+		if r.character == null:
+			continue
+		if r.kind == Relationship.Kind.RIVAL_DUELO or (RelationsData.intimacy_tier(r.affection) >= 1 and (RelationsData.person_present(r) or RelationsData.in_area(r))):
+			pool.append(r)
+	if pool.is_empty():
+		return ""
+	var r: Relationship = pool.pick_random()
+	var kind := "rival" if r.kind == Relationship.Kind.RIVAL_DUELO else ""
+	var tier := int(r.rivalry_stage()) + 1 if kind == "rival" else RelationsData.intimacy_tier(r.affection)
+	if kind.is_empty():
+		var kinds := bond_kinds(r)
+		kind = kinds[0] if not kinds.is_empty() else "courtier"
+	var line := DialogueCatalog.ambient_line(kind, tier)
+	if line.is_empty():
+		return ""
+	line = line.replace("{name}", r.person_name).replace("{player}", p.first_name)
+	var text := "%s: «%s»" % [r.person_name, line]
+	WorldEvents.record(text, "", true)
+	ambient_said.emit(text)   # el mapa lo muestra en un rótulo que se desvanece solo (sin ventana)
+	return text
+
 func _on_month_passed(_month: int, _year: int) -> void:
 	var p: Character = GameManager.player_character
 	if not GameManager.is_game_active or p == null:
 		return
 	_track_deeds(p)
+	ambient_chatter()
 	recent_busy.append(not GameManager.pending_event.is_empty() or not GameManager.event_queue.is_empty())
 	if recent_busy.size() > PACING_WINDOW:
 		recent_busy.pop_front()
@@ -81,7 +114,7 @@ func _track_deeds(p: Character) -> void:
 	if RelationsData.last_victory_month > seen_victory:
 		seen_victory = RelationsData.last_victory_month
 		deeds.append({"type": "victoria", "m": now})
-	if last_honor >= 0 and p.honor <= last_honor - DISHONOR_DROP:
+	if last_honor != -999 and p.honor <= last_honor - DISHONOR_DROP:
 		deeds.append({"type": "deshonra", "m": now})
 	last_honor = p.honor
 	if RelationsData.is_married() and not was_married:
@@ -387,7 +420,7 @@ func load_state(data: Dictionary) -> void:
 	cooldowns = data.get("cooldowns", {}).duplicate()
 	deeds = data.get("deeds", []).duplicate(true)
 	seen_victory = int(data.get("seen_victory", RelationsData.last_victory_month))
-	last_honor = int(data.get("last_honor", -1))
+	last_honor = int(data.get("last_honor", -999))
 	was_married = bool(data.get("married", RelationsData.is_married()))
 	last_battle = data.get("battle", {}).duplicate(true)
 	scheduled_duels = data.get("duels", []).duplicate(true)

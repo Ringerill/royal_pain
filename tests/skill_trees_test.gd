@@ -53,8 +53,9 @@ func _run() -> void:
 	for n: Dictionary in S.all_nodes():
 		if n.tree == S.TREE_BOSS:
 			continue
-		var cost_ok: bool = int(n.cost) == [0, 1, 1, 2, 3][n.tier]
-		var req_ok: bool = n.tier == 1 or (n.req.size() + n.req_any.size() > 0)
+		var weapon: bool = n.tree in S.WEAPON_TREES   # técnicas de arma: por nivel, sin coste ni requisitos
+		var cost_ok: bool = int(n.cost) == (0 if weapon else [0, 1, 1, 2, 3][n.tier])
+		var req_ok: bool = n.tier == 1 or weapon or (n.req.size() + n.req_any.size() > 0)
 		for r in n.req + n.req_any:
 			var rn := S.node(r)
 			req_ok = req_ok and not rn.is_empty() and rn.tree == n.tree and rn.tier < n.tier

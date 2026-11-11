@@ -168,6 +168,11 @@ var to_the_death := false
 var can_flee := true
 var item_hook := Callable()
 var loot_hook := Callable()
+# Lo que el bando 0 (el jugador) descubre del rival: intel_hook.call(tipo, Character, stats, tipo_daño, afinidad)
+# con tipo "weapon" (te golpea con su arma), "aff" (le golpeas: afinidad base de ese tipo) o "all" (analizado).
+# Lo conecta la escena (IntelData.record); sin gancho (simulaciones) no se registra nada.
+var intel_hook := Callable()
+const INFAMY_FEAR := 0.2   # moral que pierde el rival por punto de mala fama del bando (−20 con −100 de fama)
 var bags := [{}, {}]   # consumibles de cada bando (id -> cantidad); el 0 es la bolsa del jugador
 var rng := RandomNumberGenerator.new()
 
@@ -177,6 +182,7 @@ func setup(side_a: Array, side_b: Array, opts: Dictionary = {}) -> void:
 	can_flee = opts.get("can_flee", true)
 	item_hook = opts.get("item_hook", Callable())
 	loot_hook = opts.get("loot_hook", Callable())
+	intel_hook = opts.get("intel_hook", Callable())
 	bags = [opts.get("bag", {}), opts.get("enemy_bag", {})]
 	if opts.has("seed"):
 		rng.seed = int(opts.seed)
@@ -204,9 +210,13 @@ func setup(side_a: Array, side_b: Array, opts: Dictionary = {}) -> void:
 			f.next_time = f.interval() * (1.0 + rng.randf() * START_JITTER)
 			fighters.append(f)
 	_scale_generic_groups()
+	var dread := [0, 0]   # mala fama de cada bando (la mayor): asusta al rival
+	for f: Fighter in fighters:
+		dread[f.side] = maxi(dread[f.side], f.c.infamy())
 	for f: Fighter in fighters:   # pasivas de grupo: iniciativa, moral propia y miedo del rival
 		f.next_time *= 1.0 - minf(INIT_MAX, _side_fx(f.side, "ally_init"))
-		f.morale = clampi(f.morale + roundi(_side_fx(f.side, "ally_morale") - _side_fx(1 - f.side, "fear")), 0, 100)
+		var fear: float = _side_fx(1 - f.side, "fear") + int(dread[1 - f.side]) * INFAMY_FEAR
+		f.morale = clampi(f.morale + roundi(_side_fx(f.side, "ally_morale") - fear), 0, 100)
 	_log("¡Comienza el combate!")
 
 # --- Consultas ---
@@ -297,6 +307,8 @@ func base_damage(att: Fighter, def: Fighter, pow: float, dt: int, fx: Dictionary
 	if def.has("debilitado"):
 		dfn *= DEBILITADO_MULT
 	var mult := 1.0 + att.fx("dmg_t%d" % dt) + _side_fx(att.side, "ally_dmg")
+	if dt == int(att.s.weapon):   # maestrías: más daño con el arma que se lleva
+		mult += att.fx("dmg_arma")
 	if att.has("furia"):
 		mult += FURIA_DMG
 	if att.has("inspirado"):
@@ -540,6 +552,7 @@ func _strike(att: Fighter, def: Fighter, pow: float, dt: int, fx: Dictionary, in
 	att.first_sure_used = true
 	h.hit = true
 	h.aff = affinity_of(att, def, dt, fx)
+	_learn_from_hit(att, def, dt)
 	var dmg := base_damage(att, def, pow, dt, fx) * (1.0 + rng.randf_range(-VARIANCE, VARIANCE))
 	if rng.randf() < crit_chance(att, fx):
 		if def.fx("crit_ward") > 0 and not def.crit_ward_used:
@@ -641,6 +654,17 @@ func _add_status(t: Fighter, st: String, turns_: int, src: Fighter) -> void:
 	# Lo que se pone uno mismo en su turno dura turns_ turnos completos a partir del siguiente.
 	var extra := 1 if t == current and st != "guardia" else 0
 	t.statuses[st] = {"turns": turns_ + extra, "src": src, "power": src.fx("bleed_bonus") if src else 0.0}
+	if st == "analizado" and t.side == 1 and intel_hook.is_valid():
+		intel_hook.call("all", t.c, t.s, -1, -1)
+
+## Descubrimientos por golpe conectado (solo entre el jugador y el bando rival).
+func _learn_from_hit(att: Fighter, def: Fighter, dt: int) -> void:
+	if not intel_hook.is_valid() or att.side == def.side:
+		return
+	if att.side == 0:   # le golpeas: aprendes cómo encaja ese tipo (sin estados temporales)
+		intel_hook.call("aff", def.c, def.s, dt, RpgStats.affinity(dt, def.s.armor, def.s.shield))
+	elif dt == int(att.s.weapon):   # te golpea con su arma: aprendes su tipo de daño
+		intel_hook.call("weapon", att.c, att.s, dt, -1)
 
 func _try_status(att: Fighter, def: Fighter, st: String, chance: float, turns_: int) -> bool:
 	if st in ["derribado", "desequilibrado"] and def.fx("immune_derribo") > 0:

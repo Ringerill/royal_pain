@@ -94,7 +94,9 @@ func _run() -> void:
 				c.set_meta(RpgStats.META_DAMAGE, dt)
 			var foes: Array = []
 			for k in WEAK_TEST_FOES:
-				foes.append(EnemyCatalog.make_enemy("soldado", MIRROR_LEVEL + WEAK_TEST_LEVEL_UP))
+				var sol := EnemyCatalog.make_enemy("soldado", MIRROR_LEVEL + WEAK_TEST_LEVEL_UP)
+				sol.set_meta(RpgStats.META_ARMOR, RpgStats.ArmorClass.MALLA)   # equipo al azar: se fija Malla
+				foes.append(sol)
 			wins += 1 if _fight(a, foes).winner == 0 else 0
 		print("  %-12s %3d%%" % [RpgStats.DAMAGE_NAMES[dt], 100 * wins / (N * 2)])
 	quit()

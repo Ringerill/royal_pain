@@ -1042,7 +1042,7 @@ func _tournament_round_ended(winner: Character, rivalry: String) -> void:
 	var won := winner == player_character
 	var badly_hurt := player_character.current_health < player_character.max_health * Character.SEVERE_WOUND_RATIO
 	if won:
-		player_character.honor = clampi(player_character.honor + CombatSetup.TOURNAMENT_ROUND_HONOR, 0, 100)
+		player_character.honor = clampi(player_character.honor + CombatSetup.TOURNAMENT_ROUND_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 
 	if won and not CombatSetup.is_final_round() and not badly_hurt:
 		_pending_next_round = true
@@ -1054,7 +1054,7 @@ func _tournament_round_ended(winner: Character, rivalry: String) -> void:
 	var text: String
 	if won and CombatSetup.is_final_round():
 		player_character.gold += CombatSetup.TOURNAMENT_PRIZE_GOLD
-		player_character.honor = clampi(player_character.honor + CombatSetup.TOURNAMENT_PRIZE_HONOR, 0, 100)
+		player_character.honor = clampi(player_character.honor + CombatSetup.TOURNAMENT_PRIZE_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 		text = "¡Campeón del torneo! Vences las %d rondas y ganas %d de oro y %d de honor." % [
 			total, CombatSetup.TOURNAMENT_PRIZE_GOLD, CombatSetup.TOURNAMENT_PRIZE_HONOR]
 		player_character.add_fame(TOURNAMENT_FAME)

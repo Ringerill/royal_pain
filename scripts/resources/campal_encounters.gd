@@ -6,7 +6,7 @@ extends RefCounted
 
 const MAX_OFFICERS := 3
 const MAX_PARTY := 5                  # jefe + oficiales + escolta genérica
-const ESCORT_SOLDIERS := 10           # un escolta genérico por cada 10 soldados del pelotón...
+const ESCORT_SOLDIERS := 5            # un escolta genérico por cada 5 soldados del pelotón...
 const MIN_ESCORT := 1                 # ...con al menos uno
 const GENERIC_LEVEL := 3              # nivel de la escolta si nadie con nombre da referencia
 const CAPTAIN_TYPE := "sargento_veterano"
@@ -18,8 +18,8 @@ const ESCORT_BY_TYPE := {
 }
 
 # Bonos de la tropa a los personajes de su pelotón.
-const TROOP_PV_PER_SOLDIER := 0.015   # +1,5% de PV por soldado...
-const TROOP_PV_CAP := 0.6             # ...hasta +60%
+const TROOP_PV_PER_SOLDIER := 0.02    # +2% de PV por soldado...
+const TROOP_PV_CAP := 0.8             # ...hasta +80%
 const TROOP_STR_PER_SOLDIER := 0.008  # +0,8% de Fuerza por soldado...
 const TROOP_STR_CAP := 0.3            # ...hasta +30%
 const CAV_AGI := 4.0                  # caballería: más rápida...
@@ -37,9 +37,10 @@ const ENC_CUADRO_DEF := 0.1           # Cuadro: +10% de Defensa...
 const ENC_CUADRO_DEF_CAV := 0.25      # ...+25% contra caballería
 
 # Del combate a los pelotones.
-const WIN_DMG := 1.35                 # bajas que causa quien gana el choque (× las del tablero)
+const WIN_DMG := 1.6                  # bajas que causa quien gana el choque (× las del tablero)...
+const ROUT_DMG := 1.9                 # ...más esto × la parte del grupo rival que cayó (arrasarlo: ×3,5)
 const LOSS_DMG := 0.5                 # bajas que aún causa quien lo pierde
-const LOSER_TAKEN := 1.5              # bajas que recibe quien pierde (× la respuesta normal)
+const LOSER_TAKEN := 1.6              # bajas que recibe quien pierde (× la respuesta normal), + ROUT_DMG × la parte de su grupo caída
 const FLEE_TAKEN := 0.8               # quien se retira a tiempo recibe menos que si pierde
 const WIN_MORALE := 4
 const LOSS_MORALE := 12
@@ -58,6 +59,7 @@ const LOOT_GOLD_PER_ENEMY := 2        # oro por soldado enemigo caído o huido
 const LOOT_SHARE := 0.3               # parte que repartes con tu séquito
 const LOOT_ITEM_CHANCE := 0.5         # objeto tras un choque ganado por tu grupo
 const CONSUMABLES := "res://scripts/resources/consumable_catalog.gd"
+const ESCORT_LEVEL_GAP := 2   # soldados genéricos: dos niveles por debajo de su comandante
 
 # --- Grupos ---
 
@@ -81,14 +83,17 @@ static func party_of(u: BattleUnit, level: int) -> Array:
 	if lead != null and not lead.has_meta("captain"):
 		out.append(lead)
 	else:
-		var cap := EnemyCatalog.make_enemy(CAPTAIN_TYPE, level)
+		var cap := EnemyCatalog.make_enemy(CAPTAIN_TYPE, mini(EnemyCatalog.MAX_LEVEL, level + ESCORT_LEVEL_GAP))   # capitán veterano: su tropa queda al nivel de referencia
 		cap.first_name = lead.full_name() if lead != null else cap.first_name
 		out.append(cap)
 	for o: Character in u.officers:
 		if out.size() < MAX_OFFICERS + 1 and o != null and not o in out:
 			out.append(o)
-	var escort := clampi(ceili(float(u.soldiers) / ESCORT_SOLDIERS), MIN_ESCORT, MAX_PARTY)
+	var escort := clampi(u.soldiers / ESCORT_SOLDIERS, MIN_ESCORT, MAX_PARTY)
 	var used := {}
+	# Los soldados genéricos van ESCORT_LEVEL_GAP niveles por debajo de su comandante.
+	var commander_level: int = lead.level if lead != null and not lead.has_meta("captain") else level + ESCORT_LEVEL_GAP
+	level = maxi(1, commander_level - ESCORT_LEVEL_GAP)
 	var t: String = ESCORT_BY_TYPE.get(u.type, "soldado")
 	while out.size() < MAX_PARTY and escort > 0:
 		var e := EnemyCatalog.make_enemy(t, level, 0, used)
@@ -214,6 +219,12 @@ static func auto_fight(bm: BattleManager, enc: Dictionary) -> Dictionary:
 	return mgr.run_auto()
 
 ## Traduce el resultado (bando 0 = atacante) en bajas, moral y retirada. Devuelve el texto del registro.
+## Parte (0..1) de un grupo que acabó fuera de combate o muerta.
+static func _down_ratio(group: Array, fallen: Array) -> float:
+	if group.is_empty():
+		return 0.0
+	return float(group.filter(func(c): return c in fallen).size()) / group.size()
+
 static func apply(bm: BattleManager, enc: Dictionary, result: Dictionary) -> String:
 	var att: BattleUnit = enc.attacker
 	var tgt: BattleUnit = enc.target
@@ -225,8 +236,12 @@ static func apply(bm: BattleManager, enc: Dictionary, result: Dictionary) -> Str
 		winner = 1 - fled
 	var base_out: int = bm._compute_casualties(att, tgt, enc.dist, true)
 	var base_back: int = maxi(1, int(bm._compute_casualties(tgt, att, enc.dist, true) * bm._retaliation(tgt)))
-	var to_tgt: float = base_out * (WIN_DMG if winner == 0 else LOSS_DMG)
-	var to_att: float = base_back * (LOSER_TAKEN if winner == 1 else LOSS_DMG)
+	# Cuanto más del grupo rival cae en el combate, más bajas sufre su pelotón.
+	var fallen: Array = result.get("ko", []) + result.get("dead", [])
+	var down_b := _down_ratio(enc.b, fallen)
+	var down_a := _down_ratio(enc.a, fallen)
+	var to_tgt: float = base_out * ((WIN_DMG + ROUT_DMG * down_b) if winner == 0 else LOSS_DMG)
+	var to_att: float = base_back * ((LOSER_TAKEN + ROUT_DMG * down_a) if winner == 1 else LOSS_DMG)
 	if fled == 0:
 		to_att = base_back * FLEE_TAKEN
 	elif fled == 1:

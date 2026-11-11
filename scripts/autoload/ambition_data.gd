@@ -62,7 +62,7 @@ var last_plot_month := -100
 var plot_owner := ""                    # quién tiene su complot en la cola (uno a la vez)
 var news_year := 0
 var news_count := 0
-var last_honor := -1
+var last_honor := -999   # -999: aún sin medir (el honor va de −100 a 100)
 var stats := {"plots": 0, "npc_news": 0, "fizzled": 0}   # para simulaciones
 
 func _ready() -> void:
@@ -80,7 +80,7 @@ func reset() -> void:
 	plot_owner = ""
 	news_year = 0
 	news_count = 0
-	last_honor = -1
+	last_honor = -999
 	stats = {"plots": 0, "npc_news": 0, "fizzled": 0}
 
 # --- Consultas ---
@@ -259,7 +259,7 @@ func has_secret() -> bool:
 
 func _note_shame(now: int) -> void:
 	var player: Character = GameManager.player_character
-	if last_honor >= 0 and last_honor - player.honor >= SHAME_HONOR_DROP:
+	if last_honor != -999 and last_honor - player.honor >= SHAME_HONOR_DROP:
 		secrets.append({"month": now, "text": "tus bajezas"})
 	last_honor = player.honor
 	secrets = secrets.filter(func(s: Dictionary) -> bool: return now - int(s.month) <= SECRET_MONTHS)
@@ -600,7 +600,7 @@ func _resolve_usurp(r: Relationship, victim_name: String, bonus: float, with_pla
 		return text
 	var text := _punish_plotter(r, "la conjura contra %s fracasa" % victim.person_name)
 	if with_player:
-		player.honor = clampi(player.honor - 10, 0, 100)
+		player.honor = clampi(player.honor - 10, Character.HONOR_MIN, Character.HONOR_MAX)
 		victim.adjust(-30)
 		victim.adjust_grudge(30)
 		text += " Tu nombre sale a relucir: honor −10."
@@ -811,7 +811,7 @@ func load_state(data: Dictionary) -> void:
 	plot_owner = str(data.get("plot_owner", ""))
 	news_year = int(data.get("news_year", 0))
 	news_count = int(data.get("news_count", 0))
-	last_honor = int(data.get("last_honor", -1))
+	last_honor = int(data.get("last_honor", -999))
 	# Si el complot que esperaba ya no está en la cola (partida guardada sin él), se libera.
 	if not plot_owner.is_empty() and str(GameManager.pending_event.get("amb_owner", "")) != plot_owner \
 			and not GameManager.event_queue.any(func(e) -> bool: return str(e.get("amb_owner", "")) == plot_owner):

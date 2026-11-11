@@ -75,7 +75,7 @@ func _run() -> void:
 	check(RD.RETINUE_SIZE[CH.Role.DUQUE] == 5, "séquito de 5")
 	chk = RP.check_ascension(p, MI.progression_context())
 	check(chk.next_role == CH.Role.REGENTE, "Duque apunta a Regente")
-	p.honor = 10
+	p.honor = -60   # el descenso por deshonor es bajo −50 (honor de −100 a 100)
 	check(RP.check_dishonor_demotion(p), "Duque deshonrado puede caer")
 	RP.apply_dishonor_demotion(p)
 	check(p.role == CH.Role.NOBLEZA_ALTA, "cae a Nobleza Alta")

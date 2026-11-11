@@ -105,6 +105,7 @@ func _row(c: Character, is_active: bool, index: int, count: int) -> void:
 	gear.autowrap_mode = TextServer.AUTOWRAP_OFF
 	gear.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	gear.clip_text = true
+	_technique_icons(info, c)
 	row.tooltip_text = "Técnicas: %s" % ("—" if techs == null or techs.is_empty() else ", ".join(techs.map(func(t): return str(t))))
 	info.tooltip_text = row.tooltip_text
 	if is_active:
@@ -150,13 +151,25 @@ func _restore_focus() -> void:
 	if first != null:
 		first.call_deferred("grab_focus")
 
-# Gancho: técnicas del combate RPG. null si aún no existen (se muestra «—»).
+# Técnicas del combate RPG (nombres) que conoce el personaje.
 func _techniques(c: Character) -> Variant:
-	if c.has_method("techniques"):
-		return Array(c.techniques())
-	if c.has_meta("techniques"):
-		return Array(c.get_meta("techniques"))
-	return null
+	return SkillTreeCatalog.available_techniques(c).map(func(n: Dictionary) -> String: return str(n.name))
+
+const TECH_ICON := 18
+
+# Fila con el icono de cada técnica (su nombre y efecto al pasar el ratón).
+func _technique_icons(parent: Node, c: Character) -> void:
+	var nodes := SkillTreeCatalog.available_techniques(c)
+	if nodes.is_empty():
+		return
+	var icons := HBoxContainer.new()
+	icons.add_theme_constant_override("separation", 2)
+	parent.add_child(icons)
+	for n: Dictionary in nodes:
+		var icon := SkillIcons.node_icon(str(n.id), TECH_ICON, c)
+		icon.tooltip_text = "%s — %s" % [n.name, n.get("desc", "")]
+		icon.mouse_filter = Control.MOUSE_FILTER_PASS
+		icons.add_child(icon)
 
 func _equipment_text(c: Character) -> String:
 	var names: Array[String] = []

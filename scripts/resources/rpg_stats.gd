@@ -73,11 +73,11 @@ const SHIELD_DEF_BY_TIER := {1: 1, 2: 2, 3: 3, 4: 3}
 const F := CharacterEnums.FighterType
 const TYPE_MODS := {
 	F.DUELISTA:  {"pv": 1.0,  "pt": 1.0,  "fuerza": 1.0,  "defensa": 1.0,  "agilidad": 2,  "punteria": 3, "voluntad": 0},
-	F.TANQUE:    {"pv": 1.3,  "pt": 0.9,  "fuerza": 1.0,  "defensa": 1.3, "agilidad": -2, "punteria": 0, "voluntad": 2},
-	F.ESTRATEGA: {"pv": 1.1,  "pt": 1.35, "fuerza": 1.1,  "defensa": 1.0,  "agilidad": 1,  "punteria": 2, "voluntad": 3},
+	F.TANQUE:    {"pv": 1.3,  "pt": 0.9,  "fuerza": 1.06, "defensa": 1.3, "agilidad": -2, "punteria": 0, "voluntad": 2},
+	F.ESTRATEGA: {"pv": 1.1,  "pt": 1.2,  "fuerza": 1.0,  "defensa": 1.0,  "agilidad": 1,  "punteria": 2, "voluntad": 3},
 	F.BERSERKER: {"pv": 1.1,  "pt": 0.9,  "fuerza": 1.07, "defensa": 0.85, "agilidad": 0,  "punteria": 0, "voluntad": 1},
 	F.DEFENSOR:  {"pv": 1.3,  "pt": 1.15, "fuerza": 0.95, "defensa": 1.2,  "agilidad": -1, "punteria": 0, "voluntad": 3},
-	F.ASESINO:   {"pv": 0.85, "pt": 1.0,  "fuerza": 1.1,  "defensa": 0.9,  "agilidad": 2,  "punteria": 3, "voluntad": 0},
+	F.ASESINO:   {"pv": 0.92, "pt": 1.0,  "fuerza": 1.1,  "defensa": 0.9,  "agilidad": 2,  "punteria": 3, "voluntad": 0},
 }
 
 # Equipo actual → clase de armadura y tipo de daño (por nombre, para las partidas guardadas).

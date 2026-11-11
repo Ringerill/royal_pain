@@ -37,7 +37,7 @@ func _run() -> void:
 	var CAT = load("res://scripts/resources/achievement_catalog.gd")
 
 	print("[catálogo]")
-	for role in [CH.Role.CAMPESINO, CH.Role.SOLDADO, CH.Role.NOBLEZA_ALTA, CH.Role.CONDOTIERO]:
+	for role in [CH.Role.CAMPESINO, CH.Role.SOLDADO, CH.Role.NOBLEZA_ALTA]:   # el Condotiero ya no existe (fase 1)
 		var vis: Array = CAT.visible_for(role)
 		check(vis.size() >= 25 and vis.size() <= 34, "%s ve %d hazañas" % [CH.role_name_for(role), vis.size()])
 		check(vis.filter(func(a): return a.has("goal_role")).size() == 1, "una sola de destino para %s" % CH.role_name_for(role))
@@ -82,15 +82,15 @@ func _run() -> void:
 	print("[deshonra sin fin de partida]")
 	player = await _new_game(CH.Role.CABALLERO)
 	RD.liege_name = "Lord Prueba"
-	player.honor = 0
+	player.honor = CH.HONOR_MIN   # la deshonra total es a −100
 	var text: String = GM.check_disgrace()
 	print("  ", text)
 	check(GM.is_game_active, "la partida sigue")
-	check(player.role == CH.Role.MERCENARIO and RD.liege_name.is_empty(), "un caballero deshonrado es expulsado y queda como mercenario")
-	check(player.honor == 15, "honor rehecho a 15 (%d)" % player.honor)
-	check(GM.check_disgrace().is_empty(), "no se repite con honor > 0")
+	check(player.role == CH.Role.INAFILIADO and RD.liege_name.is_empty(), "un caballero deshonrado es expulsado y queda sin afiliación")
+	check(player.honor == RoleProgression.DISGRACE_HONOR_RESET, "honor rehecho a %d (%d)" % [RoleProgression.DISGRACE_HONOR_RESET, player.honor])
+	check(GM.check_disgrace().is_empty(), "no se repite mientras no vuelva a −100")
 	player.role = CH.Role.NOBLEZA_BAJA
-	player.honor = 0
+	player.honor = CH.HONOR_MIN
 	GM.check_disgrace()
 	check(player.role == CH.Role.CABALLERO and GM.is_game_active, "una noble deshonrada baja un rango")
 	check(not GM.check_defeat(), "check_defeat ya no termina la partida")

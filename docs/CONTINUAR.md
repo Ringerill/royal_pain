@@ -28,7 +28,7 @@ La conversación y la memoria de Claude están en `C:\Users\<usuario>\.claude\pr
 - **Fase 2, en curso:**
   - **2A, hecha** y probada: varias esposas según rango, concubinas (sus hijos heredan solo sin legítimos adultos), **sin celos** por decisión del usuario, lealtad y traiciones (`LoyaltyData`), acciones y eventos de siervos y prisioneros.
   - **2C, hecha** y probada: viajeros en el mapa con su cara (`TravelerData`), encuentros, gestor «Mis personajes» en el menú.
-  - **2B, hecha** y probada: eventos por cercanía, rivalidad, presencia de señores, eventos de facción e historias con efectos duraderos (`SocialEvents`). El evento "Celos" se mantiene por ahora; el usuario quiere quitarlo más adelante.
+  - **2B, hecha** y probada: eventos por cercanía, rivalidad, presencia de señores, eventos de facción e historias con efectos duraderos (`SocialEvents`). El evento "Celos" ya se retiró.
   - Glosario actualizado con todo lo de la fase 2.
 - **Pendiente:** ver **`docs/PENDIENTE.md`**: repasos pequeños de la fase 2, fase 3 (gestor de grupo y combate RPG con árbol de habilidades y enemigos genéricos) y fase 4 (batallas campales). El detalle está en `docs/plan_revision.md`.
 - **Imágenes de enemigos** (las genera el usuario): PNG de 1024×1536 con fondo transparente en `assets/portraits/enemies/<tipo>/`. La lista de tipos está en el plan, fase 3.

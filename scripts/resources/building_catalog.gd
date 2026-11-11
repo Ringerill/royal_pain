@@ -46,9 +46,15 @@ const BUILDINGS := {
 			{"cost": 280, "months": 3, "recruits": 2, "recruit_discount": 0.20, "text": "Guarnición +2 al mes · reclutar −20%"},
 			{"cost": 460, "months": 4, "recruits": 3, "recruit_discount": 0.30, "text": "Guarnición +3 al mes · reclutar −30%"},
 		]},
+	"cancilleria": {"name": "Cancillería", "description": "Escribanos, mensajeros y un sello propio: despachas más asuntos cada mes (solo en tu castillo de origen).",
+		"levels": [
+			{"cost": 250, "months": 3, "actions": 1, "text": "+1 acción al mes"},
+			{"cost": 400, "months": 4, "actions": 1, "income": 15, "text": "+1 acción al mes · +15 de oro al mes para el castillo"},
+			{"cost": 600, "months": 5, "actions": 2, "income": 15, "text": "+2 acciones al mes · +15 de oro al mes para el castillo"},
+		]},
 }
 
-const ORDER := ["herreria", "establos", "murallas", "mercado", "capilla", "cuartel"]
+const ORDER := ["herreria", "establos", "murallas", "mercado", "capilla", "cuartel", "cancilleria"]
 
 ## Datos del nivel (1..3) de un edificio, o {} si no existe.
 static func level_data(id: String, level: int) -> Dictionary:

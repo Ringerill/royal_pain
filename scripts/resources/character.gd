@@ -84,13 +84,17 @@ const ATTRIBUTES := ["leadership", "charisma", "strategy", "combat", "defense", 
 @export var current_stamina: int = 100
 @export var max_morale: int = 100
 @export var current_morale: int = 100
-@export var honor: int = 50
+@export var honor: int = 50   # −100 (infamia) .. 100; a −100, destierro
+const HONOR_MIN := -100
+const HONOR_MAX := 100
+const FAME_MIN := -100   # mala fama (temido)
+const FAME_MAX := 100
 @export_range(1, 20) var level: int = 1         # nivel de experiencia (ver gain_xp)
 @export var xp: int = 0                          # experiencia acumulada hacia el siguiente nivel
 @export var unspent_points: int = 0              # puntos de atributo por repartir al subir de nivel
 @export var pending_skill_choices: int = 0       # LEGADO: las habilidades ahora se aprenden en los árboles (SkillTreeCatalog)
 @export var age: int = 20                        # años; cada enero se cumple uno más (ver DynastyData)
-@export_range(0, 100) var fame: int = 0   # reconocimiento: duelos, torneos y hazañas; atrae eventos y seguidores
+@export_range(-100, 100) var fame: int = 0   # reconocimiento: duelos, torneos y hazañas; atrae eventos y seguidores
 @export var wound_months: int = 0   # meses que faltan para curar una herida grave (no puede batirse)
 
 @export_group("Progresión Social")
@@ -516,6 +520,7 @@ func xp_to_next() -> int:
 	return XP_BASE * level
 
 var last_xp_gained := 0        # experiencia realmente sumada en la última llamada (ya con multiplicador)
+static var xp_hook := Callable()   # (personaje, cantidad, fuente): lo fija WorldGrowth
 
 ## Suma experiencia. Devuelve cuántos niveles se subieron (0 si ninguno).
 ## source (ver XpRules.SOURCE_*): el tipo de luchador multiplica lo que se aprende de cada fuente.
@@ -525,6 +530,8 @@ func gain_xp(amount: int, source: String = "") -> int:
 		return 0
 	amount = maxi(1, roundi(amount * XpRulesRef.multiplier(fighter_type, source) * (1.0 + SkillEffects.fx(self, "xp_" + source)))) if not source.is_empty() else amount
 	last_xp_gained = amount
+	if xp_hook.is_valid():   # WorldGrowth: lo que gana el jugador lo comparte su séquito
+		xp_hook.call(self, amount, source)
 	xp += amount
 	var gained := 0
 	while level < MAX_LEVEL and xp >= xp_to_next():
@@ -546,17 +553,28 @@ static func tree_points_at(new_level: int) -> int:
 		return maxi(0, int(api.call("points_for_level", new_level)) - int(api.call("points_for_level", new_level - 1)))
 	return int(api.call("points_for_level", new_level))
 
-## Suma (o resta) fama: duelos, torneos, batallas y encargos cumplidos. 0..100.
+## Suma (o resta) fama: duelos, torneos, batallas y encargos cumplidos. −100..100.
+## Con honor negativo las hazañas dan MALA FAMA: la fama baja (te temen en vez de admirarte).
 func add_fame(amount: int) -> void:
 	if amount > 0:
 		amount = roundi(amount * SkillEffects.fame_gain_multiplier(self))
-	fame = clampi(fame + amount, 0, 100)
+		if honor < 0:
+			amount = -amount
+	fame = clampi(fame + amount, FAME_MIN, FAME_MAX)
+
+## Cuánto se te conoce, para bien o para mal (|fama|): audiencias, llamadas a filas, retos, historias.
+func renown() -> int:
+	return absi(fame)
+
+## Mala fama (0..100): intimida a los enemigos y facilita la recaudación (camino villano).
+func infamy() -> int:
+	return maxi(0, -fame)
 
 ## Suma honor aplicando los efectos de honor ganado (Devoto, Codicioso...). Las pérdidas no se modifican.
 func gain_honor(amount: int) -> void:
 	if amount > 0:
 		amount = roundi(amount * SkillEffects.honor_gain_multiplier(self))
-	honor = clampi(honor + amount, 0, 100)
+	honor = clampi(honor + amount, Character.HONOR_MIN, Character.HONOR_MAX)
 
 func register_duel_win(honor_gain: int = 10) -> void:
 	duels_won += 1
@@ -565,7 +583,7 @@ func register_duel_win(honor_gain: int = 10) -> void:
 
 func register_duel_loss() -> void:
 	duels_lost += 1
-	honor = clamp(honor - 5, 0, 100)
+	honor = clamp(honor - 5, Character.HONOR_MIN, Character.HONOR_MAX)
 
 # --- Comandancia: maestría por familia de tropa (1–10) ---
 # Cada nivel pide MASTERY_XP_STEP × nivel de experiencia; da más soldados y moral al pelotón que dirige

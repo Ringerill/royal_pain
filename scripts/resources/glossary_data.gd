@@ -29,6 +29,9 @@ const DYNAMIC := ["Personalidades", "Habilidades", "Rasgos y desventajas", "Equi
 
 const ENTRIES := {
 	"Duelo": [
+		["Técnicas de arma", "Cada familia de arma tiene sus propias técnicas: espada, hacha, estoque y daga, lanza y pica, maza, arco y ballesta. No cuestan puntos: las tienes mientras lleves esa arma y se desbloquean con el nivel (escalón I a nivel 1, II a nivel 4, III a nivel 8 y IV a nivel 12). Sin arma, usas las de la familia de tu tipo de luchador. Se ven en la pestaña «Arma» de las habilidades."],
+		["Tipos de daño","Tu arma marca tu tipo de daño (Tajo, Estocada, Contundente o Proyectil), y tus técnicas golpean con ese mismo tipo. Solo cambian las que usan otro objeto: los proyectiles lanzados (Disparo, Honda, Tirar piedras, Dardos) y los golpes de escudo (Contundente)."],
+		["Debilidades y lo que sabes del rival", "Cada armadura encaja cada tipo como Débil (×1,4), Normal o Resiste (×0,6). De un rival no sabes nada hasta que lo descubres: si te golpea, conoces su tipo de daño; si le golpeas, sabes cómo encaja ese tipo; Analizar (y técnicas parecidas) lo revela todo. Lo descubierto se recuerda en la partida: los enemigos comunes por su tipo y su equipo (un bandido con hacha no es uno con arco), y los personajes uno a uno. Su tarjeta muestra el icono de su arma y un marco por tipo de daño: dorado = Débil, azul = Resiste, oscuro = Normal, apagado = sin descubrir."],
 		["Finta", "Amagas un golpe (10 de aliento). Si el rival espera para contraatacar, su parada se pierde y tu próximo ataque no se puede parar y hace +25%. Si no, es un golpe flojo (−50%)."],
 		["Posturas que comprometen", "Cada postura cierra alguna acción: Ofensiva no deja Guardia; Defensiva y Esgrima no dejan Empujar; Desesperada solo deja Atacar, Empujar y Abandonar. En Esgrima desarmas un 10% mejor."],
 		["Leer al rival", "Al empezar tu turno, tu Estrategia frente a la suya te da una probabilidad (15% a la par, +4% por punto de ventaja, hasta 60%) de adivinar su próxima jugada: 👁 «Parece que va a desarmarte». Si la adivinas, la mantendrá. Lectura del Rival y Mente Analítica ayudan; Rostro de Piedra te hace ilegible; Previsible te delata."],
@@ -95,7 +98,7 @@ Desesperada: gran daño, defensa por los suelos; solo Atacar y Empujar."],
 		["Regente", "Desde Duque: requiere honor 80 y heredar la corona por matrimonio con la casa de tu soberano, o controlar 4 castillos de tu reino para usurparla."],
 		["La corona vacante", "Si eres Duque y el rey muere sin hijos, puedes reclamar el trono: te haces Regente y los castillos de la Corona pasan a ti, pero el pariente que lo heredaba no lo olvidará. También puedes jurarle lealtad."],
 		["Deshonra", "Un Caballero o superior con menos de 20 de honor desciende de rango."],
-		["Acciones por mes", "Cada acción del castillo, de las relaciones o de la diplomacia gasta una acción. Al avanzar el turno se recuperan."],
+		["Acciones por mes", "Cada acción del castillo, de las relaciones o de la diplomacia gasta una acción. Al avanzar el turno se recuperan. Cuántas tienes: según tu rango (1 a 4), +1 por cada 10 de Liderazgo, +1 cada 5 niveles (hasta +3), +1 a +2 por la Cancillería de tu castillo y +1 si tienes un cargo en alguna corte. La primera interacción del mes con tu cónyuge o tu séquito es gratis."],
 	],
 	"Atributos": [
 		["Liderazgo", "Mejora la moral y la fuerza de tus tropas, y es necesario para la Nobleza Alta."],
@@ -211,8 +214,9 @@ Desesperada: gran daño, defensa por los suelos; solo Atacar y Empujar."],
 		["Eventos con protagonista", "Rivales, amores y tu cónyuge toman la iniciativa: verás su retrato y lo que dicen."],
 	],
 	"Fama y honor": [
-		["Honor", "Tu reputación moral (0 a 100). Se gana con victorias justas y buenas decisiones; se pierde con huidas, traiciones y abusos. Es necesario para ascender."],
-		["Fama", "Lo conocido que eres (0 a 100). Crece con duelos, torneos, batallas y encargos. Atrae más eventos y seguidores, y hace que te acepten más retos."],
+		["Honor y fama negativos", "Honor y fama van de −100 a 100. Con honor negativo eres un deshonrado: tus hazañas ya no te dan fama sino mala fama (te temen en vez de admirarte). La mala fama baja la moral de tus enemigos en combate (hasta −20) y te hace recaudar más (hasta +20%), pero los señores honorables no pactan ni casan a los suyos contigo. Por debajo de −50 de honor pierdes rango, y al tocar −100 caes en deshonra total. Para audiencias, retos o llamadas a filas cuenta tu renombre: lo conocido que eres, para bien o para mal."],
+		["Honor", "Tu reputación moral (−100 a 100). Se gana con victorias justas y buenas decisiones; se pierde con huidas, traiciones y abusos. Es necesario para ascender."],
+		["Fama", "Lo conocido que eres (−100 a 100; en negativo, mala fama). Crece con duelos, torneos, batallas y encargos. Atrae más eventos y seguidores, y hace que te acepten más retos."],
 		["Duelos y honor", "Vencer a alguien más fuerte da más honor que vencer a alguien débil."],
 	],
 	"Nivel y dinastía": [
@@ -279,6 +283,8 @@ Desesperada: gran daño, defensa por los suelos; solo Atacar y Empujar."],
 		["Seguir jugando", "Tras una victoria (conquista del mundo o unificación por matrimonio) puedes seguir jugando la misma partida."],
 	],
 	"Interfaz y atajos": [
+		["Créditos de los iconos", "Los iconos de habilidades, tipos de daño y armaduras son de game-icons.net, bajo licencia Creative Commons BY 3.0. Autores: Lorc, Lucas, Sbed, Skoll, Willdabeast y Zeromancer. Lista por icono en assets/icons/game-icons/CREDITOS.txt."],
+		["Iconos de las habilidades", "Las técnicas de daño llevan el icono de su tipo de daño, que es el de tu arma: espada (Tajo), punta de lanza (Estocada), maza (Contundente) o arco (Proyectil). El resto lleva el de su categoría: corazón (Curación), brazo (Mejora), escudo (Protección), cabeza aturdida (Debilitación), bandera (Mando y moral) y estrella (Pasiva)."],
 		["Mis personajes", "Desde el menú: tus personajes guardados. Puedes verlos, editarlos, copiarlos, renombrarlos, borrarlos y pasarlos a otro equipo como archivo."],
 		["Mis personajes", "Desde el menú: tus personajes guardados. Puedes verlos, editarlos, copiarlos, renombrarlos, borrarlos y pasarlos a otro equipo como archivo."],
 		["Duelo", "Teclas 1–7: acciones. Q, W, E, R: posturas. Pasa el ratón sobre una orden para ver su efecto y sus probabilidades. Con mando: cruceta y A."],

@@ -230,6 +230,13 @@ func _add_row(list: VBoxContainer, r: Relationship) -> void:
 		_lord_buttons(buttons, r)
 	elif RelationsData.sociable(r):
 		_social_buttons(buttons, r)
+	if r.kind != Relationship.Kind.SENOR and r.character != null:   # interacciones voluntarias según el lazo
+		for it: Array in PersonalInteractions.for_relation(r):
+			var id: String = it[0]
+			var b := _make_button(it[1], PersonalInteractions.blocker(r, id), func(): _show_feedback(PersonalInteractions.perform(r, id)))
+			if not b.disabled:
+				b.tooltip_text = "%s %s" % [it[2], "Gratis: la primera del mes con tu cónyuge o tu séquito." if PersonalInteractions.is_free(id) else "Gasta 1 acción."]
+			buttons.add_child(b)
 	list.add_child(panel)
 
 func _lord_buttons(buttons: HFlowContainer, r: Relationship) -> void:
@@ -280,6 +287,11 @@ func _social_buttons(buttons: HFlowContainer, r: Relationship) -> void:
 	elif RelationsData.max_retinue() > 0 or RelationsData.is_intimate(r):
 		buttons.add_child(_make_button("Invitar al séquito", RelationsData.can_invite(r),
 			func(): _show_feedback(RelationsData.invite_to_retinue(r))))
+	if r.kind == Relationship.Kind.CONYUGE and RelationsData.is_spouse(r.person_name):
+		var div := _make_button("Divorciarse", RelationsData.can_divorce(r), func(): _show_feedback(RelationsData.divorce(r)))
+		if not div.disabled:
+			div.tooltip_text = "Honor %d; su familia se ofende y se rompe la alianza. Los hijos siguen siendo tuyos. Gasta 1 acción." % RelationsData.DIVORCE_HONOR
+		buttons.add_child(div)
 	if RelationsData.courtable(r) and r.romance and r.affection >= Relationship.ROMANCE_COURTSHIP:
 		var propose := _make_button("Pedir la mano (%d oro)" % RelationsData.WEDDING_COST, RelationsData.can_propose_love(r),
 			func(): _show_feedback(RelationsData.propose_love(r)))
@@ -364,6 +376,9 @@ func _heart_row(r: Relationship) -> HBoxContainer:
 		parts.append("⚔ %s (rencor %d)" % [r.rivalry_text(), r.grudge])
 	if not r.rival_suitor.is_empty():
 		parts.append("Otro pretendiente: %s" % r.rival_suitor)
+	var wed := RelationsData.npc_spouse_of(r.person_name)
+	if not wed.is_empty():
+		parts.append("Casad%s con %s" % ["a" if r.character != null and r.character.gender == CharacterEnums.Gender.FEMENINO else "o", wed])
 	var lbl := Label.new()
 	lbl.text = "   ·   ".join(parts)
 	lbl.add_theme_font_size_override("font_size", 15)

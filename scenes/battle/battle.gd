@@ -1373,7 +1373,7 @@ func _aftermath(player_won: bool, skirmish_fight: bool) -> String:
 		player.add_fame(BattleManager.COVER_FAME)
 		lines.append("Cubriste la retirada: +%d de honor y +%d de fama." % [BattleManager.COVER_HONOR, BattleManager.COVER_FAME])
 	if battle.deserted:
-		player.honor = maxi(0, player.honor - BattleManager.DESERT_HONOR)
+		player.honor = maxi(Character.HONOR_MIN, player.honor - BattleManager.DESERT_HONOR)
 		lines.append("Abandonaste el campo sin orden del general: −%d de honor." % BattleManager.DESERT_HONOR)
 	for g: Array in battle.mastery_gains:
 		if g[0] == player.full_name():

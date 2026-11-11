@@ -20,7 +20,7 @@ class_name EventCatalog
 #   Así un no afiliado no abre graneros ni un campesino gobierna un castillo. La usan también
 #   WorldEventCatalog.pick_player_event y SocialEvents.lord_event.
 
-const MONTHLY_EVENT_CHANCE := 0.2   # bajó de 0.3: historias, complots y capturas ya aportan decisiones
+const MONTHLY_EVENT_CHANCE := 0.1   # bajó de 0.3: historias, complots, capturas, tratados y sucesos de reputación ya aportan decisiones
 const FAME_EVENT_BONUS := 0.003       # +0,3% de probabilidad de evento por punto de fama (la fama atrae sucesos)
 const MAX_EVENT_CHANCE := 0.85
 const PENALTY_SCALE := 1.25           # dificultad: las pérdidas de los eventos pesan un 25% más que las ganancias
@@ -487,7 +487,7 @@ static func _apply_effects(effects: Dictionary, character: Character, castle: Ca
 					var story_node := (Engine.get_main_loop() as SceneTree).root.get_node_or_null("StoryData")
 					if story_node != null:
 						amount = maxi(1, roundi(amount * float(story_node.honor_gain_mult())))
-				character.honor = clampi(character.honor + amount, 0, 100)
+				character.honor = clampi(character.honor + amount, Character.HONOR_MIN, Character.HONOR_MAX)
 				parts.append("Honor %+d" % amount)
 			"combat", "leadership", "charisma", "strategy", "defense", "agility":
 				character.set(key, clampi(int(character.get(key)) + amount, 1, 20))

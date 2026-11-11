@@ -44,10 +44,10 @@ static func apply_monthly(id: String, player: Character, castles: Array[Castle],
 		IMPUESTOS:
 			var gold := SkillEffects.income(IMPUESTOS_GOLD, player)
 			player.gold += gold
-			player.honor = clampi(player.honor + IMPUESTOS_HONOR, 0, 100)
+			player.honor = clampi(player.honor + IMPUESTOS_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 			return "Edicto de Impuestos: ingresan %d de oro a tus arcas." % gold
 		TREGUA:
-			player.honor = clampi(player.honor + TREGUA_HONOR, 0, 100)
+			player.honor = clampi(player.honor + TREGUA_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 			for r: Relationship in relations:
 				if r.kind == Relationship.Kind.SENOR:
 					r.adjust(TREGUA_AFFINITY)

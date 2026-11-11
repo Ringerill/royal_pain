@@ -42,6 +42,11 @@ TravelerData="*res://scripts/autoload/traveler_data.gd"
 SocialEvents="*res://scripts/autoload/social_events.gd"
 LoyaltyData="*res://scripts/autoload/loyalty_data.gd"
 PartyData="*res://scripts/autoload/party_data.gd"
+IntelData="*res://scripts/autoload/intel_data.gd"
+TreatyData="*res://scripts/autoload/treaty_data.gd"
+ReputationEvents="*res://scripts/autoload/reputation_events.gd"
+WorldGrowth="*res://scripts/autoload/world_growth.gd"
+RoyalCourt="*res://scripts/autoload/royal_court.gd"
 
 [display]
 

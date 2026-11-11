@@ -72,7 +72,7 @@ func apply_record(result: Dictionary) -> void:
 	var fled := int(result.get("retreated", -1))
 	if fled >= 0:
 		var who: Character = fighter if fled == 0 else enemy
-		who.honor = clampi(who.honor - RETREAT_HONOR_COST, 0, 100)
+		who.honor = clampi(who.honor - RETREAT_HONOR_COST, Character.HONOR_MIN, Character.HONOR_MAX)
 		log_lines.append("%s logra huir del combate (−%d de honor)." % [who.full_name(), RETREAT_HONOR_COST])
 		return
 	var winner := winner_of(result)
@@ -83,7 +83,7 @@ func apply_record(result: Dictionary) -> void:
 	winner.register_duel_win(clampi(6 + 2 * power_gap, 3, 14))
 	loser.register_duel_loss()
 	if int(result.get("surrendered", -1)) >= 0:
-		loser.honor = clampi(loser.honor - SURRENDER_EXTRA_HONOR_COST, 0, 100)
+		loser.honor = clampi(loser.honor - SURRENDER_EXTRA_HONOR_COST, Character.HONOR_MIN, Character.HONOR_MAX)
 		var ransom: int = mini(SURRENDER_RANSOM, loser.gold)
 		loser.gold -= ransom
 		winner.gold += ransom
@@ -261,13 +261,13 @@ func tournament_round_ended(winner: Character, rivalry: String) -> Dictionary:
 	var won := winner == p
 	var badly_hurt := p.current_health < p.max_health * Character.SEVERE_WOUND_RATIO
 	if won:
-		p.honor = clampi(p.honor + CombatSetup.TOURNAMENT_ROUND_HONOR, 0, 100)
+		p.honor = clampi(p.honor + CombatSetup.TOURNAMENT_ROUND_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 	if won and not CombatSetup.is_final_round() and not badly_hurt:
 		return {"text": "¡Pasas a la ronda %d!" % (round_num + 1), "next_round": true}
 	var text: String
 	if won and CombatSetup.is_final_round():
 		p.gold += CombatSetup.TOURNAMENT_PRIZE_GOLD
-		p.honor = clampi(p.honor + CombatSetup.TOURNAMENT_PRIZE_HONOR, 0, 100)
+		p.honor = clampi(p.honor + CombatSetup.TOURNAMENT_PRIZE_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 		text = "¡Campeón del torneo! Vences las %d rondas y ganas %d de oro y %d de honor." % [
 			total, CombatSetup.TOURNAMENT_PRIZE_GOLD, CombatSetup.TOURNAMENT_PRIZE_HONOR]
 		p.add_fame(TOURNAMENT_FAME)

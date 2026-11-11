@@ -172,6 +172,10 @@ func _ready() -> void:
 	GameManager.turn_advanced.connect(_on_month_passed)
 
 func reset() -> void:
+	npc_marriages.clear()
+	interaction_months.clear()
+	free_interaction_month = -1
+	civil_war_against = ""
 	relations.clear()
 	used_portraits.clear()
 	kingdom_wars.clear()
@@ -539,7 +543,26 @@ func can_propose_alliance(r: Relationship) -> String:
 		return contact
 	if r.affinity < Relationship.ALLIANCE_MIN_AFFINITY:
 		return "Necesitas al menos %d de afinidad (tienes %d)." % [Relationship.ALLIANCE_MIN_AFFINITY, r.affinity]
+	if refuses_dishonored(r):
+		return "%s no pacta con alguien sin honor." % r.person_name
 	return ""
+
+## Afinidad por honor: 1 si tu honor y el suyo coinciden, 0 si son opuestos (−100 frente a 100).
+func honor_affinity(r: Relationship) -> float:
+	var player: Character = GameManager.player_character
+	if player == null or r == null or r.character == null:
+		return 0.5
+	return 1.0 - absf(player.honor - r.character.honor) / 200.0
+
+## Multiplicador de lo que se gana al tratar con alguien: ×1,5 con honor parecido, ×0,5 con honor opuesto.
+func honor_affinity_mult(r: Relationship) -> float:
+	return 0.5 + honor_affinity(r)
+
+## Los señores de personalidad honorable no tratan con un jugador de honor negativo (camino villano).
+func refuses_dishonored(r: Relationship) -> bool:
+	var player: Character = GameManager.player_character
+	return player != null and player.honor < 0 and r != null and r.character != null \
+		and r.character.personality == Character.Personality.HONORABLE
 
 func propose_alliance(r: Relationship) -> String:
 	if not can_propose_alliance(r).is_empty():
@@ -563,6 +586,9 @@ func on_player_conquered(former_owner: String) -> String:
 	var reactions := rival_reactions()
 	if not reactions.is_empty():
 		text += " " + reactions
+	var crowned := _check_civil_war_won()
+	if not crowned.is_empty():
+		text += "\n" + crowned
 	relations_changed.emit()
 	return text
 
@@ -830,6 +856,8 @@ func can_propose_marriage(r: Relationship) -> String:
 		return contact
 	if r.affinity < MARRIAGE_MIN_AFFINITY:
 		return "Necesitas al menos %d de afinidad (tienes %d)." % [MARRIAGE_MIN_AFFINITY, r.affinity]
+	if refuses_dishonored(r):
+		return "%s no casaría a los suyos con alguien sin honor." % r.person_name
 	if player.gold < DOWRY_COST:
 		return "Necesitas %d de oro para la dote." % DOWRY_COST
 	return ""
@@ -841,7 +869,7 @@ func propose_marriage(r: Relationship) -> String:
 	var player: Character = GameManager.player_character
 	GameManager.consume_action()
 	player.gold -= DOWRY_COST
-	player.honor = clampi(player.honor + MARRIAGE_HONOR, 0, 100)
+	player.honor = clampi(player.honor + MARRIAGE_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 	var spouse_first := _spouse_first_name(player, r.kingdom)
 	var wed_name := "%s %s" % [spouse_first, family_name_of(r.person_name)]
 	_register_spouse(wed_name, r.person_name)
@@ -854,6 +882,92 @@ func propose_marriage(r: Relationship) -> String:
 	if r.person_name == liege_name:
 		text += " Al emparentar con tu soberano, quedas en la línea de sucesión al trono."
 	return text
+
+# --- Divorcio ---
+
+const DIVORCE_HONOR := -10
+const DIVORCE_FAMILY_AFFINITY := -40     # la casa del cónyuge (boda política) se ofende y rompe la alianza
+const DIVORCE_KINGDOM_AFFINITY := -15    # boda por amor: el señor de su reino lo desaprueba
+const DIVORCE_AFFECTION := -60
+
+func can_divorce(r: Relationship) -> String:
+	if r == null or r.kind != Relationship.Kind.CONYUGE or not is_spouse(r.person_name):
+		return "No es tu cónyuge."
+	if not GameManager.has_actions_remaining():
+		return "No te quedan acciones este mes."
+	return ""
+
+## Disuelve el matrimonio: cuesta honor y enemista a su familia. Los hijos siguen siendo tuyos.
+func divorce(r: Relationship) -> String:
+	var reason := can_divorce(r)
+	if not reason.is_empty():
+		return reason
+	var player: Character = GameManager.player_character
+	GameManager.consume_action()
+	var family := ""
+	for s: Dictionary in spouses:
+		if s.name == r.person_name:
+			family = str(s.family)
+	_unregister_spouse(r.person_name)
+	r.kind = Relationship.Kind.CORTESANO
+	r.romance = false
+	r.adjust_affection(DIVORCE_AFFECTION)
+	r.adjust_grudge(20)
+	player.honor = clampi(player.honor + DIVORCE_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
+	var text := "Disuelves tu matrimonio con %s (honor %+d)." % [r.person_name, DIVORCE_HONOR]
+	var house := get_relation(family) if not family.is_empty() else null
+	if house != null:
+		house.adjust(DIVORCE_FAMILY_AFFINITY)
+		house.allied = false
+		text += " La casa de %s lo toma como una afrenta: se rompe la alianza (afinidad %+d)." % [house.person_name, DIVORCE_FAMILY_AFFINITY]
+	else:
+		for lord: Relationship in lords():
+			if lord.kingdom == r.kingdom:
+				lord.adjust(DIVORCE_KINGDOM_AFFINITY)
+				text += " %s lo desaprueba (afinidad %+d)." % [lord.person_name, DIVORCE_KINGDOM_AFFINITY]
+				break
+	WorldEvents.record("Te divorcias de %s." % r.person_name, "", true)
+	relations_changed.emit()
+	return text
+
+# --- Bodas entre personajes del mundo ---
+
+const NPC_MARRIAGE_CHANCE := 0.06   # por mes, una boda en algún lugar del mundo
+const NPC_MARRIAGE_AGE := [18, 55]
+
+var npc_marriages := {}   # nombre -> nombre de su cónyuge (en ambos sentidos)
+var interaction_months := {}        # nombre -> mes de la última interacción voluntaria (PersonalInteractions)
+var free_interaction_month := -1    # mes en que se usó la interacción gratis con familia o séquito
+
+func npc_spouse_of(person_name: String) -> String:
+	return str(npc_marriages.get(person_name, ""))
+
+func _npc_marriageable(r: Relationship) -> bool:
+	if r.kind != Relationship.Kind.CORTESANO or r.character == null or r.romance:
+		return false
+	if npc_marriages.has(r.person_name) or is_spouse(r.person_name) or is_concubine(r.person_name):
+		return false
+	if CaptureData.is_prisoner(r.person_name):
+		return false
+	return r.character.age >= NPC_MARRIAGE_AGE[0] and r.character.age <= NPC_MARRIAGE_AGE[1]
+
+## Casa a dos personajes del mismo reino (de sexo distinto). Devuelve la noticia, o "" si no hubo boda.
+func try_npc_marriage(force := false) -> String:
+	if not force and randf() >= NPC_MARRIAGE_CHANCE:
+		return ""
+	var pool: Array = relations.filter(_npc_marriageable)
+	pool.shuffle()
+	for a: Relationship in pool:
+		for b: Relationship in pool:
+			if b == a or b.kingdom != a.kingdom or b.character.gender == a.character.gender:
+				continue
+			npc_marriages[a.person_name] = b.person_name
+			npc_marriages[b.person_name] = a.person_name
+			var news := "Boda en la corte: %s y %s se casan." % [a.person_name, b.person_name]
+			WorldEvents.record(news, "", true)
+			relations_changed.emit()
+			return news
+	return ""
 
 # "Lord Baram Roca Alta" -> "Roca Alta": se omiten el título y el nombre de pila.
 static func family_name_of(lord_name: String) -> String:
@@ -895,6 +1009,87 @@ func become_regent(by_marriage: bool) -> String:
 			text += " %s jura venganza." % liege_name
 	relations_changed.emit()
 	return text
+
+# --- Reclamar el trono (Duque) y guerra civil ---
+# Un Duque reclama la corona. Los señores de su reino eligen bando por su afinidad contigo: con más apoyos
+# que rechazos te coronan sin lucha; si no, guerra civil contra el rey: sus castillos pasan a ser
+# atacables (ArmyData.is_hostile) y te coronas cuando no le queda ninguno.
+
+const CLAIM_MIN_HONOR := 50
+const CLAIM_SUPPORT_AFFINITY := 20     # afinidad mínima para apoyarte
+const CLAIM_OPPOSE_AFFINITY := -15     # quienes se oponen te guardan rencor
+
+var civil_war_against := ""   # el rey contra el que luchas por la corona ("" = no hay guerra civil)
+
+func can_claim_throne() -> String:
+	var player: Character = GameManager.player_character
+	if player == null or player.role != Character.Role.DUQUE:
+		return "Solo un Duque puede reclamar el trono."
+	if not civil_war_against.is_empty():
+		return "Ya estás en guerra civil contra %s." % civil_war_against
+	if liege_name.is_empty() or get_relation(liege_name) == null:
+		return "No hay rey a quien disputar la corona."
+	if player.honor < CLAIM_MIN_HONOR:
+		return "Necesitas %d de honor (tienes %d)." % [CLAIM_MIN_HONOR, player.honor]
+	if not GameManager.has_actions_remaining():
+		return "No te quedan acciones este mes."
+	return ""
+
+## Señores de tu reino (sin contar al rey): [apoyos, rechazos].
+func claim_sides() -> Array:
+	var support: Array[Relationship] = []
+	var oppose: Array[Relationship] = []
+	for r: Relationship in lords():
+		if r.kingdom == GameManager.player_kingdom and r.person_name != liege_name:
+			(support if r.affinity >= CLAIM_SUPPORT_AFFINITY else oppose).append(r)
+	return [support, oppose]
+
+func claim_throne() -> String:
+	var reason := can_claim_throne()
+	if not reason.is_empty():
+		return reason
+	GameManager.consume_action()
+	var sides := claim_sides()
+	var support: Array = sides[0]
+	var oppose: Array = sides[1]
+	var names := func(list: Array) -> String: return ", ".join(list.map(func(r): return r.person_name)) if not list.is_empty() else "nadie"
+	var text := "Reclamas la corona de %s. Te apoyan: %s. Se oponen: %s." % [liege_name, names.call(support), names.call(oppose)]
+	for r: Relationship in oppose:
+		r.adjust(CLAIM_OPPOSE_AFFINITY)
+	if support.size() > oppose.size():
+		return text + "\n" + _crown_player("Los grandes del reino te respaldan: %s abdica sin lucha." % liege_name)
+	var liege := get_relation(liege_name)
+	civil_war_against = liege_name
+	if liege != null:
+		liege.at_war = true
+		liege.allied = false
+		liege.adjust(USURPATION_AFFINITY)
+	WorldEvents.record("Guerra civil: %s se alza contra %s." % [GameManager.player_character.full_name(), liege_name], "", true)
+	relations_changed.emit()
+	return text + "\nNo tienes apoyos suficientes: estalla la guerra civil. Toma los castillos de %s para ceñir la corona." % liege_name
+
+## ¿Es este castillo del rey contra el que libras la guerra civil? (atacable aunque sea de tu reino)
+func is_rebel_target(castle: Castle) -> bool:
+	return castle != null and not civil_war_against.is_empty() and castle.owner_name == civil_war_against
+
+func _crown_player(intro: String) -> String:
+	var player: Character = GameManager.player_character
+	var text := intro + " " + become_regent(false)
+	player.role = Character.Role.REGENTE
+	civil_war_against = ""
+	GameManager.refresh_actions_for_role_change()
+	WorldEvents.record("%s se corona como %s." % [player.full_name(), player.role_title()], "", true)
+	relations_changed.emit()
+	return text
+
+## Tras conquistar un castillo: si el rey de la guerra civil se quedó sin ninguno, te coronas.
+func _check_civil_war_won() -> String:
+	if civil_war_against.is_empty():
+		return ""
+	for c: Castle in MapData.castles:
+		if c.owner_name == civil_war_against:
+			return ""
+	return _crown_player("%s ha perdido todos sus castillos: la guerra civil termina." % civil_war_against)
 
 # --- Diplomacia: guerra, paz y traición ---
 
@@ -959,7 +1154,7 @@ func on_player_marches_against(owner_name: String) -> String:
 	if r.allied:
 		r.allied = false
 		r.adjust(BETRAYAL_AFFINITY)
-		player.honor = clampi(player.honor + BETRAYAL_HONOR, 0, 100)
+		player.honor = clampi(player.honor + BETRAYAL_HONOR, Character.HONOR_MIN, Character.HONOR_MAX)
 		for other: Relationship in lords():
 			if other != r:
 				other.adjust(BETRAYAL_REPUTATION)
@@ -990,7 +1185,7 @@ func romance_possible(r: Relationship) -> bool:
 
 # Compatibilidad: quien puede ser cortejado.
 func courtable(r: Relationship) -> bool:
-	return romance_possible(r) and r.kind != Relationship.Kind.CONYUGE
+	return romance_possible(r) and r.kind != Relationship.Kind.CONYUGE and not npc_marriages.has(r.person_name)
 
 ## Gente de tu zona (el reino donde estás ahora, ver TravelData): con ella puedes tratar y a ella puedes retar.
 func in_area(r: Relationship) -> bool:
@@ -1158,7 +1353,7 @@ func interact(r: Relationship, kind: String) -> String:
 				topic = "gift_like"
 	if gain > 0:
 		var bonus: float = SkillEffects.gift_multiplier(player) if kind == "gift" else 1.0 + SkillEffects.fx(player, "social")
-		gain = maxi(1, roundi(gain * bonus))
+		gain = maxi(1, roundi(gain * bonus * honor_affinity_mult(r)))
 	r.adjust_affection(gain)
 	if gain > 0 and r.kind == Relationship.Kind.RIVAL_DUELO:
 		r.adjust_grudge(-roundi(gain * GRUDGE_EASE))
@@ -1262,7 +1457,7 @@ func converse(r: Relationship, attitude: String) -> Dictionary:
 		if gain > 0:
 			if attitude in ["halagador", "intima"]:
 				gain += player.charisma / 3
-			gain = maxi(1, roundi(gain * maxf(react, 0.5) * (1.0 + SkillEffects.fx(player, "social"))))
+			gain = maxi(1, roundi(gain * maxf(react, 0.5) * (1.0 + SkillEffects.fx(player, "social")) * honor_affinity_mult(r)))
 		if attitude == "intima":
 			r.romance = true
 	else:
@@ -1451,7 +1646,7 @@ func challenge(r: Relationship) -> Dictionary:
 	if rival.role == Character.Role.CAMPESINO:
 		return {"accepted": false, "text": "%s: «%s»\n(Un campesino no se bate en duelo.)" % [
 			r.person_name, DialogueCatalog.line("challenge_refuse_fear", rival, player, ctx)]}
-	if rank_gap >= CHALLENGE_RANK_GAP and player.fame < CHALLENGE_FAME_PER_RANK * (rank_gap - 1):
+	if rank_gap >= CHALLENGE_RANK_GAP and player.renown() < CHALLENGE_FAME_PER_RANK * (rank_gap - 1):
 		return {"accepted": false, "text": "%s: «%s»\n(Necesitas al menos %d de fama para que alguien de su rango acepte.)" % [
 			r.person_name, DialogueCatalog.line("challenge_refuse_rank", rival, player, ctx), CHALLENGE_FAME_PER_RANK * (rank_gap - 1)]}
 	var bold: bool = rival.personality in [Character.Personality.ARROGANTE] or Character.Personality.keys().has("VALIENTE") and rival.personality == Character.Personality.get("VALIENTE")
@@ -1503,7 +1698,7 @@ func can_invite(r: Relationship) -> String:
 		if r.affection < RETINUE_MIN_AFFECTION:
 			return "Necesitas más intimidad (%d de %d)." % [r.affection, RETINUE_MIN_AFFECTION]
 		var req: Array = RETINUE_REQUIREMENTS.get(r.character.role, [0, 0])
-		if player.fame < req[0] or player.honor < req[1]:
+		if player.renown() < req[0] or player.honor < req[1]:
 			return "Alguien de su rango solo sigue a quien tiene %d de fama y %d de honor." % [req[0], req[1]]
 		if r.kind == Relationship.Kind.RIVAL_DUELO and r.rivalry_stage() in [Relationship.RivalryStage.RIVAL, Relationship.RivalryStage.NEMESIS]:
 			return "Te guarda demasiado rencor."
@@ -1792,6 +1987,7 @@ func _on_month_passed(_month: int, _year: int) -> void:
 		return
 	var now := GameManager.months_elapsed()
 	var player: Character = GameManager.player_character
+	try_npc_marriage()
 	for r: Relationship in relations:
 		if not sociable(r) or r.affection <= 0 or r.kind == Relationship.Kind.CONYUGE:
 			continue
@@ -2059,7 +2255,9 @@ func arrange_political_marriage(lord_name: String) -> String:
 func save_state() -> Dictionary:
 	return {"retinue": retinue.duplicate(), "last_victory_month": last_victory_month,
 		"occupations": occupations.duplicate(), "designated_champion": designated_champion,
-		"practice_month": practice_month.duplicate(), "spouses": spouses.duplicate(true), "concubines": concubines.duplicate()}
+		"practice_month": practice_month.duplicate(), "spouses": spouses.duplicate(true), "concubines": concubines.duplicate(),
+		"npc_marriages": npc_marriages.duplicate(), "civil_war_against": civil_war_against,
+		"interaction_months": interaction_months.duplicate(), "free_interaction_month": free_interaction_month}
 
 func load_state(data: Dictionary) -> void:
 	retinue.clear()
@@ -2075,6 +2273,14 @@ func load_state(data: Dictionary) -> void:
 		practice_month[str(key)] = int(data.practice_month[key])
 	practice_partner = ""
 	retinue_news.clear()
+	civil_war_against = str(data.get("civil_war_against", ""))
+	interaction_months = {}
+	for key in data.get("interaction_months", {}):
+		interaction_months[str(key)] = int(data.interaction_months[key])
+	free_interaction_month = int(data.get("free_interaction_month", -1))
+	npc_marriages = {}
+	for key in data.get("npc_marriages", {}):
+		npc_marriages[str(key)] = str(data.npc_marriages[key])
 	# Partidas anteriores a los varios cónyuges: el único spouse_name pasa a la lista.
 	spouses.clear()
 	for s in data.get("spouses", []):

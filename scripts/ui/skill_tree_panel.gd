@@ -4,6 +4,7 @@ extends Control
 # Uso: load("res://scripts/ui/skill_tree_panel.gd").open(nodo, personaje)
 
 const TAB_NAMES := ["Combate", "Personalidad", "Alineación"]
+const WEAPON_TAB := "Arma"
 const TIER_MARK := ["", "I", "II", "III", "IV"]
 const LEARNED_COLOR := Color("d4af5a")
 const LOCKED_ALPHA := 0.45
@@ -116,6 +117,8 @@ func _rebuild() -> void:
 	var trees := SkillTreeCatalog.trees_for(character)
 	for i in trees.size():
 		_tabs.add_child(_tree_page(TAB_NAMES[i], trees[i]))
+	# Técnicas del arma que lleva: no cuestan puntos, se desbloquean con el nivel.
+	_tabs.add_child(_tree_page(WEAPON_TAB, SkillTreeCatalog.weapon_tree_of(character)))
 	_tabs.current_tab = clampi(current, 0, _tabs.get_tab_count() - 1)
 	_points.text = "Puntos libres: %d" % SkillTreeCatalog.points_free(character)
 
@@ -154,6 +157,7 @@ func _node_button(id: String) -> Button:
 	b.custom_minimum_size = Vector2(0, 34)
 	b.clip_text = true
 	b.focus_mode = Control.FOCUS_ALL
+	SkillIcons.set_node_button_icon(b, id, character, 24)
 	if SkillTreeCatalog.knows(character, id):
 		b.text = "★ " + b.text
 		b.add_theme_color_override("font_color", LEARNED_COLOR)
@@ -201,9 +205,19 @@ func _show_hint(id: String) -> void:
 		parts.append("Técnica · %d PT" % int(n.get("pt", 0)))
 		if float(n.get("pow", 0.0)) > 0.0:
 			var dt := int(n.get("dt", -1))
-			parts.append("Daño: " + (RpgStats.DAMAGE_NAMES[dt] if dt >= 0 and dt < RpgStats.DAMAGE_NAMES.size() else "el del arma"))
+			if dt >= 0 and dt < RpgStats.DAMAGE_NAMES.size():
+				parts.append("Daño: " + RpgStats.DAMAGE_NAMES[dt])
+			else:
+				parts.append("Daño: el de tu arma (%s)" % RpgStats.DAMAGE_NAMES[RpgStats.weapon_type(character)])
 	else:
 		parts.append("Pasiva")
+	if SkillTreeCatalog.is_weapon_node(id):   # técnicas de arma: sin puntos, por nivel
+		var lv := SkillTreeCatalog.required_level(n)
+		var have := SkillTreeCatalog.knows(character, id)
+		parts.append("Técnica de arma · nivel %d" % lv)
+		_hint.text = "%s — %s\n%s · %s" % [n.name, n.desc, " · ".join(parts),
+			"La tienes mientras lleves esta arma." if have else "Se desbloquea sola al llegar al nivel %d." % lv]
+		return
 	var cost := SkillTreeCatalog.cost_for(character, id)
 	parts.append("Coste: gratis" if cost == 0 else "Coste: %d punto%s" % [cost, "" if cost == 1 else "s"])
 	var reqs := []

@@ -147,6 +147,8 @@ func _refresh_ui() -> void:
 	role_label.text = "%s\n%s · Nivel %d (%d/%d exp.) · %s" % [character.full_name(), character.role_title(),
 		character.level, character.xp, character.xp_to_next(), character.health_text()]
 	honor_label.text = "Honor %d" % character.honor
+	honor_bar.min_value = Character.HONOR_MIN   # −100 (infamia) .. 100
+	honor_bar.max_value = Character.HONOR_MAX
 	honor_bar.value = character.honor
 	if not honor_bar.has_theme_stylebox_override("fill"):
 		var gold_fill := StyleBoxFlat.new()
@@ -510,8 +512,17 @@ func _get_actions_for_role(role: int) -> Array[Dictionary]:
 				_mercenarios_action(),
 				{"label": "Diplomacia (Relaciones)", "tooltip": "Declara guerras, firma paces, pacta alianzas y envía presentes.",
 					"locked": false, "no_cost": true, "callback": _action_abrir_relaciones},
+				_claim_throne_action(),
 			]
 	return []
+
+func _claim_throne_action() -> Dictionary:
+	var sides := RelationsData.claim_sides()
+	return {"label": "Reclamar el Trono",
+		"tooltip": "Los señores de tu reino eligen bando según su afinidad contigo (apoyan con %d o más). Hoy: %d a favor, %d en contra. Con mayoría te coronan; si no, guerra civil: toma los castillos del rey." % [
+			RelationsData.CLAIM_SUPPORT_AFFINITY, sides[0].size(), sides[1].size()],
+		"unavailable": RelationsData.can_claim_throne(), "locked": false, "no_cost": true,
+		"callback": func(): _show_feedback(RelationsData.claim_throne())}
 
 # --- Vasallaje y Duque ---
 
@@ -579,7 +590,7 @@ func _action_cazar() -> void:
 		character.gold += CAZA_GOLD
 		_show_feedback("Cobras un ciervo en el bosque del señor y vendes la carne por %d de oro." % CAZA_GOLD)
 	else:
-		character.honor = clampi(character.honor - CAZA_HONOR_PENALTY, 0, 100)
+		character.honor = clampi(character.honor - CAZA_HONOR_PENALTY, Character.HONOR_MIN, Character.HONOR_MAX)
 		_show_feedback("Los guardabosques te sorprenden con la pieza: la vergüenza te cuesta %d de honor." % CAZA_HONOR_PENALTY)
 	_refresh_ui()
 

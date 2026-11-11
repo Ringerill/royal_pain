@@ -13,6 +13,8 @@ const EndingPanel = preload("res://scripts/ui/ending_panel.gd")
 const ACHIEVEMENTS_KEY := KEY_L   # «Libro de hazañas»
 const PARTY_KEY := KEY_G          # gestor de grupo
 const PartyPanel = preload("res://scripts/ui/party_panel.gd")
+const KingdomPanel = preload("res://scripts/ui/kingdom_panel.gd")
+const KINGDOM_KEY := KEY_K        # información de los reinos
 const SiteMarkerScript = preload("res://scenes/map/site_marker.gd")
 const SiteCatalog = preload("res://scripts/resources/site_catalog.gd")
 const LEVEL_UP_PANEL := "res://scripts/ui/level_up_panel.gd"
@@ -100,6 +102,7 @@ func _ready() -> void:
 	_add_player_face()
 	_add_level_button()
 	_add_party_button()
+	_add_kingdom_button()
 	camera.setup_bounds(MapData.MAP_WIDTH, MapData.MAP_HEIGHT)
 	# Empieza mirando dónde estás (tu castillo al empezar), no el centro del mapa.
 	var here := TravelData.current_castle() if GameManager.is_game_active else MapData.get_castle_by_id(GameManager.home_castle_id)
@@ -126,6 +129,7 @@ func _ready() -> void:
 	_setup_menu()
 	MissionData.missions_changed.connect(_refresh_missions_button)
 	WorldEvents.notification_added.connect(_show_next_notification)
+	SocialEvents.ambient_said.connect(_show_toast)
 	GameManager.turn_advanced.connect(_on_turn_advanced)
 	GameManager.actions_changed.connect(_on_actions_changed)
 	_refresh_turn_ui()
@@ -207,6 +211,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		ChroniclePanel.open($UILayer, visible_castle_ids)
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == ACHIEVEMENTS_KEY:
 		AchievementsPanel.open($UILayer)
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KINGDOM_KEY:
+		_open_kingdoms()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == PARTY_KEY:
 		_open_party()
 	elif event.is_action_pressed("map_toggle_panels"):
@@ -1147,3 +1153,48 @@ func _check_end_conditions() -> bool:
 
 func _show_ending(ending: Dictionary) -> void:
 	EndingPanel.open($UILayer, ending)
+
+# Botón «Reinos» arriba (o tecla K): gobernantes, economía, castillos e integrantes; audiencias reales.
+func _add_kingdom_button() -> void:
+	if GameManager.player_character == null:
+		return
+	var btn := Button.new()
+	btn.name = "BtnKingdoms"
+	btn.text = "Reinos"
+	btn.tooltip_text = "Gobernantes, economía, castillos e integrantes de cada reino; pide audiencia al gobernante (K)."
+	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	btn.pressed.connect(_open_kingdoms)
+	var bar: HBoxContainer = $UILayer/TopBar/TopHBox
+	bar.add_child(btn)
+	bar.move_child(btn, mini(3, bar.get_child_count() - 1))
+
+func _open_kingdoms() -> void:
+	if $UILayer.get_children().any(func(n): return n is Control and n.get_script() == KingdomPanel):
+		return
+	KingdomPanel.open($UILayer, visible_castle_ids).tree_exited.connect(func():
+		if is_inside_tree():
+			_refresh_turn_ui())
+
+# --- Rótulo pasajero (diálogos sueltos de SocialEvents): aparece abajo y se desvanece solo ---
+const TOAST_SECONDS := 5.0
+
+func _show_toast(text: String) -> void:
+	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	panel.offset_top = -120
+	panel.offset_bottom = -70
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	var label := Label.new()
+	label.text = text
+	label.custom_minimum_size.x = 420
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(label)
+	$UILayer.add_child(panel)
+	panel.modulate.a = 0.0
+	var tw := panel.create_tween()
+	tw.tween_property(panel, "modulate:a", 1.0, 0.4)
+	tw.tween_interval(TOAST_SECONDS)
+	tw.tween_property(panel, "modulate:a", 0.0, 0.8)
+	tw.tween_callback(panel.queue_free)

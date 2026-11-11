@@ -24,7 +24,7 @@ const REGENTE_MIN_HONOR := 80
 const REGENTE_USURP_CASTLES := 4   # castillos de tu reino que debes controlar para usurpar el trono
 
 # Umbral bajo el cual un Caballero+ puede perder su título por deshonor
-const DISHONOR_THRESHOLD := 20
+const DISHONOR_THRESHOLD := -50   # con honor negativo se puede seguir siendo noble (camino villano), no hundirse del todo
 
 static func next_role(role: int) -> int:
 	match role:
@@ -127,10 +127,10 @@ static func apply_dishonor_demotion(character: Character) -> void:
 		Character.Role.NOBLEZA_BAJA: character.role = Character.Role.CABALLERO
 		Character.Role.NOBLEZA_ALTA: character.role = Character.Role.NOBLEZA_BAJA
 		Character.Role.DUQUE: character.role = Character.Role.NOBLEZA_ALTA
-	character.honor = clamp(character.honor + 15, 0, 100)   # tras la caída, se estabiliza un poco
+	character.honor = clamp(character.honor + 15, Character.HONOR_MIN, Character.HONOR_MAX)   # tras la caída, se estabiliza un poco
 
-# --- Deshonra total (honor 0): ya no termina la partida, pero cuesta caro ---
-const DISGRACE_HONOR_RESET := 15     # tras la caída, el honor se rehace desde aquí
+# --- Deshonra total (honor −100): no termina la partida, pero cuesta caro ---
+const DISGRACE_HONOR_RESET := -60    # tras tocar fondo, el honor se rehace desde aquí
 const DISGRACE_FAME_LOSS := 10
 const DISGRACE_DEMOTION := {
 	Character.Role.SOLDADO: Character.Role.CAMPESINO,
@@ -144,7 +144,7 @@ const DISGRACE_DEMOTION := {
 const DISGRACE_EXPELLED_ROLES := [Character.Role.SOLDADO, Character.Role.CABALLERO]
 
 static func is_disgraced(character: Character) -> bool:
-	return character != null and character.honor <= 0
+	return character != null and character.honor <= Character.HONOR_MIN
 
 ## Aplica la deshonra: pierdes un rango, fama, y si servías sin tierras tu señor te expulsa.
 ## Devuelve {text, expelled}. Quien llama se ocupa de olvidar el vasallaje si expelled es true.
@@ -156,8 +156,8 @@ static func apply_disgrace(character: Character, has_liege: bool) -> Dictionary:
 	elif DISGRACE_DEMOTION.has(character.role):
 		character.role = DISGRACE_DEMOTION[character.role]
 	character.honor = DISGRACE_HONOR_RESET
-	character.fame = maxi(0, character.fame - DISGRACE_FAME_LOSS)
-	var text := "Tu honor ha caído a cero: nadie respeta ya tu palabra."
+	character.fame = maxi(0, character.fame - DISGRACE_FAME_LOSS) if character.fame > 0 else mini(0, character.fame + DISGRACE_FAME_LOSS)   # pierdes renombre
+	var text := "Tu honor ha tocado fondo: nadie respeta ya tu palabra."
 	if expelled:
 		text += " Tu señor te expulsa de su servicio; de %s pasas a ser %s." % [old_title, character.role_title()]
 	elif character.role_title() != old_title:

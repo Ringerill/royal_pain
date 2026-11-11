@@ -19,6 +19,8 @@ const GRID_H := 8
 const MAX_TURNS := 12               # si se agota, el asedio fracasa y gana el defensor
 const SOLDIERS_PER_UNIT := 20
 const MAX_UNITS_PER_SIDE := 6
+const MIN_UNITS_PER_SIDE := 4        # al menos 4 pelotones por bando...
+const MIN_UNIT_SOLDIERS := 8         # ...si cada uno puede tener al menos 8 soldados
 const MAX_UNITS_WITH_ALLIES := 8      # en una batalla ajena: tus pelotones + los del anfitrión (una columna del tablero)
 const ROUT_CONTAGION := 5             # moral que pierde el bando cuando huye un pelotón completo (proporcional a su tamaño)
 const WALL_COLUMNS := 2
@@ -577,6 +579,8 @@ func _create_units(side: int, total: int) -> void:
 			continue
 		# Al menos tantos pelotones como jefes propios (tú y tus compañeros), sin pasar de los soldados que hay.
 		var min_count: int = mini(int(g[3]) if g.size() > 3 else 1, amount)
+		if not g[2]:   # tus pelotones y los del rival: un mínimo para que la batalla tenga maniobra
+			min_count = maxi(min_count, mini(MIN_UNITS_PER_SIDE, amount / MIN_UNIT_SOLDIERS))
 		var count: int = clampi(maxi(ceili(amount / float(SOLDIERS_PER_UNIT)), min_count), 1, g[1])
 		var types := _composition(side, count)
 		var per_unit: int = amount / count

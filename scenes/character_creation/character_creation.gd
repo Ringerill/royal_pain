@@ -402,6 +402,9 @@ func _on_volver_menu_pressed() -> void:
 
 # --- Habilidades: una básica por rama de cada árbol (personalidad, alineación y tipo de luchador) ---
 
+const SKILL_ICON := 22
+const INK_ACTIVE := Color("6e2a14")    # iconos sobre pergamino: técnicas en tinta roja...
+const INK_PASSIVE := Color("24405e")   # ...pasivas en tinta azul
 var _tree_options: Array = []      # [{"tree", "branch", "ids"}] en orden: árbol por árbol
 var _basic_buttons: Array = []     # OptionButton por rama (mismo índice que _tree_options)
 
@@ -435,11 +438,17 @@ func _build_skills_lists() -> void:
 		var ob := OptionButton.new()
 		ob.add_item("—")
 		ob.set_item_metadata(0, "")
+		ob.add_theme_constant_override("icon_max_width", SKILL_ICON)
+		ob.get_popup().add_theme_constant_override("icon_max_width", SKILL_ICON)
 		for id in opt.ids:
 			var n: Dictionary = SkillTreeCatalog.node(str(id))
-			ob.add_item(str(n.get("name", id)))
-			ob.set_item_metadata(ob.item_count - 1, str(id))
-			ob.set_item_tooltip(ob.item_count - 1, str(n.get("desc", "")))
+			var k := ob.item_count
+			ob.add_icon_item(SkillIcons.texture(SkillIcons.node_icon_name(str(id))), str(n.get("name", id)))
+			ob.set_item_metadata(k, str(id))
+			ob.set_item_tooltip(k, str(n.get("desc", "")))
+			ob.get_popup().set_item_icon_modulate(k, INK_ACTIVE if n.get("kind", "") == "act" else INK_PASSIVE)
+		for c in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_focus_color", "icon_hover_pressed_color"]:
+			ob.add_theme_color_override(c, INK_ACTIVE)
 		ob.item_selected.connect(func(k: int): _on_basic_selected(i, str(ob.get_item_metadata(k))))
 		list.add_child(ob)
 		_basic_buttons.append(ob)

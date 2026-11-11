@@ -152,7 +152,11 @@ static func income_multiplier(character: Character) -> float:
 	var m := 1.0 + fx(character, "income")
 	if has(character, ADMINISTRADOR):
 		m *= ADMINISTRADOR_BONUS
+	if character != null:   # mala fama: nadie se atreve a regatearte (hasta +20% con −100 de fama)
+		m += character.infamy() * INFAMY_INCOME
 	return maxf(0.2, m)
+
+const INFAMY_INCOME := 0.002
 
 ## Multiplicador del coste de reclutar (milicia, mercenarios): menor es más barato.
 static func recruit_cost_multiplier(character: Character) -> float:

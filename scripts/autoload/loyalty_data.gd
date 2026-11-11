@@ -58,7 +58,7 @@ const PLOT_JAIL_AFFINITY := 25
 
 var loyalty: Dictionary = {}     # clave (nombre o "castillo:<id>") -> 0..100
 var warned: Dictionary = {}      # clave -> mes (months_elapsed) del aviso
-var _last_honor := -1
+var _last_honor := -999   # -999: aún sin medir (el honor va de −100 a 100)
 var _last_victory := -1
 
 func _ready() -> void:
@@ -69,7 +69,7 @@ func _ready() -> void:
 func reset() -> void:
 	loyalty.clear()
 	warned.clear()
-	_last_honor = -1
+	_last_honor = -999
 	_last_victory = RelationsData.last_victory_month
 
 # --- Consultas ---
@@ -226,7 +226,7 @@ func month_tick() -> void:
 		_last_victory = RelationsData.last_victory_month
 		if _last_victory >= 0:
 			note_all("victory")
-	if _last_honor >= 0:
+	if _last_honor != -999:
 		if player.honor <= _last_honor - HONOR_STEP:
 			note_all("dishonor")
 		elif player.honor >= _last_honor + HONOR_STEP:
@@ -444,5 +444,5 @@ func load_state(data: Dictionary) -> void:
 	warned = {}
 	for k in data.get("warned", {}):
 		warned[str(k)] = int(data.warned[k])
-	_last_honor = int(data.get("last_honor", -1))
+	_last_honor = int(data.get("last_honor", -999))
 	_last_victory = int(data.get("last_victory", RelationsData.last_victory_month))

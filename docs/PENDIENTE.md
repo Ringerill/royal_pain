@@ -27,6 +27,35 @@ Resumen de las fases que faltan del plan de revisión. El detalle completo, con 
   - campales con más pelotones (mínimo 4), más escolta y choques más decisivos;
   - evento «Celos» retirado.
 
+**Hecho el 11 de noviembre de 2026 (tarde, versión 0.9.7):**
+- **Móvil (APK):**
+  - las ventanas que no caben se encogen solas (`TouchSupport.fit`);
+  - el gesto «atrás» de Android equivale a Esc;
+  - en combate, «Volver» va el primero de la lista;
+  - «Tu destino» se oculta solo en el móvil;
+  - los recortes de cara se escalan si el retrato se importa más pequeño.
+- **Icono del juego:** el escudo de armas, en `assets/icons/app/` (lo genera `tools/build_app_icon.gd`).
+- **Combate:**
+  - cada acción se anuncia (nombre y flecha al objetivo) antes de ejecutarse, con embestida hacia el objetivo;
+  - daño general rebajado (`DMG_SCALE` 2.7);
+  - «Retirarse» directo (sin rendirse), según la Agilidad; al retirarse en una campal, las bajas siguen al daño sufrido;
+  - fondos por bioma, y el cuartel solo para torneos, prácticas y duelos en el castillo.
+- **Batalla campal:** solo existe con un ejército de verdad en marcha, y su resultado cambia el mapa (repliegue o marcha).
+- **Duelos:** eliges a quién retar (`DuelPicker`), y te puede rechazar por rango, miedo, prudencia, amistad o tu deshonra.
+- **Interfaz:**
+  - creación y resumen sin el marco de pergamino;
+  - árbol de habilidades dibujado como árbol;
+  - Relaciones y Grupo con menos texto;
+  - iconos (`StatIcons`) para recursos, atributos, roles y lazos en mapa, castillo, Relaciones, Reinos, Grupo, ficha, creación, tienda, obras y consejo de guerra.
+- **Mundo:**
+  - expediciones por pasos con rescates (`SiteCatalog.steps`);
+  - reclutar o encerrar enemigos genéricos con nombre propio (`RecruitRules`, `RecruitDialog`);
+  - sucesos coherentes con la personalidad (`only`/`avoid`, uno propio por carácter);
+  - jornal que cuesta vida;
+  - fuera la caza furtiva y la tregua con rivales.
+- **Por vigilar:**
+  - a nivel 3, contra 5 enemigos, la victoria bajó al 25 % con el nuevo daño;
+
 **Lo que queda:**
 - **Probarlo todo jugando:** nada de la sesión de noviembre se ha probado a mano todavía.
 - **Equilibrio** (medido con simulaciones cortas, afinar jugando):

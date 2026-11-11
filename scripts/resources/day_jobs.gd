@@ -5,6 +5,7 @@ extends RefCounted
 const PER_MONTH := 2               # jornales como máximo al mes
 const MARKET_BONUS := 3            # oro extra por nivel del mercado del castillo
 const INCIDENT_DAMAGE := 15        # vida que cuesta un mal día de escolta o de guardia
+const HEALTH_PER_GOLD := 0.5       # el trabajo desgasta: vida por cada moneda ganada
 
 # id, nombre, atributo que cuenta, oro base, oro por punto del atributo, prob. de incidente
 const JOBS := [
@@ -28,6 +29,10 @@ static func eligible(c: Character, has_liege: bool) -> bool:
 		Character.Role.SOLDADO:
 			return not has_liege
 	return false
+
+## Vida que cuesta un jornal que paga `gold` (más oro, trabajo más duro).
+static func health_cost(gold: int) -> int:
+	return maxi(1, ceili(gold * HEALTH_PER_GOLD))
 
 static func pay(job: Dictionary, c: Character, castle: Castle) -> int:
 	var stat: int = c.get(job.stat)

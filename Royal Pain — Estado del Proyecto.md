@@ -1,4 +1,4 @@
-# ⚔️ Royal Pain — Reinos de Destino
+# ⚔️ Royal Pain
 
 Estado del proyecto · estrategia 2D histórico-medieval en Godot 4.7
 
@@ -6,7 +6,7 @@ Estado del proyecto · estrategia 2D histórico-medieval en Godot 4.7
 
 ## Visión y pretensiones generales
 
-"Reinos de Destino" es un juego de estrategia en pixel art ambientado en una Europa medieval sin fantasía (siglos X–XV). No hay niveles ni experiencia: la progresión es puramente **social**. El jugador elige un rol dentro de la jerarquía feudal —de Campesino a Regente— y asciende o desciende según sus decisiones, hazañas y fracasos.
+"Royal Pain" es un juego de estrategia en pixel art ambientado en una Europa medieval sin fantasía (siglos X–XV). No hay niveles ni experiencia: la progresión es puramente **social**. El jugador elige un rol dentro de la jerarquía feudal —de Campesino a Regente— y asciende o desciende según sus decisiones, hazañas y fracasos.
 
 La promesa central: tu historia personal es el juego. Cada decisión puede catapultarte al poder o arruinarte.
 

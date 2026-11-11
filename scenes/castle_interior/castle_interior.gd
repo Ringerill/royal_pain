@@ -37,9 +37,6 @@ var castle: Castle
 
 # --- Constantes de balance de acciones (ajustables sin tocar la lógica) ---
 const TIERRA_GOLD_GAIN := 20
-const CAZA_GOLD := 35
-const CAZA_BASE_CHANCE := 0.55          # + (Estrategia - 5) * 3%
-const CAZA_HONOR_PENALTY := 5
 const ENTRENAR_COMBAT_GAIN := 1
 const ENTRENAR_COST := 15
 const ENTRENAR_CAP := 18                # cuanto más cerca de este Combate, más difícil mejorar
@@ -66,7 +63,7 @@ const MOBILIZE_FRACTION_DUQUE := 0.5
 const DUCADO_BASE_PER_CASTLE := 30
 const DUCADO_LEADERSHIP_FACTOR := 2
 const MOBILIZE_HINT := "Para tomar un castillo amurallado hace falta ≈1,5 veces su guarnición: reúne ejércitos, contrata mercenarios o asédialo antes de asaltar."
-const DUEL_TOOLTIP := "Retas a un rival de tu rango. Ganar da honor, oro y cuenta para ascender; perder resta honor."
+const DUEL_TOOLTIP := "Eliges a quién retar entre la gente de la zona (o buscas a un desconocido de tu nivel). Puede rechazarte. Ganar da honor, oro y cuenta para ascender; perder resta honor. Proponerlo gasta 1 acción."
 const MEDICO_COST := 30
 const MEDICO_HEAL := 50
 
@@ -140,13 +137,57 @@ func _refresh_ui_if_ready() -> void:
 	if character != null and is_node_ready():
 		_refresh_ui()
 
+## Iconos en vez de texto en la ficha: [rol] nivel y vida; oro, fama y duelos; y los del castillo.
+var _row_me: HBoxContainer
+var _row_wealth: HBoxContainer
+var _row_castle: HBoxContainer
+
+func _refresh_icon_rows() -> void:
+	var box := role_label.get_parent()
+	if _row_me == null:
+		_row_me = HBoxContainer.new()
+		_row_wealth = HBoxContainer.new()
+		_row_castle = HBoxContainer.new()
+		for r: HBoxContainer in [_row_me, _row_wealth, _row_castle]:
+			r.alignment = BoxContainer.ALIGNMENT_CENTER
+			r.add_theme_constant_override("separation", 12)
+		box.add_child(_row_me)
+		box.move_child(_row_me, role_label.get_index() + 1)
+		box.add_child(_row_wealth)
+		box.move_child(_row_wealth, gold_label.get_index())
+		box.add_child(_row_castle)
+		box.move_child(_row_castle, castle_stats_label.get_index())
+	for r: HBoxContainer in [_row_me, _row_wealth, _row_castle]:
+		for ch in r.get_children():
+			ch.queue_free()
+	var ri := StatIcons.role_icon(character, 18)
+	ri.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_row_me.add_child(ri)
+	StatIcons.pair(_row_me, "nivel", "%d" % character.level, 16, "Nivel %d · %d/%d de experiencia" % [character.level, character.xp, character.xp_to_next()])
+	StatIcons.pair(_row_me, "vida", "%d/%d" % [character.current_health, character.max_health], 16, character.health_text())
+	StatIcons.pair(_row_wealth, "oro", str(character.gold), 16)
+	StatIcons.pair(_row_wealth, "fama", str(character.fame), 16)
+	StatIcons.pair(_row_wealth, "rivalidad", "%d–%d" % [character.duels_won, character.duels_lost], 16, "Duelos: %d ganados, %d perdidos" % [character.duels_won, character.duels_lost])
+	_row_castle.visible = castle != null
+	if castle != null:
+		StatIcons.pair(_row_castle, "oro", str(castle.gold), 16, "Tesoro del castillo")
+		StatIcons.pair(_row_castle, "comida", str(castle.food), 16)
+		StatIcons.pair(_row_castle, "soldados", str(castle.garrison_size), 16, "Guarnición")
+	var hi := honor_label.get_parent().get_child(0)
+	if not (hi is TextureRect):
+		var icon := StatIcons.icon("honor", 18)
+		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		honor_label.get_parent().add_child(icon)
+		honor_label.get_parent().move_child(icon, 0)
+
 func _refresh_ui() -> void:
 	title_label.text = castle.castle_name if castle != null else "Interior del Castillo"
 	title_label.tooltip_text = title_label.text   # el título se recorta con «…» si no cabe junto a los botones
 	portrait.texture = character.get_portrait()
-	role_label.text = "%s\n%s · Nivel %d (%d/%d exp.) · %s" % [character.full_name(), character.role_title(),
-		character.level, character.xp, character.xp_to_next(), character.health_text()]
-	honor_label.text = "Honor %d" % character.honor
+	role_label.text = character.full_name()
+	role_label.tooltip_text = character.role_title()
+	honor_label.text = str(character.honor)
+	_refresh_icon_rows()
 	honor_bar.min_value = Character.HONOR_MIN   # −100 (infamia) .. 100
 	honor_bar.max_value = Character.HONOR_MAX
 	honor_bar.value = character.honor
@@ -155,8 +196,8 @@ func _refresh_ui() -> void:
 		gold_fill.bg_color = Color("c9a24a")
 		gold_fill.set_corner_radius_all(3)
 		honor_bar.add_theme_stylebox_override("fill", gold_fill)
-	gold_label.text = "Oro: %d · Fama: %d" % [character.gold, character.fame]
-	duels_label.text = "Duelos: %d ganados / %d perdidos" % [character.duels_won, character.duels_lost]
+	gold_label.visible = false   # oro, fama, vida y duelos: con iconos (_refresh_icon_rows)
+	duels_label.visible = false
 	actions_label.text = "Acciones: %d / %d" % [GameManager.actions_remaining, GameManager.actions_per_turn]
 
 	if castle != null:
@@ -169,9 +210,10 @@ func _refresh_ui() -> void:
 		elif _is_foreign():
 			castle_info_label.text += " · de visita"
 		castle_banner.color = KingdomEnums.kingdom_color(castle.kingdom)
-		castle_stats_label.text = "Tesoro del castillo: %d\nComida: %d\nGuarnición: %d soldados" % [castle.gold, castle.food, castle.garrison_size]
+		castle_stats_label.text = ""   # tesoro, comida y guarnición: con iconos (_refresh_icon_rows)
 		if LoyaltyData.is_tracked(castle):
-			castle_stats_label.text += " · %s" % LoyaltyData.bar_text(castle)
+			castle_stats_label.text = LoyaltyData.bar_text(castle)
+		castle_stats_label.visible = not castle_stats_label.text.is_empty()
 		var built: Array[String] = []
 		for id: String in BuildingCatalog.ORDER:
 			if castle.building_level(id) > 0:
@@ -375,7 +417,7 @@ func _foreign_actions() -> Array[Dictionary]:
 			"tooltip": "El torneo local: %d duelos contra los campeones de la zona. Uno por castillo y año, de abril a septiembre." % CombatSetup.TOURNAMENT_ROUNDS,
 			"unavailable": TravelData.local_tournament_blocker(castle), "locked": false, "callback": _action_torneo_local})
 		result.append({"label": "Retar a Duelo", "tooltip": DUEL_TOOLTIP, "unavailable": _duel_unavailable_reason(),
-			"locked": false, "callback": _action_retar_duelo})
+			"locked": false, "no_cost": true, "callback": _action_retar_duelo})
 	return result
 
 func _action_audiencia() -> void:
@@ -428,9 +470,6 @@ func _get_actions_for_role(role: int) -> Array[Dictionary]:
 			return [
 				{"label": "Trabajar la Tierra", "tooltip": "Ganas %d de oro trabajando en tus tierras." % TIERRA_GOLD_GAIN,
 					"locked": false, "callback": _action_trabajar_tierra},
-				{"label": "Cazar Furtivo", "tooltip": "%d%% de cazar en el bosque del señor y vender la pieza por %d de oro; si te pillan, pierdes %d de honor." % [
-					roundi(_caza_chance() * 100), CAZA_GOLD, CAZA_HONOR_PENALTY],
-					"locked": false, "callback": _action_cazar},
 				{"label": "Abandonar tus Tierras", "tooltip": "Dejas tu tierra y a tu señor: quedas como %s, libre de ir donde quieras." % Character.role_title_for(Character.Role.INAFILIADO, character.gender),
 					"locked": false, "callback": _action_abandon_land},
 				{"label": "Migrar a Otro Reino", "tooltip": "Te mudas a otro reino en busca de mejor fortuna: viaja desde el mapa a un castillo de otro reino y, allí, elige «Establecerte Aquí».",
@@ -441,7 +480,7 @@ func _get_actions_for_role(role: int) -> Array[Dictionary]:
 		Character.Role.SOLDADO:
 			return [
 				{"label": "Retar a Duelo", "tooltip": DUEL_TOOLTIP, "unavailable": _duel_unavailable_reason(),
-					"locked": false, "callback": _action_retar_duelo},
+					"locked": false, "no_cost": true, "callback": _action_retar_duelo},
 				_entrenar_action(),
 				{"label": "Desertar", "tooltip": "Abandonas tu puesto y vuelves a ser Campesino.",
 					"unavailable": _desertar_unavailable_reason(),
@@ -451,7 +490,7 @@ func _get_actions_for_role(role: int) -> Array[Dictionary]:
 		Character.Role.CABALLERO:
 			return [
 				{"label": "Retar a Duelo", "tooltip": DUEL_TOOLTIP, "unavailable": _duel_unavailable_reason(),
-					"locked": false, "callback": _action_retar_duelo},
+					"locked": false, "no_cost": true, "callback": _action_retar_duelo},
 				_tournament_action(),
 				_mejorar_tierras_action(),
 				_entrenar_action(),
@@ -462,7 +501,7 @@ func _get_actions_for_role(role: int) -> Array[Dictionary]:
 		Character.Role.NOBLEZA_BAJA:
 			return [
 				{"label": "Retar a Duelo", "tooltip": DUEL_TOOLTIP, "unavailable": _duel_unavailable_reason(),
-					"locked": false, "callback": _action_retar_duelo},
+					"locked": false, "no_cost": true, "callback": _action_retar_duelo},
 				_tournament_action(),
 				{"label": "Recaudar Impuestos", "tooltip": "Recolectas impuestos de tu condado, proporcional a tu Liderazgo (%d%% para ti, el resto para el castillo)." % roundi(PLAYER_TAX_SHARE * 100),
 					"locked": false, "callback": _action_recaudar},
@@ -479,7 +518,7 @@ func _get_actions_for_role(role: int) -> Array[Dictionary]:
 		Character.Role.NOBLEZA_ALTA:
 			return [
 				{"label": "Retar a Duelo", "tooltip": DUEL_TOOLTIP, "unavailable": _duel_unavailable_reason(),
-					"locked": false, "callback": _action_retar_duelo},
+					"locked": false, "no_cost": true, "callback": _action_retar_duelo},
 				_tournament_action(),
 				{"label": "Gobernar Territorio", "tooltip": "Administras tu región a mayor escala, recaudando más que un noble menor (%d%% para ti, el resto para el castillo)." % roundi(PLAYER_TAX_SHARE * 100),
 					"locked": false, "callback": _action_gobernar_territorio},
@@ -503,7 +542,7 @@ func _get_actions_for_role(role: int) -> Array[Dictionary]:
 		Character.Role.DUQUE:
 			return [
 				{"label": "Retar a Duelo", "tooltip": DUEL_TOOLTIP, "unavailable": _duel_unavailable_reason(),
-					"locked": false, "callback": _action_retar_duelo},
+					"locked": false, "no_cost": true, "callback": _action_retar_duelo},
 				_tournament_action(),
 				{"label": "Gobernar el Ducado", "tooltip": "Recaudas en cada castillo a tu nombre (%d de base + Liderazgo × %d por castillo; %d%% para ti, el resto para sus arcas)." % [
 					DUCADO_BASE_PER_CASTLE, DUCADO_LEADERSHIP_FACTOR, roundi(PLAYER_TAX_SHARE * 100)],
@@ -581,18 +620,6 @@ func _action_trabajar_tierra() -> void:
 
 func _action_migrar() -> void:
 	_show_feedback("Para migrar, vuelve al mapa, elige un castillo de otro reino y pulsa «Viajar» (1 acción por tramo, 2 en invierno). Allí podrás establecerte con su señor.")
-
-func _caza_chance() -> float:
-	return clampf(CAZA_BASE_CHANCE + (character.strategy - 5) * 0.03, 0.3, 0.85)
-
-func _action_cazar() -> void:
-	if randf() < _caza_chance():
-		character.gold += CAZA_GOLD
-		_show_feedback("Cobras un ciervo en el bosque del señor y vendes la carne por %d de oro." % CAZA_GOLD)
-	else:
-		character.honor = clampi(character.honor - CAZA_HONOR_PENALTY, Character.HONOR_MIN, Character.HONOR_MAX)
-		_show_feedback("Los guardabosques te sorprenden con la pieza: la vergüenza te cuesta %d de honor." % CAZA_HONOR_PENALTY)
-	_refresh_ui()
 
 # --- Soldado ---
 
@@ -822,8 +849,28 @@ func _action_retar_duelo() -> void:
 	if not character.can_fight_duels():
 		_show_feedback("Tu rango no te permite batirte en duelo.")
 		return
-	# A veces vuelve un rival conocido buscando revancha; si no, te retas con alguien de la corte.
-	var rival := RelationsData.pick_duel_opponent(character)
+	# Eliges a quién retar; puede rechazarte (RelationsData.challenge). Proponerlo gasta la acción.
+	DuelPicker.open(self, RelationsData.duel_candidates(), _on_duel_pick, _on_duel_stranger)
+
+func _on_duel_pick(r: Relationship) -> void:
+	var result: Dictionary = RelationsData.challenge(r)
+	if not result.get("accepted", false):
+		_show_feedback(result.text)
+		_refresh_ui()
+		return
+	_show_feedback(result.text)
+	CombatSetup.start_campaign_duel(character, result.rival)
+	await get_tree().create_timer(1.2).timeout
+	get_tree().change_scene_to_file(CombatSetup.RPG_SCENE)
+
+## Un aspirante de tu nivel que busca fama (siempre acepta).
+func _on_duel_stranger() -> void:
+	if not GameManager.has_actions_remaining():
+		_show_feedback("No te quedan acciones este turno.")
+		return
+	GameManager.consume_action()
+	var gender := PortraitPool.new(RelationsData.used_portraits).pick_gender()
+	var rival := CharacterLoader.make_rival(character, RelationsData._take_portrait(PortraitPool.new(RelationsData.used_portraits), gender), gender)
 	CombatSetup.start_campaign_duel(character, rival)
 	get_tree().change_scene_to_file(CombatSetup.RPG_SCENE)
 
@@ -888,11 +935,13 @@ func _day_job_action() -> Dictionary:
 		reason = "Ya trabajaste %d jornales este mes." % DayJobs.PER_MONTH
 	elif not GameManager.has_actions_remaining():
 		reason = "No te quedan acciones este mes."
-	return {"label": "Trabajo a Jornal", "tooltip": "Un día de trabajo por oro: cargador, jornalero, guardia o escolta. Hasta %d al mes. Gasta 1 acción." % DayJobs.PER_MONTH,
+	return {"label": "Trabajo a Jornal", "tooltip": "Un día de trabajo por oro; cuanto más ganas, más vida te cuesta. Hasta %d al mes." % DayJobs.PER_MONTH,
 		"unavailable": reason, "locked": false, "no_cost": true, "anywhere": true, "callback": _action_day_job}
 
 func _action_day_job() -> void:
-	var labels: Array = DayJobs.JOBS.map(func(j: Dictionary) -> String: return "%s (%d oro)" % [j.name, DayJobs.pay(j, character, castle)])
+	var labels: Array = DayJobs.JOBS.map(func(j: Dictionary) -> String:
+		var g := DayJobs.pay(j, character, castle)
+		return "%s (+%d oro, −%d vida)" % [j.name, g, DayJobs.health_cost(g)])
 	_choose_option("¿Qué trabajo buscas?", labels, func(i: int): _do_day_job(DayJobs.JOBS[i]))
 
 ## Hace el jornal (gasta la acción). Devuelve el oro ganado; público para las pruebas.
@@ -900,9 +949,15 @@ func _do_day_job(job: Dictionary) -> int:
 	if _drills_done("jornal") >= DayJobs.PER_MONTH or not GameManager.consume_action():
 		_show_feedback("Hoy no hay más trabajo para ti.")
 		return 0
-	_note_drill("jornal")
 	var gold := DayJobs.pay(job, character, castle)
-	var text := "Trabajas de %s y cobras %d de oro." % [job.name.to_lower(), gold]
+	var tired := DayJobs.health_cost(gold)
+	if character.current_health <= tired:
+		GameManager.actions_remaining += 1   # no se llega a trabajar: se devuelve la acción
+		_show_feedback("Estás demasiado agotado para ese trabajo (cuesta %d de vida)." % tired)
+		return 0
+	_note_drill("jornal")
+	character.current_health -= tired   # el trabajo duro desgasta: más oro, más vida
+	var text := "Trabajas de %s y cobras %d de oro (−%d de vida)." % [job.name.to_lower(), gold, tired]
 	if randf() < float(job.risk):
 		character.take_damage(DayJobs.INCIDENT_DAMAGE)
 		text += " Hubo pelea por el camino: −%d de vida." % DayJobs.INCIDENT_DAMAGE
@@ -940,8 +995,8 @@ func _action_enlist() -> void:
 	_build_role_actions()
 
 func _volunteer_action() -> Dictionary:
-	var reason := "" if not ArmyData.volunteer_event(castle).is_empty() else "%s no está en guerra con sus vecinos." % (castle.owner_name if castle != null else "Este señor")
-	return {"label": "Ofrecerte Voluntario", "tooltip": "Te ofreces a luchar en la guerra de este señor, aunque no sea la tuya.",
+	var reason := "" if not ArmyData.volunteer_event(castle).is_empty() else "Ningún ejército marcha contra este castillo ni sale de él: no hay batalla a la que sumarse."
+	return {"label": "Ofrecerte Voluntario", "tooltip": "Si un ejército marcha contra este castillo (o su señor ha mandado el suyo contra otro), te ofreces a luchar en la batalla campal, aunque la guerra no sea la tuya.",
 		"unavailable": reason, "locked": false, "no_cost": true, "anywhere": true, "callback": _action_volunteer}
 
 func _action_volunteer() -> void:

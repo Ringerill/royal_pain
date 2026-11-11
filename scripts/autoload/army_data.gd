@@ -28,7 +28,7 @@ const INVITE_MIN_AFFINITY := 20         # un señor que te aprecia así te llama
 const INVITE_MIN_INTIMACY := 40         # ...o alguien de su corte con quien tienes esta intimidad...
 const INVITE_MIN_FAME := 25             # ...o el señor de la zona donde estás, si tu fama te precede
 const INVITE_CHANCE := 0.85             # no todos los que pueden llamarte lo hacen (tu señor, siempre)
-const FIELD_INVITE_CHANCE := 0.4        # cada mes, con una guerra en tu zona: batalla campal
+const FIELD_INVITE_CHANCE := 0.6        # un ejército en marcha junto a ti: batalla campal (una tirada por ejército)
 const INVITE_WIN_GOLD_PER_SOLDIER := 2  # tu anfitrión paga a tu gente si vencéis
 const INVITE_WIN_GOLD_MIN := 20
 const INVITE_WIN_FAME := 4
@@ -52,6 +52,7 @@ var active_battle_army: Army
 
 # Noticias del último turno: [{text, castle_id}]. El mapa muestra las que el jugador puede ver.
 var turn_events: Array[Dictionary] = []
+var _field_called: Array[String] = []   # ejércitos por los que ya se te llamó a campo abierto (una vez cada uno)
 
 func _ready() -> void:
 	GameManager.turn_advanced.connect(_on_turn_advanced)
@@ -59,6 +60,7 @@ func _ready() -> void:
 
 func reset() -> void:
 	armies.clear()
+	_field_called.clear()
 	_next_id = 1
 	active_battle_army = null
 	turn_events.clear()
@@ -675,36 +677,57 @@ func decline_invitation(army_id: String) -> void:
 		armies_changed.emit()
 		events_changed.emit()
 
-# Con una guerra en tu zona, un señor puede llamarte a una batalla campal contra un castillo vecino.
+# Batalla campal: solo con un ejército de verdad en el mapa. Si un ejército de la IA marcha sobre un castillo
+# junto a ti, un señor de uno de los dos bandos puede llamarte a salirle al paso (o a marchar con él).
 func _maybe_field_invitation() -> void:
 	var player: Character = GameManager.player_character
-	if player == null or not _event_slot_free() or randf() >= FIELD_INVITE_CHANCE:
+	if player == null or not _event_slot_free():
 		return
-	var travel := get_node_or_null("/root/TravelData")
-	var here: Castle = travel.current_castle() if travel != null else MapData.get_castle_by_id(GameManager.home_castle_id)
-	if here == null:
-		return
-	var options: Array = []
-	for ally: Castle in [here] + here.connected_castle_ids.map(func(id: String): return MapData.get_castle_by_id(id)):
-		if ally == null or ally.owner_name == player.full_name():
+	var options: Array[Dictionary] = []
+	for a: Army in armies:
+		if a.army_id in _field_called:
 			continue
-		for enemy_id: String in ally.connected_castle_ids:
-			var enemy: Castle = MapData.get_castle_by_id(enemy_id)
-			if enemy == null or enemy.kingdom == ally.kingdom or not KingdomDiplomacy.at_war(RelationsData.kingdom_wars, ally.kingdom, enemy.kingdom):
-				continue
-			if enemy.owner_name == player.full_name() or is_player_defended(enemy):
-				continue
-			var pick := _inviter_for(ally.owner_name, ally.kingdom, enemy.kingdom)
-			if not pick.is_empty():
-				options.append([pick, ally, enemy])
+		var target: Castle = field_target(a)
+		if target == null or not _player_near(target, a.origin_castle_id):
+			continue
+		var pick := _field_pick(a, target)
+		if not pick.is_empty():
+			options.append(pick)
 	if options.is_empty():
 		return
-	options.sort_custom(func(a: Array, b: Array) -> bool: return a[0].score > b[0].score)
-	var best: Array = options[0]
-	GameManager.pending_event = InvitationCatalog.field_event(best[1], best[2], best[0].lord, best[0].inviter, best[0].liege)
+	options.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return x.score > y.score)
+	var best: Dictionary = options[0]
+	_field_called.append(best.army.army_id)   # una sola tirada por ejército
+	if not best.liege and randf() >= FIELD_INVITE_CHANCE:
+		return
+	GameManager.pending_event = InvitationCatalog.field_event(best.army, best.target, best.side, best.lord, best.inviter, best.liege)
+	_add_event("%s te llama a la batalla campal: %s marcha sobre %s." % [best.inviter, best.army.owner_name, best.target.castle_name],
+		best.target.castle_id)
 
-## El jugador se ofrece voluntario en el castillo donde está: si su reino está en guerra con un vecino,
-## su señor lo manda a la batalla campal. Devuelve el evento (o {} si no hay guerra ni señor que lo acepte).
+## El castillo contra el que marcha un ejército de la IA, si se le puede salir al paso; null si no.
+## (Los asedios a tus castillos los defiendes tú: no hay batalla campal.)
+func field_target(a: Army) -> Castle:
+	if a == null or is_player_army(a) or not a.is_marching():
+		return null
+	var target: Castle = MapData.get_castle_by_id(a.destination_castle_id)
+	if target == null or not is_hostile(a, target) or is_player_defended(target):
+		return null
+	return target
+
+## Quién te llamaría a esa batalla y en qué bando (el que más ganas tenga). {} si nadie.
+func _field_pick(a: Army, target: Castle) -> Dictionary:
+	var best := {}
+	for side: int in [BattleEnums.Side.ATACANTE, BattleEnums.Side.DEFENSOR]:
+		var with_army := side == BattleEnums.Side.ATACANTE
+		var pick := _inviter_for(a.owner_name if with_army else target.owner_name, a.kingdom if with_army else target.kingdom,
+			target.kingdom if with_army else a.kingdom)
+		if not pick.is_empty() and (best.is_empty() or pick.score > best.score):
+			pick.merge({"side": side, "army": a, "target": target})
+			best = pick
+	return best
+
+## El jugador se ofrece voluntario en el castillo donde está: si un ejército enemigo marcha sobre él
+## (o el señor de aquí ha mandado el suyo contra otro), lo manda a la batalla campal. {} si no hay batalla.
 func volunteer_event(here: Castle) -> Dictionary:
 	var player: Character = GameManager.player_character
 	if player == null or here == null or here.owner_name == player.full_name():
@@ -712,14 +735,37 @@ func volunteer_event(here: Castle) -> Dictionary:
 	var lord := RelationsData.get_relation(here.owner_name)
 	if lord == null or lord.at_war or lord.is_hostile():
 		return {}
-	for enemy_id: String in here.connected_castle_ids:
-		var enemy: Castle = MapData.get_castle_by_id(enemy_id)
-		if enemy == null or enemy.kingdom == here.kingdom or not KingdomDiplomacy.at_war(RelationsData.kingdom_wars, here.kingdom, enemy.kingdom):
+	for a: Army in armies:
+		var target := field_target(a)
+		if target == null:
 			continue
-		if enemy.owner_name == player.full_name() or is_player_defended(enemy):
-			continue
-		return InvitationCatalog.field_event(here, enemy, here.owner_name, here.owner_name, false)
+		if target == here:
+			return InvitationCatalog.field_event(a, target, BattleEnums.Side.DEFENSOR, here.owner_name, here.owner_name, false)
+		if a.origin_castle_id == here.castle_id and a.owner_name == here.owner_name:
+			return InvitationCatalog.field_event(a, target, BattleEnums.Side.ATACANTE, here.owner_name, here.owner_name, false)
 	return {}
+
+## Resultado de una batalla campal en el mundo: el ejército y la guarnición que salió pierden sus bajas;
+## si el ejército pierde, se repliega y no hay asedio; si gana, sigue su marcha. Devuelve el texto.
+func resolve_field_battle(a: Army, castle: Castle, army_won: bool, army_lost: int, sortie_lost: int) -> String:
+	if a == null or castle == null:
+		return ""
+	var lines: Array[String] = []
+	castle.garrison_size = maxi(1, castle.garrison_size - sortie_lost)
+	a.size = maxi(0, a.size - army_lost)
+	var text: String
+	if army_won and a.size > 0:
+		text = "%s vence en campo abierto y sigue su marcha sobre %s con %d soldados; a la guarnición le quedan %d." % [
+			a.owner_name, castle.castle_name, a.size, castle.garrison_size]
+		lines.append(text)
+	else:
+		text = "La hueste de %s es derrotada ante %s: no habrá asedio." % [a.owner_name, castle.castle_name]
+		lines.append(text)
+		_retreat_army(a, a.size, lines)
+	_add_event("Batalla campal ante %s: %s" % [castle.castle_name, text], castle.castle_id)
+	armies_changed.emit()
+	events_changed.emit()
+	return " ".join(lines)
 
 ## Soldados que salen a una batalla campal desde un castillo.
 func field_battle_soldiers(castle: Castle) -> int:

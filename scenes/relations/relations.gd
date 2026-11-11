@@ -15,11 +15,7 @@ const AFFINITY_BAR_WIDTH := 150
 const FACE_SIZE := 64
 # [clave, título]: clave es la que usa RelationsData.requested_tab para abrir una pestaña concreta.
 const TAB_KEYS := [["lugar", "Tu zona"], ["afectos", "Afectos"], ["sequito", "Séquito"], ["rivales", "Rivales"], ["senores", "Señores"], ["reinos", "Reinos"], ["presos", "Prisioneros"]]
-const RULES_TEXT := "Los señores aliados no atacan tus castillos; los hostiles te prefieren como blanco. Atacar o conquistar a un señor empeora la relación. Las alianzas requieren 40 de afinidad y rango de Nobleza. El matrimonio político (afinidad 60, Caballero o más) une a la familia como aliada; casarte con la familia de tu soberano te pone en la línea de sucesión al trono. Marchar contra un señor sin declararle la guerra lo ofende; marchar contra un aliado es traición."
-const AREA_TEXT := "Gente del lugar donde estás (viaja para conocer a la de otros reinos): puedes conversar, hacer regalos, invitar al séquito o retar a duelo. Quien te supera mucho en rango solo acepta un reto si tienes fama; quien te teme puede negarse. El romance solo es posible entre un hombre y una mujer, y nace de la confianza: primero la amistad."
-const RETINUE_TEXT := "Tu séquito te acompaña a la batalla (cada miembro lidera una unidad) y puede batirse en duelo en tu lugar como campeón. Para que alguien te siga hacen falta %d de intimidad y la fama y el honor que exige su rango; cada miembro cobra %d de oro al mes. Quien te es íntimo (y tu cónyuge) te sigue sea cual sea tu rol, en %d plazas extra. Con «Gestionar» eliges su ocupación del mes, su equipo, tu campeón y duelos de práctica. Si no tienes séquito, tu señor te presta compañeros de tu reino, menos leales." % [RelationsData.RETINUE_MIN_AFFECTION, RelationsData.RETINUE_UPKEEP, RelationsData.INTIMATE_SLOTS]
 
-const LETTER_TEXT := "Con el señor de la tierra donde estás tratas en persona. A los demás solo puedes escribirles (✉): presentes con mensajero, diplomacia y noticias, con una acción más. Pedir una mano exige ir en persona."
 
 var _lists := {}   # clave de pestaña -> VBoxContainer
 
@@ -59,11 +55,7 @@ func _build_tabs() -> void:
 		_lists[entry[0]] = list
 
 func _rebuild() -> void:
-	var player: Character = GameManager.player_character
-	info_label.text = "%s — %s · Oro %d · Honor %d · Fama %d · Acciones %d/%d · Soberano: %s · %s" % [
-		player.full_name(), player.role_title(), player.gold, player.honor, player.fame,
-		GameManager.actions_remaining, GameManager.actions_per_turn,
-		"tú" if player.role == Character.Role.REGENTE else (RelationsData.liege_name if not RelationsData.liege_name.is_empty() else "ninguno"), _marriage_text(player)]
+	info_label.visible = false   # sin la ficha del jugador bajo el título (ya está en el mapa)
 
 	for list: VBoxContainer in _lists.values():
 		for child in list.get_children():
@@ -71,7 +63,6 @@ func _rebuild() -> void:
 
 	var area := RelationsData.people_in_area()
 	area.sort_custom(func(a: Relationship, b: Relationship) -> bool: return a.affection > b.affection)
-	_add_info(_lists.lugar, _zone_heading() + "Conversa, regala, invita o reta.", AREA_TEXT)
 	for r: Relationship in area:
 		_add_row(_lists.lugar, r)
 
@@ -83,7 +74,6 @@ func _rebuild() -> void:
 		_add_row(_lists.afectos, r)
 
 	var members := RelationsData.retinue_members()
-	_add_info(_lists.sequito, "Te acompaña a la batalla y lucha por ti.", RETINUE_TEXT)
 	var champ := " · Campeón: %s" % RelationsData.designated_champion if not RelationsData.designated_champion.is_empty() else ""
 	_add_note(_lists.sequito, "%s%s" % [RelationsData.retinue_slots_text(), champ], false)
 	var spouse_rel := RelationsData.spouse_relation() if RelationsData.is_married() else null
@@ -107,14 +97,11 @@ func _rebuild() -> void:
 	var rank_block := RelationsData.lord_rank_blocker()
 	if not rank_block.is_empty():
 		_add_info(_lists.senores, "No puedes dirigirte a un señor.", rank_block)
-	else:
-		_add_info(_lists.senores, "✉ por carta: +1 acción.", LETTER_TEXT)
 	var lords := RelationsData.lords()
 	lords.sort_custom(func(a: Relationship, b: Relationship) -> bool:
 		return RelationsData.lord_present(a) and not RelationsData.lord_present(b))
 	for r: Relationship in lords:
 		_add_row(_lists.senores, r)
-	_add_info(_lists.senores, "Reglas de diplomacia", RULES_TEXT)
 
 	var lines: Array[String] = []
 	for key: String in RelationsData.kingdom_wars.keys():
@@ -130,29 +117,9 @@ func _rebuild() -> void:
 	for i in TAB_KEYS.size():
 		tabs.set_tab_title(i, TAB_KEYS[i][1] + (" (%d)" % counts[i] if counts[i] >= 0 else ""))
 
-func _marriage_text(player: Character) -> String:
-	var female := player.gender == CharacterEnums.Gender.FEMENINO
-	if not RelationsData.is_married():
-		return "Soltera" if female else "Soltero"
-	var text := "%s con %s" % ["Casada" if female else "Casado", RelationsData.spouse_name]
-	if not RelationsData.spouse_family.is_empty():
-		text += " (casa de %s)" % RelationsData.spouse_family
-	return text
-
 func _pair_names(key: String) -> Array:
 	var parts := key.split("|")
 	return [KingdomEnums.kingdom_name(int(parts[0])), KingdomEnums.kingdom_name(int(parts[1]))]
-
-## «Estás en X (reino)»: la pestaña Tu zona muestra la gente del lugar donde se encuentra el jugador.
-func _zone_heading() -> String:
-	var here: Castle = TravelData.current_castle()
-	if here == null:
-		return ""
-	var realm := KingdomEnums.kingdom_name(here.kingdom)
-	var heading := ("Estás en %s. " % realm) if here.castle_name == realm else "Estás en %s (%s). " % [here.castle_name, realm]
-	if here.kingdom == KingdomEnums.Kingdom.NEUTRAL:
-		heading += "Tierra sin señor: apenas hay gente. "
-	return heading
 
 ## Nota corta con «ⓘ»: la explicación completa va en el tooltip (y en el glosario).
 func _add_info(list: VBoxContainer, short: String, full: String) -> void:
@@ -203,9 +170,8 @@ func _add_row(list: VBoxContainer, r: Relationship) -> void:
 	if RelationsData.has_occupation(r):
 		name_lbl.text += "  · %s" % RelationsData.OccupationRules.name_of(RelationsData.occupation_of(r))
 	if r.kind == Relationship.Kind.SENOR:
-		var extra := RelationsData.letter_extra_actions(r)
-		name_lbl.text += "  · en estas tierras" if RelationsData.lord_present(r) else \
-			("  · ✉ por carta (+%d %s)" % [extra, "acción" if extra == 1 else "acciones"] if extra > 0 else "  · ✉ por carta (sello imperial)")
+		if RelationsData.lord_present(r):   # los demás: sus botones ya llevan ✉ (por carta)
+			name_lbl.text += "  · en estas tierras"
 	elif not RelationsData.person_present(r):
 		name_lbl.text += "  · lejos"
 	var detail_lbl := Label.new()
@@ -213,8 +179,25 @@ func _add_row(list: VBoxContainer, r: Relationship) -> void:
 	detail_lbl.text = _detail_text(r)
 	detail_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail_lbl.add_theme_font_size_override("font_size", 14)
-	name_box.add_child(name_lbl)
-	name_box.add_child(detail_lbl)
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 6)
+	if r.character != null:
+		var ri := StatIcons.role_icon(r.character, 18)
+		ri.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		name_row.add_child(ri)
+	name_row.add_child(name_lbl)
+	var rel := StatIcons.relation_icon(r, 18)
+	rel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	name_row.add_child(rel)
+	name_box.add_child(name_row)
+	var detail_row := HBoxContainer.new()
+	detail_row.add_theme_constant_override("separation", 10)
+	detail_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	detail_row.add_child(detail_lbl)
+	if r.character != null and r.kind != Relationship.Kind.SENOR:
+		for k in [["combate", r.character.combat], ["defensa", r.character.defense]]:
+			StatIcons.pair(detail_row, k[0], str(k[1]), 14).modulate = Color(1, 1, 1, 0.85)
+	name_box.add_child(detail_row)
 	name_box.add_child(_affinity_row(r) if r.kind == Relationship.Kind.SENOR else _heart_row(r))
 	hbox.add_child(name_box)
 
@@ -348,7 +331,9 @@ func _affinity_row(r: Relationship) -> HBoxContainer:
 	bar.add_theme_stylebox_override("fill", fill)
 	row.add_child(bar)
 	var status_lbl := Label.new()
-	status_lbl.text = "%s (%+d)" % [r.status_text(), r.affinity]
+	status_lbl.text = "%+d" % r.affinity
+	status_lbl.tooltip_text = r.status_text()
+	status_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
 	status_lbl.add_theme_font_size_override("font_size", 15)
 	row.add_child(status_lbl)
 	return row
@@ -380,9 +365,12 @@ func _heart_row(r: Relationship) -> HBoxContainer:
 	if not wed.is_empty():
 		parts.append("Casad%s con %s" % ["a" if r.character != null and r.character.gender == CharacterEnums.Gender.FEMENINO else "o", wed])
 	var lbl := Label.new()
-	lbl.text = "   ·   ".join(parts)
+	lbl.text = str(r.affection)
+	lbl.tooltip_text = "\n".join(parts)
+	lbl.mouse_filter = Control.MOUSE_FILTER_PASS
 	lbl.add_theme_font_size_override("font_size", 15)
 	row.add_child(lbl)
+	bar.tooltip_text = lbl.tooltip_text
 	return row
 
 func _make_button(text: String, disabled_reason: String, on_press: Callable, actions: int = 1) -> Button:
@@ -400,12 +388,11 @@ func _detail_text(r: Relationship) -> String:
 	var personality: String = DialogueCatalog.personality_name(c.personality) if c != null else "?"
 	match r.kind:
 		Relationship.Kind.RIVAL_DUELO:
-			return "%s · %s · Duelos: le ganaste %d, te ganó %d" % [c.role_name(), personality, r.duels_won_against, r.duels_lost_against]
+			return "%s · duelos %d–%d" % [personality, r.duels_won_against, r.duels_lost_against]
 		Relationship.Kind.CONYUGE:
 			return "Tu cónyuge · %s" % personality
 		Relationship.Kind.CORTESANO, Relationship.Kind.PUEBLO:
-			return "%s · %s · %s · Combate %d, Defensa %d" % [c.role_name(), personality,
-				KingdomEnums.kingdom_name(r.kingdom), c.combat, c.defense]
+			return "%s · %s" % [personality, KingdomEnums.kingdom_name(r.kingdom)]
 	var castles := RelationsData.castles_of(r.person_name)
 	if castles.is_empty():
 		return "Sin tierras: perdió sus castillos"

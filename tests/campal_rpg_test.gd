@@ -177,6 +177,23 @@ func _run() -> void:
 				fled_cas += 20 - cap_unit.soldiers
 				fled_mor += 70 - cap_unit.morale
 	check(fled_cas < lost_cas and fled_mor < lost_mor, "retirarse a tiempo cuesta menos que perder (bajas %d<%d, moral %d<%d)" % [fled_cas, lost_cas, fled_mor, lost_mor])
+	# Al retirarse, cada bando pierde tropa según el daño que sufrió su grupo en el choque (y nada más).
+	cap_unit.soldiers = 20
+	foe.soldiers = 20
+	var ef := CampalEncounters.make(b, cap_unit, foe, 1)
+	var hp_now := {}
+	var hp_start := {}
+	for c in ef.a:
+		hp_start[c] = 100
+		hp_now[c] = [50, 100]   # tu grupo perdió la mitad de su vida
+	for c in ef.b:
+		hp_start[c] = 100
+		hp_now[c] = [90, 100]   # el rival, un 10 %
+	b.resolve_encounter(ef, {"winner": 1, "retreated": 0, "ko": [], "dead": [], "hp": hp_now, "hp_start": hp_start})
+	var mine_lost: int = 20 - cap_unit.soldiers
+	var foe_lost: int = 20 - foe.soldiers
+	check(mine_lost == roundi(20 * 0.5 * CampalEncounters.FLEE_TROOP_LOSS) and foe_lost == roundi(20 * 0.1 * CampalEncounters.FLEE_TROOP_LOSS),
+		"al retirarse, las bajas siguen al daño sufrido (tú −%d con la mitad de vida perdida, el rival −%d con un 10 %%)" % [mine_lost, foe_lost])
 	# Desigual: 40 contra 8 se pierde casi siempre (huir importa).
 	for i in 20:
 		cap_unit.soldiers = 8

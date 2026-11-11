@@ -35,7 +35,7 @@ const GROUP_PV_MIN := 0.75
 const GROUP_PV_MAX := 2.3
 const GROUP_STR_EXP := 0.5       # la fuerza escala con la raíz del factor de PV
 const GROUP_BOSS_UNITS := 2.0
-const DMG_SCALE := 3.1                 # 2.8 → 3.1: combates de 4–8 rondas también contra 3–5 enemigos
+const DMG_SCALE := 2.7                 # 3.1 → 2.7: las peleas acababan en muy pocos golpes (nov. 2026)
 const DEF_K := 30.0                 # daño × DEF_K / (DEF_K + Defensa)
 const VARIANCE := 0.1
 const HIT_BASE := 0.9
@@ -162,6 +162,7 @@ var now := 0.0
 var current: Fighter = null
 var round_num := 1
 var turns := 0
+var hp_start := {}              # Character -> PV al empezar (el daño sufrido en este combate)
 var ended := false
 var result := {}
 var to_the_death := false
@@ -385,6 +386,9 @@ func _scale_generic_groups() -> void:
 func next_turn() -> Fighter:
 	if ended:
 		return null
+	if hp_start.is_empty():   # primer turno: ya se aplicaron las heridas de choques anteriores
+		for f: Fighter in fighters:
+			hp_start[f.c] = f.hp
 	if current != null and current.actions_left > 0 and current.up() and current.active:
 		return current
 	if current != null:
@@ -780,7 +784,7 @@ func _finish(winner: int) -> void:
 		if f.participated and not f.dead:
 			xp[f.c] = xp_pool if winner == 0 else roundi(xp_pool * XP_LOSS_FRAC)
 	result.merge({"winner": winner, "rounds": round_num, "turns": turns, "ko": ko, "dead": dead,
-		"hp": hp, "xp": xp, "loot": [], "to_the_death": to_the_death})
+		"hp": hp, "hp_start": hp_start, "xp": xp, "loot": [], "to_the_death": to_the_death})
 	result.merge({"retreated": -1, "surrendered": -1})
 	if winner == 0 and loot_hook.is_valid():
 		loot_hook.call(result)

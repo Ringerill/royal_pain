@@ -2,13 +2,14 @@ extends Node
 # Autoload "TouchSupport": lo que el ratón da gratis y el dedo no.
 #   - Mantener pulsado LONG_PRESS segundos sobre cualquier control muestra su ayuda (tooltip_text, suyo o
 #     de un contenedor). Al levantar el dedo no se pulsa el botón; el siguiente toque cierra la ayuda.
-#   - En pantallas pequeñas (móvil) la interfaz se amplía un poco (SMALL_SCREEN_SCALE).
-# Solo actúa en dispositivos táctiles; en PC no hace nada.
+#   - Las ventanas centradas (CenterContainer > panel) que no caben en la pantalla se encogen hasta caber,
+#     para que sus botones siempre se puedan pulsar. Esto actúa también en PC (ventanas pequeñas).
+#   - El gesto «atrás» de Android equivale a Esc (no cierra el juego).
+# La pulsación larga solo actúa en dispositivos táctiles.
 
 const LONG_PRESS := 0.5
 const MOVE_TOLERANCE := 14.0          # píxeles que el dedo puede moverse sin cancelar la pulsación larga
-const SMALL_SCREEN_INCHES := 7.0      # por debajo (diagonal), es un móvil...
-const SMALL_SCREEN_SCALE := 1.2       # ...y la interfaz se amplía
+const FIT_MARGIN := 0.96              # fracción de la pantalla que puede ocupar una ventana
 const MAX_WIDTH := 420.0
 
 var enabled := false
@@ -21,6 +22,8 @@ var _label: Label
 var _swallow_release := false
 
 func _ready() -> void:
+	get_tree().node_added.connect(_on_node_added)
+	get_viewport().size_changed.connect(_refit_all)
 	enabled = DisplayServer.is_touchscreen_available() or OS.has_feature("mobile")
 	if not enabled:
 		return
@@ -40,16 +43,66 @@ func _ready() -> void:
 	_label.custom_minimum_size.x = MAX_WIDTH
 	_bubble.add_child(_label)
 	_layer.add_child(_bubble)
-	_apply_scale.call_deferred()
 
-## Amplía la interfaz en móviles: con «canvas_items» la ventana se escala; el factor extra agranda textos y botones.
-func _apply_scale() -> void:
-	var dpi := float(DisplayServer.screen_get_dpi())
-	if dpi <= 0.0:
+# --- Ventanas que no caben -------------------------------------------------------------------------
+
+var _fitted: Array[Control] = []
+
+func _on_node_added(n: Node) -> void:
+	if not (n is Control and n.get_parent() is CenterContainer):
 		return
-	var inches := Vector2(DisplayServer.screen_get_size()).length() / dpi
-	if inches < SMALL_SCREEN_INCHES:
-		get_window().content_scale_factor = SMALL_SCREEN_SCALE
+	var center: CenterContainer = n.get_parent()
+	# Solo ventanas: un CenterContainer a pantalla completa (no los pequeños dentro de un panel).
+	if center.anchor_right < 1.0 or center.anchor_bottom < 1.0 or center.anchor_left > 0.0 or center.anchor_top > 0.0:
+		return
+	var c: Control = n
+	# Si el panel es más grande, el contenedor crece por igual a ambos lados (no solo hacia abajo)
+	# y así el centro sigue siendo el de la pantalla.
+	center.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	center.grow_vertical = Control.GROW_DIRECTION_BOTH
+	if c in _fitted:
+		return
+	_fitted.append(c)
+	# El contenedor devuelve la escala a 1 cada vez que ordena: se vuelve a encoger después.
+	# Al salir del árbol se desconecta (si no, la señal llamaría con el panel ya liberado).
+	var refit := func(): fit.call_deferred(c)
+	center.sort_children.connect(refit)
+	c.tree_exiting.connect(func():
+		_fitted.erase(c)
+		if is_instance_valid(center) and center.sort_children.is_connected(refit):
+			center.sort_children.disconnect(refit), CONNECT_ONE_SHOT)
+	fit.call_deferred(c)
+
+func _refit_all() -> void:
+	for c in _fitted:
+		fit.call_deferred(c)
+
+## Encoge (escala) la ventana si es más grande que la pantalla; la CenterContainer la sigue centrando.
+func fit(c: Control) -> void:
+	if not is_instance_valid(c) or not c.is_inside_tree():
+		return
+	var vp := c.get_viewport_rect().size * FIT_MARGIN
+	var k := 1.0
+	if c.size.x > 0.0 and c.size.y > 0.0:
+		k = minf(1.0, minf(vp.x / c.size.x, vp.y / c.size.y))
+	c.pivot_offset = c.size / 2.0
+	c.scale = Vector2(k, k)
+
+## Gesto «atrás» de Android: en vez de cerrar el juego (quit_on_go_back = false), hace lo que Esc
+## (ui_cancel): cerrar un panel, volver al menú anterior del combate, cancelar un objetivo…
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		if _bubble != null and _bubble.visible:
+			_hide()
+			return
+		var ev := InputEventAction.new()
+		ev.action = &"ui_cancel"
+		ev.pressed = true
+		Input.parse_input_event(ev)
+		var up := InputEventAction.new()
+		up.action = &"ui_cancel"
+		up.pressed = false
+		Input.parse_input_event.call_deferred(up)
 
 func _input(event: InputEvent) -> void:
 	if not enabled:

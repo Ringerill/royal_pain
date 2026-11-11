@@ -1,7 +1,7 @@
 """Calcula dónde está la cara en cada retrato de cuerpo entero.
 
 Uso:  python tools/build_face_rects.py [--sheet salida.png]
-Escribe scripts/resources/face_rects.gd: ruta res:// -> [x, y, lado] (recorte cuadrado en píxeles).
+Escribe scripts/resources/face_rects.gd: ruta res:// -> [x, y, lado, ancho original] (recorte cuadrado en píxeles).
 Es un script de datos (no JSON) para que viaje en el juego exportado. El juego lo usa para mostrar
 solo la cara (Character.get_face()). Si un recorte sale mal se puede corregir a mano en ese archivo;
 con --sheet se genera una hoja para revisarlos todos.
@@ -50,12 +50,12 @@ def main():
     rects = {}
     for f in files:
         rel = "res://" + os.path.relpath(f, ROOT).replace("\\", "/")
-        rects[rel] = face_rect(f)
+        rects[rel] = face_rect(f) + [Image.open(f).size[0]]
     lines = ["extends RefCounted",
-             "# Generado por tools/build_face_rects.py: recorte de la cara de cada retrato [x, y, lado].",
+             "# Generado por tools/build_face_rects.py: recorte de la cara de cada retrato [x, y, lado, ancho original].",
              "", "const RECTS := {"]
-    for path, (x, y, side) in rects.items():
-        lines.append('\t"%s": [%d, %d, %d],' % (path, x, y, side))
+    for path, (x, y, side, src_w) in rects.items():
+        lines.append('\t"%s": [%d, %d, %d, %d],' % (path, x, y, side, src_w))
     lines.append("}")
     with open(OUT, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(lines) + "\n")
@@ -65,7 +65,7 @@ def main():
         cols, size = 12, 96
         sheet = Image.new("RGB", (cols * size, ((len(files) + cols - 1) // cols) * size), (40, 40, 40))
         for i, f in enumerate(files):
-            x, y, s = rects["res://" + os.path.relpath(f, ROOT).replace("\\", "/")]
+            x, y, s, _w = rects["res://" + os.path.relpath(f, ROOT).replace("\\", "/")]
             face = Image.open(f).convert("RGBA").crop((x, y, x + s, y + s)).resize((size, size))
             bg = Image.new("RGB", (size, size), (40, 40, 40))
             bg.paste(face, (0, 0), face)

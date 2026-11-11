@@ -106,6 +106,9 @@ func _ready() -> void:
 	title.text = "Tienda"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
+	var gold_icon := StatIcons.icon("oro", 20, "Tu oro")
+	gold_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header.add_child(gold_icon)
 	_gold_label = Label.new()
 	_gold_label.theme_type_variation = &"StatLabel"
 	header.add_child(_gold_label)
@@ -173,7 +176,7 @@ func _column(parent: Node, title: String) -> VBoxContainer:
 
 func _rebuild() -> void:
 	var player: Character = GameManager.player_character
-	_gold_label.text = "Oro: %d" % player.gold
+	_gold_label.text = str(player.gold)
 	_first_button = null
 	for list in [_stock_list, _owned_list]:
 		for child in list.get_children():

@@ -216,7 +216,7 @@ func _populate_personality_options() -> void:
 	# Descripción de la personalidad elegida, bajo el desplegable.
 	if personality_desc == null:
 		personality_desc = Label.new()
-		personality_desc.theme_type_variation = &"InkLabel"
+		personality_desc.theme_type_variation = &"MutedLabel"
 		personality_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		personality_desc.custom_minimum_size = Vector2(220, 0)
 		personality_desc.add_theme_font_size_override("font_size", 14)
@@ -269,13 +269,18 @@ func _build_stats_grid() -> void:
 	# Dos atributos por fila (la rejilla tiene 8 columnas): con 6 atributos en una sola columna no cabía.
 	for i in Character.ATTRIBUTES.size():
 		var stat_key: String = Character.ATTRIBUTES[i]
+		# [icono] Nombre del atributo
+		var name_box := HBoxContainer.new()
+		name_box.custom_minimum_size = Vector2(130 if i % 2 == 0 else 170, 0)
+		name_box.alignment = BoxContainer.ALIGNMENT_END if i % 2 == 1 else BoxContainer.ALIGNMENT_BEGIN
+		name_box.add_theme_constant_override("separation", 6)
+		var attr_icon := StatIcons.icon(StatIcons.ATTRS.get(stat_key, ""), 20)
+		attr_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		name_box.add_child(attr_icon)
 		var name_label := Label.new()
 		name_label.text = STAT_LABELS[stat_key]
-		name_label.custom_minimum_size = Vector2(100 if i % 2 == 0 else 150, 0)
-		if i % 2 == 1:
-			name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		name_label.add_theme_color_override("font_color", Color(0.01, 0.008, 0.002, 1.0)) # dorado suave
-		stats_grid.add_child(name_label)
+		name_box.add_child(name_label)
+		stats_grid.add_child(name_box)
 
 		var btn_minus := Button.new()
 		btn_minus.text = "-"
@@ -286,7 +291,6 @@ func _build_stats_grid() -> void:
 		var value_label := Label.new()
 		value_label.custom_minimum_size = Vector2(30, 0)
 		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		value_label.add_theme_color_override("font_color", Color.BLACK)
 		stats_grid.add_child(value_label)
 		stat_value_labels[stat_key] = value_label
 
@@ -331,7 +335,6 @@ func _make_trait_checkbox(t: CharacterTrait) -> CheckBox:
 	var cb := CheckBox.new()
 	cb.text = t.trait_name
 	cb.tooltip_text = t.description
-	cb.add_theme_color_override("font_color", Color.BLACK)
 	return cb
 
 func _trait_text(t: CharacterTrait) -> String:
@@ -344,12 +347,11 @@ func _add_entry(container: Container, cb: CheckBox, description: String) -> void
 	box.add_theme_constant_override("separation", 0)
 	box.add_child(cb)
 	var desc := Label.new()
-	desc.theme_type_variation = &"InkLabel"
+	desc.theme_type_variation = &"MutedLabel"
 	desc.text = description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.custom_minimum_size = Vector2(200, 0)
 	desc.add_theme_font_size_override("font_size", 13)
-	desc.add_theme_color_override("font_color", Color(0.24, 0.16, 0.1, 0.85))
 	desc.add_theme_constant_override("line_spacing", 0)
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 30)
@@ -359,7 +361,7 @@ func _add_entry(container: Container, cb: CheckBox, description: String) -> void
 
 func _add_header(container: Container, text: String) -> void:
 	var header := Label.new()
-	header.theme_type_variation = &"InkHeaderLabel"
+	header.theme_type_variation = &"SubheaderLabel"
 	header.text = text
 	header.add_theme_font_size_override("font_size", 15)
 	container.add_child(header)
@@ -403,8 +405,8 @@ func _on_volver_menu_pressed() -> void:
 # --- Habilidades: una básica por rama de cada árbol (personalidad, alineación y tipo de luchador) ---
 
 const SKILL_ICON := 22
-const INK_ACTIVE := Color("6e2a14")    # iconos sobre pergamino: técnicas en tinta roja...
-const INK_PASSIVE := Color("24405e")   # ...pasivas en tinta azul
+const INK_ACTIVE := Color("e0915a")    # iconos sobre el panel oscuro: técnicas en rojizo...
+const INK_PASSIVE := Color("8fb6e0")   # ...pasivas en azul claro
 var _tree_options: Array = []      # [{"tree", "branch", "ids"}] en orden: árbol por árbol
 var _basic_buttons: Array = []     # OptionButton por rama (mismo índice que _tree_options)
 
@@ -432,7 +434,6 @@ func _build_skills_lists() -> void:
 				title.text = opt.tree
 		var list: Container = lists[tree_index]
 		var lbl := Label.new()
-		lbl.theme_type_variation = &"InkLabel"
 		lbl.text = opt.branch
 		list.add_child(lbl)
 		var ob := OptionButton.new()

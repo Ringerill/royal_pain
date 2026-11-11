@@ -175,7 +175,11 @@ func get_face() -> Texture2D:
 	var atlas := AtlasTexture.new()
 	atlas.atlas = tex
 	var r: Array = FaceRects.RECTS.get(path, [])
-	if r.size() != 3:
+	var k := 1.0
+	if r.size() == 4:   # [x, y, lado, ancho original]: si se importó más pequeño, se escala el recorte
+		k = float(tex.get_width()) / float(r[3])
+		r = [r[0] * k, r[1] * k, r[2] * k]
+	elif r.size() != 3:
 		r = FaceDetector.face_rect(tex)   # retrato nuevo: se calcula una vez y se guarda
 	if r.size() == 3:
 		atlas.region = Rect2(r[0], r[1], r[2], r[2])

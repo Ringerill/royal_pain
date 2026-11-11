@@ -50,7 +50,11 @@ func _run() -> void:
 			enemy = c
 	if enemy == null:
 		enemy = neighbor
-	var fe: Dictionary = IC.field_event(home, enemy, home.owner_name, home.owner_name, true)
+	var march = root.get_node("ArmyData").create_army(enemy.owner_name, enemy.kingdom, 100, enemy.castle_id)   # un ejército de verdad en marcha
+	march.origin_castle_id = enemy.castle_id
+	march.destination_castle_id = home.castle_id
+	march.turns_remaining = 2
+	var fe: Dictionary = IC.field_event(march, home, BattleEnums.Side.DEFENSOR, home.owner_name, home.owner_name, true)
 	change_scene_to_file(CS.begin_event_fight(fe.options[0].fight, fe.title))
 	await create_timer(0.8).timeout
 	var scene = current_scene

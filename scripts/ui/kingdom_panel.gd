@@ -109,8 +109,12 @@ func _kingdom_page(k: int) -> Control:
 	grid.columns = 8
 	grid.add_theme_constant_override("h_separation", 16)
 	page.add_child(grid)
-	for h in ["Castillo", "Señor", "Guarnición", "Oro", "Comida", "Ingresos/mes", "Paga/mes", "Comida/mes"]:
-		_cell(grid, h, "MutedLabel")
+	# Cabecera con iconos (el nombre de cada columna, en su ayuda).
+	_cell(grid, "Castillo", "MutedLabel")
+	_cell(grid, "Señor", "MutedLabel")
+	for h: Array in [["soldados", "", "Guarnición"], ["oro", "", "Oro del castillo"], ["comida", "", "Comida"],
+			["oro", "+/mes", "Ingresos al mes"], ["soldados", "−oro/mes", "Paga de la tropa al mes"], ["comida", "/mes", "Comida al mes"]]:
+		StatIcons.pair(grid, h[0], h[1], 16, h[2]).modulate = Color(1, 1, 1, 0.85)
 	for c: Castle in MapData.castles:
 		if c.kingdom != k:
 			continue
@@ -179,12 +183,19 @@ func _member(r: Relationship) -> Control:
 	row.add_theme_constant_override("separation", 6)
 	row.add_child(FaceIcon.make(r.character, FACE))
 	var c := r.character
-	var txt := "%s\n%s · Nv %d · Honor %d" % [r.person_name, c.role_name(), c.level, c.honor]
-	if r.kind == Relationship.Kind.SENOR:
-		txt += " · Afinidad %d" % r.affinity
-	elif r.affection > 0:
-		txt += " · Intimidad %d" % r.affection
-	_label(row, txt, "").size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var info := VBoxContainer.new()
+	info.add_theme_constant_override("separation", 0)
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(info)
+	StatIcons.named(info, c, r.person_name, 16)
+	var stats := HBoxContainer.new()
+	stats.add_theme_constant_override("separation", 8)
+	info.add_child(stats)
+	StatIcons.pair(stats, "nivel", str(c.level), 14)
+	StatIcons.pair(stats, "honor", str(c.honor), 14)
+	var rel := StatIcons.relation_icon(r, 14)
+	rel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	stats.add_child(rel)
 	return row
 
 func _audience_button(text: String, ruler: Relationship, by_letter: bool) -> Button:

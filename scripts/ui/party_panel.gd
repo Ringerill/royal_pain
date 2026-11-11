@@ -90,23 +90,30 @@ func _row(c: Character, is_active: bool, index: int, count: int) -> void:
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.add_theme_constant_override("separation", 0)
 	row.add_child(info)
-	_label(info, c.full_name() + (" (tú)" if player else ""), "")
+	StatIcons.named(info, c, c.full_name(), 16)
+	# A la vista, solo lo esencial: nivel, arma, armadura, vida y estado. El resto, en la ayuda.
+	var s := RpgStats.compute(c)
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", 4)
+	info.add_child(line)
+	StatIcons.pair(line, "nivel", str(c.level), STAT_ICON, "Nivel").modulate = Color(1, 1, 1, 0.85)
+	line.add_child(SkillIcons.damage_icon(int(s.weapon), STAT_ICON))
+	_tag(line, "%s ·" % RpgStats.DAMAGE_NAMES[int(s.weapon)])
+	line.add_child(SkillIcons.armor_icon(int(s.armor), STAT_ICON))
+	_tag(line, "%s ·" % RpgStats.ARMOR_NAMES[int(s.armor)])
+	StatIcons.pair(line, "vida", "%d/%d" % [c.current_health, c.max_health], STAT_ICON).modulate = Color(1, 1, 1, 0.85)
+	_tag(line, "· %s" % _state_text(c))
 	var techs: Variant = _techniques(c)
-	var tech_text := "Técnicas %s" % ("—" if techs == null else str(techs.size()))
 	var loyal := "—" if player or r == null else LoyaltyData.bar_text(r.person_name)
 	var job := "—"
 	if r != null and RelationsData.has_occupation(r):
 		job = OccupationRules.name_of(RelationsData.occupation_of(r))
-	var line := _label(info, "Nv %d · %s · %s · Lealtad %s · %s" % [c.level, c.health_text(), tech_text, loyal, job], "MutedLabel")
-	line.autowrap_mode = TextServer.AUTOWRAP_OFF
-	line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	line.clip_text = true
-	var gear := _label(info, _equipment_text(c), "MutedLabel")
-	gear.autowrap_mode = TextServer.AUTOWRAP_OFF
-	gear.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	gear.clip_text = true
-	_technique_icons(info, c)
-	row.tooltip_text = "Técnicas: %s" % ("—" if techs == null or techs.is_empty() else ", ".join(techs.map(func(t): return str(t))))
+	row.tooltip_text = "%s
+Técnicas: %s%s%s" % [_equipment_text(c),
+		"—" if techs == null or techs.is_empty() else ", ".join(techs.map(func(t): return str(t))),
+		"" if player else "
+Lealtad: %s" % loyal, "" if job == "—" else "
+Oficio: %s" % job]
 	info.tooltip_text = row.tooltip_text
 	if is_active:
 		_button(row, "Subir", c, index > 0, func(): PartyData.move(c, -1))
@@ -155,21 +162,15 @@ func _restore_focus() -> void:
 func _techniques(c: Character) -> Variant:
 	return SkillTreeCatalog.available_techniques(c).map(func(n: Dictionary) -> String: return str(n.name))
 
-const TECH_ICON := 18
+const STAT_ICON := 16
 
-# Fila con el icono de cada técnica (su nombre y efecto al pasar el ratón).
-func _technique_icons(parent: Node, c: Character) -> void:
-	var nodes := SkillTreeCatalog.available_techniques(c)
-	if nodes.is_empty():
-		return
-	var icons := HBoxContainer.new()
-	icons.add_theme_constant_override("separation", 2)
-	parent.add_child(icons)
-	for n: Dictionary in nodes:
-		var icon := SkillIcons.node_icon(str(n.id), TECH_ICON, c)
-		icon.tooltip_text = "%s — %s" % [n.name, n.get("desc", "")]
-		icon.mouse_filter = Control.MOUSE_FILTER_PASS
-		icons.add_child(icon)
+## Estado: herido (con los meses que le quedan), cansado si le falta vida, o en forma.
+func _state_text(c: Character) -> String:
+	if c.is_wounded():
+		return "herido (%d %s)" % [c.wound_months, "mes" if c.wound_months == 1 else "meses"]
+	if c.current_health < c.max_health:
+		return "magullado"
+	return "en forma"
 
 func _equipment_text(c: Character) -> String:
 	var names: Array[String] = []
@@ -198,6 +199,12 @@ func _open_upgrade(c: Character) -> void:
 func _close() -> void:
 	finished.emit()
 	queue_free()
+
+## Texto de una sola línea dentro de una fila (sin ajuste: si no, se parte letra a letra).
+func _tag(parent: Node, text: String) -> Label:
+	var l := _label(parent, text, "MutedLabel")
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	return l
 
 func _label(parent: Node, text: String, variation: String) -> Label:
 	var l := Label.new()

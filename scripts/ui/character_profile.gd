@@ -62,8 +62,10 @@ func _ready() -> void:
 	pers.mouse_filter = Control.MOUSE_FILTER_PASS
 	_label(right, "Alineamiento: %s · Estilo: %s" % [
 		_enum_name(CharacterEnums.Alignment, c.alignment), _enum_name(CharacterEnums.FighterType, c.fighter_type)], "MutedLabel")
-	_label(right, "Combate %d · Defensa %d · Agilidad %d · Liderazgo %d · Carisma %d · Estrategia %d · Vida %d/%d · Honor %d · Fama %d" % [
-		c.combat, c.defense, c.agility, c.leadership, c.charisma, c.strategy, c.current_health, c.max_health, c.honor, c.fame], "BodyBoldLabel")
+	# Atributos y estado con iconos (el nombre de cada uno, en su ayuda).
+	StatIcons.named(right, c, c.role_title(), 18)
+	StatIcons.attributes(right, c, 18)
+	StatIcons.row(right, [["nivel", c.level], ["vida", "%d/%d" % [c.current_health, c.max_health]], ["honor", c.honor], ["fama", c.fame]], 18)
 	right.add_child(HSeparator.new())
 	_label(right, _relation_text(), "")
 	if LoyaltyData.is_tracked(relation.person_name):

@@ -70,13 +70,6 @@ theme_override_font_sizes/font_size = 54
 text = "Royal Pain"
 horizontal_alignment = 1
 
-[node name="SubtitleLabel" type="Label" parent="MenuColumn/MenuVBox"]
-layout_mode = 2
-theme_type_variation = &"SubheaderLabel"
-theme_override_font_sizes/font_size = 17
-text = "— Reinos de Destino —"
-horizontal_alignment = 1
-
 [node name="TopSeparator" type="HSeparator" parent="MenuColumn/MenuVBox"]
 layout_mode = 2
 theme_override_constants/separation = 20

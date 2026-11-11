@@ -6,6 +6,7 @@ extends Node
 
 const SiteCatalog = preload("res://scripts/resources/site_catalog.gd")
 const XpRules = preload("res://scripts/resources/xp_rules.gd")
+const RecruitRules = preload("res://scripts/resources/recruit_rules.gd")
 
 signal sites_changed
 
@@ -117,29 +118,53 @@ func _free_spot_near(castle: Castle) -> Vector2:
 
 ## Visita el lugar eligiendo una opción: gasta una acción, aplica sus efectos y el lugar desaparece.
 ## Devuelve {ok, text, fight (dict de combate para CombatSetup.begin_event_fight, o {}), title}.
+## Una expedición es una serie de pasos: solo el primero gasta la acción; cada decisión puede llevar a
+## otro paso ("next"), a un combate (y ahí termina) o rescatar a alguien ("rescue": su rol).
+## Devuelve {ok, text, title, fight, continue (sigue en otro paso), rescue (Character o null)}.
 func visit(uid: String, option_index: int) -> Dictionary:
 	var site := find(uid)
 	var player: Character = GameManager.player_character
 	if site.is_empty() or player == null:
 		return {"ok": false, "text": "Ese lugar ya no está."}
-	var event := SiteCatalog.as_event(site.type)
+	var step_id: String = site.get("step", "start")
+	var event := SiteCatalog.as_event(site.type, step_id)
 	var options: Array = event.options
 	if option_index < 0 or option_index >= options.size():
 		return {"ok": false, "text": ""}
 	var home := MapData.get_castle_by_id(GameManager.home_castle_id)
-	if not EventCatalog.can_choose(options[option_index], player, home):
-		return {"ok": false, "text": EventCatalog.requirement_text(options[option_index])}
-	if not GameManager.consume_action():
+	var option: Dictionary = options[option_index]
+	if not EventCatalog.can_choose(option, player, home):
+		return {"ok": false, "text": EventCatalog.requirement_text(option)}
+	var first := not bool(site.get("started", false))
+	if first and not GameManager.consume_action():
 		return {"ok": false, "text": "No te quedan acciones este mes."}
-	var text := EventCatalog.apply_option(event, option_index, player, home)
-	var levels := player.gain_xp(XpRules.EXPLORATION, XpRules.SOURCE_EXPLORATION)
-	text += "\n(+%d exp. por explorar%s)" % [player.last_xp_gained, " · ¡subes al nivel %d!" % player.level if levels > 0 else ""]
+	site["started"] = true
+	var outcome: Dictionary = option
+	if option.has("chance"):
+		outcome = option.success if randf() < EventCatalog.success_chance(option, player) else option.failure
+	var text: String = outcome.get("result", "")
+	var summary := EventCatalog._apply_effects(outcome.get("effects", {}), player, home)
+	if not summary.is_empty():
+		text += "\n(" + summary + ")"
+	var fight: Dictionary = outcome.get("fight", option.get("fight", {}))
+	var next: String = str(outcome.get("next", option.get("next", "")))
+	var rescue_role := str(outcome.get("rescue", option.get("rescue", "")))
+	if first:
+		var levels := player.gain_xp(XpRules.EXPLORATION, XpRules.SOURCE_EXPLORATION)
+		text += "\n(+%d exp. por explorar%s)" % [player.last_xp_gained, " · ¡subes al nivel %d!" % player.level if levels > 0 else ""]
+	if not next.is_empty() and fight.is_empty():
+		site["step"] = next   # la expedición sigue: el lugar no desaparece todavía
+		sites_changed.emit()
+		return {"ok": true, "text": text, "fight": {}, "title": event.title, "continue": true, "rescue": null}
 	sites.erase(site)
 	visited_count += 1
-	var option: Dictionary = options[option_index]
 	WorldEvents.record("%s: %s. %s" % [event.title, option.get("label", ""), text.get_slice("\n", 0)], site.castle_id, true)
 	sites_changed.emit()
-	return {"ok": true, "text": text, "fight": CombatSetup.tag_fight(option.get("fight", {}), "exploracion"), "title": event.title}
+	var rescued: Character = null
+	if not rescue_role.is_empty():
+		rescued = RecruitRules.make_captive(Character.Role.SOLDADO if rescue_role == "soldado" else Character.Role.CAMPESINO)
+	return {"ok": true, "text": text, "fight": CombatSetup.tag_fight(fight, "exploracion"), "title": event.title,
+		"continue": false, "rescue": rescued}
 
 # --- Guardado ---
 
@@ -152,7 +177,8 @@ func load_state(data: Dictionary) -> void:
 	for s in data.get("sites", []):
 		if s is Dictionary and SiteCatalog.SITES.has(s.get("type", "")):
 			sites.append({"uid": str(s.uid), "type": str(s.type), "castle_id": str(s.castle_id),
-				"x": float(s.x), "y": float(s.y), "months_left": int(s.months_left)})
+				"x": float(s.x), "y": float(s.y), "months_left": int(s.months_left),
+				"step": str(s.get("step", "start")), "started": bool(s.get("started", false))})
 	visited_count = int(data.get("visited_count", 0))
 	_months_to_next = int(data.get("months_to_next", 1))
 	_next_uid = int(data.get("next_uid", sites.size() + 1))

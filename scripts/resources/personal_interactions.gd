@@ -57,7 +57,6 @@ static func for_relation(r: Relationship) -> Array:
 				out.append(["confianza", "Ganarte su confianza", "Más intimidad: será más fácil que se una a ti."])
 			"rival":
 				out.append(["provocar", "Provocarle", "Más rencor, y algo de fama si te ven."])
-				out.append(["tregua", "Proponer una tregua", "Según tu Carisma: el rencor se enfría."])
 				out.append(["estudiar", "Estudiar su estilo", "Experiencia, y conoces su arma y sus debilidades."])
 			"courtier":
 				out.append(["cena", "Invitar a cenar (%d oro)" % DINNER_COST, "Intimidad."])
@@ -169,13 +168,6 @@ static func perform(r: Relationship, id: String) -> String:
 				text = "Le provocas delante de testigos. Rencor +15; fama +2."
 			else:
 				text = "Le provocas. Rencor +15."
-		"tregua":
-			if randf() < clampf(0.3 + p.charisma * 0.03, 0.1, 0.85):
-				r.adjust_grudge(-30)
-				text = "Aceptáis una tregua de palabra. Rencor −30."
-			else:
-				r.adjust_grudge(5)
-				text = "Se ríe de tu propuesta. Rencor +5."
 		"cena":
 			p.gold -= DINNER_COST
 			var g := _gain(r, 6)

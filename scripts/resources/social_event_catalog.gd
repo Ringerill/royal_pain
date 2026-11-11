@@ -7,7 +7,8 @@ extends RefCounted
 #   kinds     — clases de lazo a las que sirve ([] = cualquiera): spouse, lover, friend, courtier, serf, prisoner, retinue
 #   stages    — etapas de rivalidad en las que puede ocurrir (Relationship.RivalryStage)
 #   deed      — hazaña del jugador a la que reacciona un señor: victoria, deshonra, boda ("" = ninguna)
-#   bias      — {Personality: peso} del protagonista
+#   bias      — {Personality: peso} del protagonista (los no listados pesan poco: SocialEvents.UNLISTED_WEIGHT)
+#   avoid     — personalidades a las que nunca les pasa; only — solo a estas
 # Marcadores: {name} protagonista, {player}, {lord}, {comrade}, {third}, {castle}; {a:m|f} concuerda con el
 # jugador y {s:m|f} con el protagonista. "social" en una opción: efectos que no caben en EventCatalog
 # (group: intimidad con toda la facción, adjust: {marcador: n}, schedule_duel, third_grudge) — los aplica SocialEvents.
@@ -17,13 +18,13 @@ const ST := Relationship.RivalryStage
 
 # --- 1) Lazos personales, de menos a más intimidad ---
 const BOND := [
-	{"id": "soc_pide_ayuda", "title": "Una mano tendida", "min_tier": 1, "kinds": [], "bias": {P.COBARDE: 1.5, P.ROMANTICO: 1.2},
+	{"id": "soc_pide_ayuda", "title": "Una mano tendida", "min_tier": 1, "kinds": [], "avoid": [P.PIADOSO, P.HONORABLE, P.PRUDENTE], "bias": {P.COBARDE: 1.5, P.ROMANTICO: 1.2},
 		"text": "{name} llega con la mirada baja: unas deudas de juego le quitan el sueño. No pide mucho, solo que alguien {s:le|la} saque del apuro antes de que sus acreedores pierdan la paciencia.",
 		"options": [
 			{"label": "Prestarle 30", "requires": {"gold": 30}, "effects": {"gold": -30, "affection": 10, "honor": 2}, "result": "{name} jura que no lo olvidará."},
 			{"label": "Negarte", "effects": {"affection": -5}, "result": "{name} se marcha sin decir palabra."},
 		]},
-	{"id": "soc_rina", "title": "Palabras gruesas", "min_tier": 1, "kinds": [], "bias": {P.ARROGANTE: 2.0, P.CRUEL: 1.5, P.PRUDENTE: 0.5},
+	{"id": "soc_rina", "title": "Palabras gruesas", "min_tier": 1, "kinds": [], "avoid": [P.COBARDE, P.PIADOSO], "bias": {P.ARROGANTE: 2.0, P.CRUEL: 1.5, P.PRUDENTE: 0.5},
 		"text": "Una discusión por una minucia se enciende delante de los criados. {name} alza la voz y te reprocha tu orgullo. El salón entero espera tu respuesta.",
 		"options": [
 			{"label": "Disculparte", "effects": {"affection": 5, "honor": -1}, "result": "La tormenta pasa. {name} acepta tu mano."},
@@ -51,7 +52,7 @@ const BOND := [
 			{"label": "Aceptar el trato", "effects": {"gold": -5, "affection": 6, "xp": 15}, "result": "Lo que cuenta {name} vale cada migaja."},
 			{"label": "No negociar", "effects": {"affection": -4}, "result": "{name} se encoge en su rincón."},
 		]},
-	{"id": "soc_regalo", "title": "Un regalo sin motivo", "min_tier": 2, "kinds": [], "bias": {P.GENEROSO: 2.5, P.ROMANTICO: 1.5, P.CRUEL: 0.4},
+	{"id": "soc_regalo", "title": "Un regalo sin motivo", "min_tier": 2, "kinds": [], "avoid": [P.CRUEL], "bias": {P.GENEROSO: 2.5, P.ROMANTICO: 1.5, P.CRUEL: 0.4},
 		"text": "{name} te sorprende con un presente envuelto en paño fino. «No es nada», dice, aunque se nota que lo ha elegido con cuidado.",
 		"options": [
 			{"label": "Aceptarlo", "effects": {"item": 1, "affection": 3}, "result": "Un regalo digno y un lazo más fuerte."},
@@ -83,7 +84,7 @@ const BOND := [
 			{"label": "Recuperarlo todo", "effects": {"castle_gold": 40, "affection": 4, "honor": 1}, "result": "El mayordomo devuelve hasta la última moneda."},
 			{"label": "Dejarlo en sus manos", "effects": {"castle_gold": 25, "affection": 8}, "result": "{name} lo resuelve con discreción."},
 		]},
-	{"id": "soc_juramento", "title": "Un juramento", "min_tier": 4, "kinds": ["retinue", "friend", "lover"], "bias": {P.LEAL: 2.5, P.HONORABLE: 1.5},
+	{"id": "soc_juramento", "title": "Un juramento", "min_tier": 4, "kinds": ["retinue", "friend", "lover"], "avoid": [P.CRUEL, P.COBARDE, P.ASTUTO], "bias": {P.LEAL: 2.5, P.HONORABLE: 1.5},
 		"text": "{name} se arrodilla sin que nadie lo pida y jura seguirte hasta donde vayas, en la guerra y en la desgracia. Lo dice ante testigos.",
 		"options": [
 			{"label": "Aceptarlo", "effects": {"affection": 6, "honor": 3, "fame": 1}, "result": "La corte habla de esa lealtad durante semanas."},
@@ -132,7 +133,7 @@ const BOND := [
 			{"label": "Pagarle una nueva", "requires": {"gold": 15}, "effects": {"gold": -15, "affection": 6}, "result": "{name} prueba el filo y sonríe como un niño."},
 			{"label": "Que se apañe", "effects": {"affection": -4}, "result": "{name} entrena con un palo durante semanas."},
 		]},
-	{"id": "soc2_sequito_guardia", "title": "Dormid{s:o|a} en la guardia", "min_tier": 2, "kinds": ["retinue"], "bias": {P.COBARDE: 1.5, P.PRUDENTE: 0.6},
+	{"id": "soc2_sequito_guardia", "title": "Dormid{s:o|a} en la guardia", "min_tier": 2, "kinds": ["retinue"], "avoid": [P.HONORABLE, P.LEAL], "bias": {P.COBARDE: 1.5, P.PRUDENTE: 0.6},
 		"text": "Al alba encuentras a {name} dormid{s:o|a} sobre su lanza en el adarve. Los demás hombres miran de reojo: esperan ver si hay castigo.",
 		"options": [
 			{"label": "Castigarl{s:o|a} ante todos", "effects": {"honor": 1, "affection": -6}, "result": "La guardia no vuelve a cabecear en mucho tiempo."},
@@ -144,7 +145,7 @@ const BOND := [
 			{"label": "Aceptar su oferta", "effects": {"garrison": 3, "castle_food": -10, "affection": 4}, "result": "Al mes, los mozos ya marchan al paso."},
 			{"label": "No hace falta", "effects": {"affection": -2}, "result": "{name} vuelve a sus tareas, algo decepcionad{s:o|a}."},
 		]},
-	{"id": "soc2_sequito_golpe", "title": "Un golpe ajeno", "min_tier": 4, "kinds": ["retinue"], "bias": {P.LEAL: 2.0, P.VALIENTE: 1.5},
+	{"id": "soc2_sequito_golpe", "title": "Un golpe ajeno", "min_tier": 4, "kinds": ["retinue"], "avoid": [P.COBARDE, P.CRUEL], "bias": {P.LEAL: 2.0, P.VALIENTE: 1.5},
 		"text": "En una emboscada en el camino, {name} se interpuso entre tú y un hachazo. Ahora tiene el brazo vendado y quita importancia a la herida.",
 		"options": [
 			{"label": "Curarle tú mism{a:o|a}", "effects": {"health": -3, "affection": 10, "honor": 2}, "result": "Cambias sus vendas cada noche. Nadie en el séquito lo olvida."},
@@ -274,7 +275,7 @@ const BOND := [
 				"failure": {"effects": {"health": -10, "affection": 6}, "result": "Os echan a la calle con un ojo morado cada uno."}},
 			{"label": "Pagar los daños", "requires": {"gold": 15}, "effects": {"gold": -15, "affection": 4}, "result": "El tabernero calma los ánimos a cambio de tu bolsa."},
 		]},
-	{"id": "soc2_amigo_jabali", "title": "La montería del jabalí", "min_tier": 2, "kinds": ["friend"], "bias": {P.VALIENTE: 2.0, P.COBARDE: 0.4},
+	{"id": "soc2_amigo_jabali", "title": "La montería del jabalí", "min_tier": 2, "kinds": ["friend"], "avoid": [P.COBARDE], "bias": {P.VALIENTE: 2.0, P.COBARDE: 0.4},
 		"text": "{name} ha visto huellas de un jabalí enorme en el robledal y propone salir a por él al amanecer, solo vosotros dos y un par de lebreles.",
 		"options": [
 			{"label": "Salir de montería", "effects": {"xp": 15, "affection": 6, "health": -3}, "result": "El jabalí os da guerra, pero esa noche cenáis como reyes."},
@@ -288,7 +289,7 @@ const BOND := [
 				"failure": {"effects": {"affection": -5}, "result": "{name} enrolla el pergamino, ofendid{s:o|a}."}},
 			{"label": "Alabarlos", "effects": {"affection": 4, "honor": -1}, "result": "Nadie contesta a los versos, pero {name} te sigue apreciando."},
 		]},
-	{"id": "soc2_amigo_padrino", "title": "Padrino de duelo", "min_tier": 4, "kinds": ["friend"], "bias": {P.HONORABLE: 2.0, P.LEAL: 1.5, P.PRUDENTE: 0.6},
+	{"id": "soc2_amigo_padrino", "title": "Padrino de duelo", "min_tier": 4, "kinds": ["friend"], "avoid": [P.COBARDE], "bias": {P.HONORABLE: 2.0, P.LEAL: 1.5, P.PRUDENTE: 0.6},
 		"text": "Un caballero ha insultado a la familia de {name} y el duelo es inevitable. Te pide que seas su padrino: que midas las armas y estés a su lado si cae.",
 		"options": [
 			{"label": "Aceptar", "effects": {"honor": 3, "fame": 1, "affection": 10, "health": -5}, "result": "{name} vence, y tú recibes un corte al separar a los padrinos."},
@@ -296,11 +297,91 @@ const BOND := [
 				"success": {"effects": {"affection": 4, "honor": 1}, "result": "Consigues una disculpa pública y nadie derrama sangre."},
 				"failure": {"effects": {"affection": -6}, "result": "{name} busca otro padrino y no te lo perdona."}},
 		]},
+	# --- Sucesos propios de cada carácter (only): lo que solo haría alguien así ---
+	{"id": "soc3_ambicion_tierras", "title": "Hambre de tierras", "min_tier": 1, "kinds": [], "only": [P.AMBICIOSO],
+		"text": "{name} ha puesto los ojos en un señorío sin dueño y quiere pedirlo al señor. Te propone ir a medias: tu palabra a cambio de una parte de las rentas.",
+		"options": [
+			{"label": "Respaldarle ante el señor", "chance": 0.55, "chance_stat": "charisma",
+				"success": {"effects": {"gold": 40, "affection": 8}, "result": "Le conceden el señorío y {name} cumple: te envía tu parte."},
+				"failure": {"effects": {"affection": 3, "honor": -1}, "result": "El señor se ríe de la petición. {name} no te lo reprocha."}},
+			{"label": "Aconsejarle paciencia", "effects": {"affection": -4}, "result": "{name} frunce el ceño: no ha nacido para esperar."},
+		]},
+	{"id": "soc3_leal_aviso", "title": "Un aviso a tiempo", "min_tier": 2, "kinds": [], "only": [P.LEAL],
+		"text": "{name} llega de noche, sin aliento: ha oído en la taberna a dos hombres que planean robar tus caballos camino de la feria.",
+		"options": [
+			{"label": "Doblar la guardia y agradecérselo", "effects": {"affection": 6, "gold": 15}, "result": "Los ladrones encuentran las cuadras vigiladas y se marchan con las manos vacías."},
+			{"label": "Tenderles una trampa", "chance": 0.55, "chance_stat": "strategy",
+				"success": {"effects": {"fame": 3, "honor": 2, "affection": 6}, "result": "Caen en la trampa y los entregas a la justicia del señor."},
+				"failure": {"effects": {"gold": -20}, "result": "Huelen la trampa y se llevan un potro en la confusión."}},
+		]},
+	{"id": "soc3_prudente_grano", "title": "Antes del invierno", "min_tier": 1, "kinds": [], "only": [P.PRUDENTE],
+		"text": "{name} ha hecho cuentas: si el invierno es largo, el grano no llegará a la primavera. Propone comprar ahora, mientras está barato.",
+		"options": [
+			{"label": "Comprar grano (30)", "requires": {"gold": 30}, "effects": {"gold": -30, "castle_food": 60, "affection": 5}, "result": "Los graneros se llenan. {name} duerme tranquil{s:o|a}."},
+			{"label": "Ya veremos", "effects": {"affection": -2}, "result": "{name} anota algo en su cuaderno y no dice nada."},
+		]},
+	{"id": "soc3_arrogante_desaire", "title": "Un desaire en tu mesa", "min_tier": 1, "kinds": [], "only": [P.ARROGANTE],
+		"text": "{name} se niega a compartir mesa con tu escudero, «hijo de un herrero». El muchacho, rojo de vergüenza, espera a ver qué haces.",
+		"options": [
+			{"label": "Defender a tu escudero", "effects": {"affection": -6, "honor": 3}, "result": "{name} se levanta ofendid{s:o|a}; tu gente te mira con otros ojos."},
+			{"label": "Mandar al escudero a otra mesa", "effects": {"affection": 6, "honor": -2}, "result": "{name} sonríe satisfech{s:o|a}. El muchacho no olvida."},
+		]},
+	{"id": "soc3_piadoso_peregrinacion", "title": "Camino del santuario", "min_tier": 2, "kinds": [], "only": [P.PIADOSO],
+		"text": "{name} va a peregrinar al santuario del monte y te invita a acompañar{s:le|la}: tres días de camino, ayuno y oración.",
+		"options": [
+			{"label": "Acompañar{s:le|la}", "effects": {"affection": 10, "honor": 4, "health": 10}, "result": "Volvéis con los pies llagados y el alma en paz."},
+			{"label": "Darle una limosna para el santuario (15)", "requires": {"gold": 15}, "effects": {"gold": -15, "affection": 4, "honor": 1}, "result": "{name} promete rezar por ti ante el altar."},
+			{"label": "Excusarte", "effects": {"affection": -3}, "result": "{name} se marcha sin ti, rezando también por tu alma."},
+		]},
+	{"id": "soc3_astuto_negocio", "title": "Un negocio discreto", "min_tier": 1, "kinds": [], "only": [P.ASTUTO],
+		"text": "{name} conoce a unos mercaderes de sal que pagarían bien por pasar sin peaje por tus caminos. Nadie tendría por qué enterarse.",
+		"options": [
+			{"label": "Aceptar el trato", "effects": {"gold": 50, "honor": -4, "affection": 6}, "result": "La sal pasa de noche y las monedas llegan puntuales."},
+			{"label": "Negarte", "effects": {"affection": -4, "honor": 1}, "result": "{name} se encoge de hombros: «Otro sabrá aprovecharlo»."},
+		]},
+	{"id": "soc3_valiente_combate", "title": "Acero contra acero", "min_tier": 1, "kinds": [], "only": [P.VALIENTE],
+		"text": "{name} te reta a un asalto de práctica en el patio, delante de todos: «Quiero ver si eres tan bueno como dicen».",
+		"options": [
+			{"label": "Aceptar el asalto", "chance": 0.55, "chance_stat": "combat",
+				"success": {"effects": {"xp": 15, "fame": 2, "affection": 6}, "result": "Le desarmas con un giro limpio y {name} ríe, encantad{s:o|a}."},
+				"failure": {"effects": {"xp": 10, "health": -8, "affection": 4}, "result": "Acabas en el suelo con la espada de {name} en el cuello. Te tiende la mano."}},
+			{"label": "Declinar", "effects": {"affection": -4}, "result": "{name} no oculta su decepción."},
+		]},
+	{"id": "soc3_cruel_castigo", "title": "La vara en las cuadras", "min_tier": 1, "kinds": [], "only": [P.CRUEL],
+		"text": "Encuentras a {name} azotando a un mozo de cuadra por dejar suelta una yegua. El chico sangra y nadie se atreve a intervenir.",
+		"options": [
+			{"label": "Detener{s:le|la}", "effects": {"affection": -8, "honor": 4}, "result": "{name} arroja la vara a tus pies. El mozo te mira como a un santo."},
+			{"label": "Dejar que siga", "effects": {"affection": 4, "honor": -4}, "result": "Los gritos se oyen hasta el patio."},
+		]},
+	{"id": "soc3_generoso_limosna", "title": "Pan para los pobres", "min_tier": 1, "kinds": [], "only": [P.GENEROSO],
+		"text": "{name} ha repartido en tu nombre un carro de pan entre los pobres del arrabal. Ahora te trae la cuenta, algo avergonzad{s:o|a}.",
+		"options": [
+			{"label": "Pagarla con gusto (25)", "requires": {"gold": 25}, "effects": {"gold": -25, "honor": 3, "fame": 3, "affection": 6}, "result": "En el arrabal bendicen tu nombre."},
+			{"label": "Reprenderle por gastar lo ajeno", "effects": {"affection": -6, "honor": -1}, "result": "{name} paga de su bolsa, dolid{s:o|a}."},
+		]},
+	{"id": "soc3_cobarde_excusa", "title": "Una excusa mal hilada", "min_tier": 1, "kinds": [], "only": [P.COBARDE],
+		"text": "{name} te pide que digas que estaba contigo anoche: le tocaba la ronda por los caminos y no se presentó. Han robado a un mercader.",
+		"options": [
+			{"label": "Cubrir{s:le|la}", "effects": {"affection": 8, "honor": -3}, "result": "{name} respira aliviad{s:o|a}. Te debe una."},
+			{"label": "Decir la verdad", "effects": {"affection": -8, "honor": 2}, "result": "El capitán le retira la paga de un mes."},
+		]},
+	{"id": "soc3_romantico_cantar", "title": "Un cantar sobre ti", "min_tier": 2, "kinds": [], "only": [P.ROMANTICO],
+		"text": "En el banquete, {name} se levanta con un laúd y canta unas coplas sobre tus hazañas, adornadas con más gloria de la que hubo.",
+		"options": [
+			{"label": "Brindar por el cantar", "effects": {"fame": 4, "affection": 6}, "result": "Al día siguiente, medio castillo tararea tus coplas."},
+			{"label": "Corregir lo exagerado", "effects": {"honor": 2, "affection": -3}, "result": "{name} se sonroja; la corte aprecia tu modestia."},
+		]},
+	{"id": "soc3_honorable_verdad", "title": "Una verdad incómoda", "min_tier": 2, "kinds": [], "only": [P.HONORABLE],
+		"text": "{name} te habla sin rodeos: tus soldados saquean las aldeas por donde pasáis, y tu nombre se mancha con ello.",
+		"options": [
+			{"label": "Escuchar y poner orden", "effects": {"honor": 4, "affection": 8, "gold": -10}, "result": "Pagas a las aldeas lo robado. {name} asiente en silencio."},
+			{"label": "Mandarle callar", "effects": {"affection": -10}, "result": "{name} no vuelve a sacar el tema, pero algo se ha roto."},
+		]},
 ]
 
 # --- 2) Rivalidades (el protagonista es un rival de duelo) ---
 const RIVALRY := [
-	{"id": "soc_apuesta", "title": "Una apuesta", "stages": [ST.CONOCIDO, ST.RIVAL, ST.RESPETO], "bias": {P.AMBICIOSO: 1.5, P.ARROGANTE: 1.5},
+	{"id": "soc_apuesta", "title": "Una apuesta", "stages": [ST.CONOCIDO, ST.RIVAL, ST.RESPETO], "avoid": [P.PIADOSO], "bias": {P.AMBICIOSO: 1.5, P.ARROGANTE: 1.5},
 		"text": "{name} te propone una apuesta delante de la corte: tres flechas al blanco, cincuenta monedas al que acierte más. Los cortesanos ya cruzan sus propias apuestas.",
 		"options": [
 			{"label": "Apostar 50", "requires": {"gold": 50}, "chance": 0.5, "chance_stat": "combat",
@@ -308,7 +389,7 @@ const RIVALRY := [
 				"failure": {"effects": {"gold": -50, "grudge": -3}, "result": "{name} cobra con una sonrisa."}},
 			{"label": "Declinar", "effects": {}, "result": "No todo se resuelve apostando."},
 		]},
-	{"id": "soc_humillacion", "title": "Humillación pública", "stages": [ST.RIVAL, ST.NEMESIS], "bias": {P.ARROGANTE: 2.0, P.CRUEL: 1.5, P.HONORABLE: 0.4},
+	{"id": "soc_humillacion", "title": "Humillación pública", "stages": [ST.RIVAL, ST.NEMESIS], "avoid": [P.HONORABLE, P.PIADOSO], "bias": {P.ARROGANTE: 2.0, P.CRUEL: 1.5, P.HONORABLE: 0.4},
 		"text": "En pleno banquete, {name} brinda «por {player}, que lucha mejor con la lengua que con la espada». Las risas recorren las mesas.",
 		"options": [
 			{"label": "Responder con ingenio", "chance": 0.5, "chance_stat": "charisma",
@@ -317,20 +398,20 @@ const RIVALRY := [
 			{"label": "Retarl{s:o|a} ahora", "requires": {"healthy": true}, "start_duel": true, "effects": {}, "result": "Te levantas y arrojas el guante."},
 			{"label": "Aguantar", "effects": {"honor": -3, "grudge": -3}, "result": "Tragas saliva. Hay quien lo llama templanza."},
 		]},
-	{"id": "soc_sabotaje", "title": "Un cortejo saboteado", "stages": [ST.RIVAL, ST.NEMESIS], "needs": "beloved", "bias": {P.ASTUTO: 2.0, P.AMBICIOSO: 1.5},
+	{"id": "soc_sabotaje", "title": "Un cortejo saboteado", "stages": [ST.RIVAL, ST.NEMESIS], "needs": "beloved", "avoid": [P.HONORABLE], "bias": {P.ASTUTO: 2.0, P.AMBICIOSO: 1.5},
 		"text": "{name} ha empezado a rondar a {third} con regalos y mentiras sobre ti. Sabes que no lo hace por amor, sino para quitártelo todo.",
 		"options": [
 			{"label": "Redoblar el cortejo", "requires": {"gold": 30}, "effects": {"gold": -30, "affection": 8}, "result": "{third} aprecia el gesto y se ríe de los cuentos."},
 			{"label": "Retar a {name}", "requires": {"healthy": true}, "start_duel": true, "effects": {}, "result": "Que la espada decida quién miente."},
 			{"label": "Dejarlo estar", "effects": {"affection": -8}, "result": "{third} empieza a dudar de ti."},
 		]},
-	{"id": "soc_duelo_concertado", "title": "Un duelo de honor", "stages": [ST.RIVAL, ST.NEMESIS], "bias": {P.HONORABLE: 2.0, P.VALIENTE: 1.5, P.COBARDE: 0.2},
+	{"id": "soc_duelo_concertado", "title": "Un duelo de honor", "stages": [ST.RIVAL, ST.NEMESIS], "avoid": [P.COBARDE], "bias": {P.HONORABLE: 2.0, P.VALIENTE: 1.5, P.COBARDE: 0.2},
 		"text": "Un heraldo trae el cartel de {name}: te emplaza a un duelo de honor ante testigos, en el palenque y dentro de dos meses. Rechazarlo se sabrá en todo el reino.",
 		"options": [
 			{"label": "Aceptar la cita", "social": {"schedule_duel": true}, "effects": {"fame": 1}, "result": "Fijas la fecha. La corte ya cuenta los días."},
 			{"label": "Rechazar el cartel", "effects": {"honor": -5, "grudge": 5}, "result": "El heraldo se marcha con tu negativa."},
 		]},
-	{"id": "soc_reconciliacion", "title": "Una tregua", "stages": [ST.RIVAL, ST.RESPETO], "bias": {P.PIADOSO: 2.0, P.GENEROSO: 1.5, P.LEAL: 1.3, P.CRUEL: 0.3},
+	{"id": "soc_reconciliacion", "title": "Una tregua", "stages": [ST.RIVAL, ST.RESPETO], "avoid": [P.CRUEL], "bias": {P.PIADOSO: 2.0, P.GENEROSO: 1.5, P.LEAL: 1.3, P.CRUEL: 0.3},
 		"text": "{name} se presenta sin armas y te ofrece la mano. Dice que ya ha habido bastante rencor entre los dos y que el reino necesita a ambos.",
 		"options": [
 			{"label": "Estrecharla", "effects": {"grudge": -25, "honor": 2}, "result": "La corte respira: la vieja rivalidad se apaga."},
@@ -342,7 +423,7 @@ const RIVALRY := [
 			{"label": "Unir fuerzas", "social": {"third_grudge": 10}, "effects": {"grudge": -15, "fame": 2}, "result": "{third} pronto nota que tiene dos enemigos."},
 			{"label": "Avisar a {third}", "social": {"third_grudge": -10}, "effects": {"grudge": 10, "honor": 2}, "result": "{third} te lo agradece; {name} no."},
 		]},
-	{"id": "soc2_rival_justa", "title": "Cruce de lanzas", "stages": [ST.CONOCIDO, ST.RIVAL, ST.RESPETO], "bias": {P.VALIENTE: 2.0, P.ARROGANTE: 1.3, P.COBARDE: 0.3},
+	{"id": "soc2_rival_justa", "title": "Cruce de lanzas", "stages": [ST.CONOCIDO, ST.RIVAL, ST.RESPETO], "avoid": [P.COBARDE], "bias": {P.VALIENTE: 2.0, P.ARROGANTE: 1.3, P.COBARDE: 0.3},
 		"text": "En el torneo de las fiestas, el sorteo te empareja con {name} en la justa. Al cruzaros junto a la liza, alza la lanza hacia ti con una media sonrisa.",
 		"options": [
 			{"label": "Justar con todo", "chance": 0.5, "chance_stat": "combat",
@@ -350,7 +431,7 @@ const RIVALRY := [
 				"failure": {"effects": {"health": -10, "fame": -1, "grudge": -3}, "result": "Sales despedid{a:o|a} de la silla entre el griterío."}},
 			{"label": "Retirarte alegando una lesión", "effects": {"honor": -2}, "result": "{name} recorre la liza sin rival, saludando a las gradas."},
 		]},
-	{"id": "soc2_rival_rumor", "title": "Un rumor en las tabernas", "stages": [ST.RIVAL, ST.NEMESIS], "bias": {P.ASTUTO: 2.0, P.CRUEL: 1.3, P.HONORABLE: 0.5},
+	{"id": "soc2_rival_rumor", "title": "Un rumor en las tabernas", "stages": [ST.RIVAL, ST.NEMESIS], "avoid": [P.HONORABLE, P.PIADOSO], "bias": {P.ASTUTO: 2.0, P.CRUEL: 1.3, P.HONORABLE: 0.5},
 		"text": "En las tabernas se cuenta que huiste en tu última batalla. Todos los hilos llevan al mismo sitio: un criado de {name} paga las rondas a quien repite la historia.",
 		"options": [
 			{"label": "Desmentirlo en la plaza", "chance": 0.5, "chance_stat": "charisma",
@@ -359,7 +440,7 @@ const RIVALRY := [
 			{"label": "Pagar a un juglar", "requires": {"gold": 20}, "effects": {"gold": -20, "fame": 2, "grudge": 3}, "result": "Pronto se canta otra versión, y {name} sale peor parad{s:o|a}."},
 			{"label": "Callar", "effects": {"fame": -1}, "result": "El rumor se apaga solo, aunque deja poso."},
 		]},
-	{"id": "soc2_rival_herradura", "title": "Una herradura floja", "stages": [ST.RIVAL, ST.NEMESIS], "bias": {P.CRUEL: 1.5, P.ASTUTO: 1.5},
+	{"id": "soc2_rival_herradura", "title": "Una herradura floja", "stages": [ST.RIVAL, ST.NEMESIS], "avoid": [P.HONORABLE, P.PIADOSO, P.LEAL], "bias": {P.CRUEL: 1.5, P.ASTUTO: 1.5},
 		"text": "Tu caballo amanece cojo: alguien le aflojó una herradura por la noche. El mozo de cuadras jura que vio al escudero de {name} rondando los establos.",
 		"options": [
 			{"label": "Denunciarlo ante la corte", "effects": {"honor": 2, "grudge": 10}, "result": "{name} lo niega con indignación, pero la sospecha queda."},
@@ -479,7 +560,7 @@ const FACTION := [
 ## Plantilla rellena: textos con nombres y género, sin claves de catálogo que el mapa no entiende.
 static func build(t: Dictionary, speaker: Character, player: Character, names: Dictionary) -> Dictionary:
 	var e: Dictionary = _fill(t.duplicate(true), speaker, player, names)
-	for k in ["min_tier", "kinds", "stages", "deed", "bias", "liege", "after_battle", "needs", "premise"]:
+	for k in ["min_tier", "kinds", "stages", "deed", "bias", "avoid", "only", "liege", "after_battle", "needs", "premise"]:
 		e.erase(k)
 	return e
 

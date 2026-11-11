@@ -23,15 +23,23 @@ static func army_event(army: Army, castle: Castle, side: int, lord: String, invi
 		"Te unes a las tropas de %s ante %s." % [lord, castle.castle_name],
 		{"invite_decline": army.army_id}, is_liege)
 
-## Batalla campal entre dos castillos de reinos en guerra (en campo abierto: hay duelos de jefes).
-static func field_event(ally_castle: Castle, enemy_castle: Castle, lord: String, inviter: String, is_liege: bool) -> Dictionary:
-	var text := _who(inviter, lord) + " Sus hombres saldrán de %s al encuentro de las tropas de %s (%s) en campo abierto. En campo abierto los jefes pueden retarse a duelo singular." % [
-		ally_castle.castle_name, enemy_castle.owner_name, KingdomEnums.kingdom_name(enemy_castle.kingdom)]
+## Batalla campal: un ejército de la IA marcha sobre "castle" y la guarnición sale a su encuentro en campo
+## abierto antes del asedio (hay duelos de jefes). side = DEFENSOR: luchas con la guarnición que le corta
+## el paso; ATACANTE: marchas con el ejército. Solo existe si hay un ejército de verdad en marcha.
+static func field_event(army: Army, castle: Castle, side: int, lord: String, inviter: String, is_liege: bool) -> Dictionary:
+	var text: String
+	if side == BattleEnums.Side.ATACANTE:
+		text = _who(inviter, lord) + " Sus %d hombres marchan sobre %s, y %s ha sacado a su gente a cerrarles el paso en campo abierto." % [
+			army.size, castle.castle_name, castle.owner_name]
+	else:
+		text = _who(inviter, lord) + " %s (%s) marcha sobre %s con %d soldados. Sus hombres saldrán a cortarle el paso en campo abierto antes de que empiece el asedio." % [
+			army.owner_name, KingdomEnums.kingdom_name(army.kingdom), castle.castle_name, army.size]
+	text += " En campo abierto los jefes pueden retarse a duelo singular."
 	if is_liege:
 		text += " Es tu señor: negarte no le hará gracia."
 	return _event("Batalla campal", text, inviter, lord,
-		{"type": "invited", "kind": "field", "side": BattleEnums.Side.ATACANTE, "lord": lord, "inviter": inviter,
-			"ally_castle_id": ally_castle.castle_id, "enemy_castle_id": enemy_castle.castle_id},
+		{"type": "invited", "kind": "field", "side": side, "lord": lord, "inviter": inviter,
+			"army_id": army.army_id, "castle_id": castle.castle_id},
 		"Te unes a las tropas de %s camino de la batalla." % lord, {}, is_liege)
 
 static func _who(inviter: String, lord: String) -> String:

@@ -41,7 +41,8 @@ const WIN_DMG := 1.6                  # bajas que causa quien gana el choque (×
 const ROUT_DMG := 1.9                 # ...más esto × la parte del grupo rival que cayó (arrasarlo: ×3,5)
 const LOSS_DMG := 0.5                 # bajas que aún causa quien lo pierde
 const LOSER_TAKEN := 1.6              # bajas que recibe quien pierde (× la respuesta normal), + ROUT_DMG × la parte de su grupo caída
-const FLEE_TAKEN := 0.8               # quien se retira a tiempo recibe menos que si pierde
+const FLEE_TAKEN := 0.8               # (ya no se usa: la retirada cuesta según el daño sufrido)
+const FLEE_TROOP_LOSS := 0.6          # al retirarse: tropa perdida = soldados × daño sufrido por su grupo × esto
 const WIN_MORALE := 4
 const LOSS_MORALE := 12
 const FLEE_MORALE := 6
@@ -225,6 +226,21 @@ static func _down_ratio(group: Array, fallen: Array) -> float:
 		return 0.0
 	return float(group.filter(func(c): return c in fallen).size()) / group.size()
 
+## Parte (0..1) de la vida que perdió un grupo durante el combate (de hp_start a hp).
+static func _damage_taken(group: Array, result: Dictionary) -> float:
+	var lost := 0.0
+	var total := 0.0
+	var start: Dictionary = result.get("hp_start", {})
+	var now: Dictionary = result.get("hp", {})
+	for c in group:
+		if not now.has(c):
+			continue
+		var pair: Array = now[c]
+		var before := float(start.get(c, pair[0]))
+		lost += maxf(0.0, before - float(pair[0]))
+		total += maxf(1.0, float(pair[1]))
+	return clampf(lost / total, 0.0, 1.0) if total > 0.0 else 0.0
+
 static func apply(bm: BattleManager, enc: Dictionary, result: Dictionary) -> String:
 	var att: BattleUnit = enc.attacker
 	var tgt: BattleUnit = enc.target
@@ -242,10 +258,11 @@ static func apply(bm: BattleManager, enc: Dictionary, result: Dictionary) -> Str
 	var down_a := _down_ratio(enc.a, fallen)
 	var to_tgt: float = base_out * ((WIN_DMG + ROUT_DMG * down_b) if winner == 0 else LOSS_DMG)
 	var to_att: float = base_back * ((LOSER_TAKEN + ROUT_DMG * down_a) if winner == 1 else LOSS_DMG)
-	if fled == 0:
-		to_att = base_back * FLEE_TAKEN
-	elif fled == 1:
-		to_tgt = base_out * FLEE_TAKEN
+	if fled >= 0:
+		# Retirada: nadie gana el choque; cada pelotón pierde según el daño que sufrió su grupo
+		# en este combate, y conserva el resto (sin bajas de derrota).
+		to_att = att.soldiers * _damage_taken(enc.a, result) * FLEE_TROOP_LOSS
+		to_tgt = tgt.soldiers * _damage_taken(enc.b, result) * FLEE_TROOP_LOSS
 	var k_tgt := roundi(to_tgt)
 	var k_att := roundi(to_att)
 	bm._apply_casualties(tgt, k_tgt)

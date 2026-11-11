@@ -66,6 +66,9 @@ func _ready() -> void:
 	title.text = "Obras de %s" % castle.castle_name
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
+	var gold_icon := StatIcons.icon("oro", 20, "Tesoro del castillo")
+	gold_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header.add_child(gold_icon)
 	_status = Label.new()
 	_status.theme_type_variation = &"StatLabel"
 	header.add_child(_status)
@@ -114,7 +117,7 @@ func _rebuild() -> void:
 	for child in _list.get_children():
 		child.queue_free()
 	_first_button = null
-	_status.text = "Tesoro: %d" % castle.gold
+	_status.text = str(castle.gold)
 	if castle.is_building():
 		_status.text += " · En obras: %s (%d %s)" % [BuildingCatalog.building_name(castle.construction_id),
 			castle.construction_months_left, "mes" if castle.construction_months_left == 1 else "meses"]
@@ -137,7 +140,7 @@ func _add_row(id: String, player: Character) -> void:
 	row.add_child(text)
 	var name_label := Label.new()
 	name_label.theme_type_variation = &"BodyBoldLabel"
-	name_label.text = "%s  %s%s" % [b.name, "■".repeat(level), "□".repeat(BuildingCatalog.MAX_LEVEL - level)]
+	name_label.text = "%s  ★ %d/%d" % [b.name, level, BuildingCatalog.MAX_LEVEL]   # (■□ no existen en la fuente)
 	if building_now:
 		name_label.text += "   — en obras, faltan %d %s" % [castle.construction_months_left, "mes" if castle.construction_months_left == 1 else "meses"]
 	text.add_child(name_label)

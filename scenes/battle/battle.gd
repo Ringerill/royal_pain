@@ -45,6 +45,7 @@ var player_defending := false   # true si el jugador defiende su castillo de un 
 
 var skirmish: Dictionary = {}   # escaramuza de un evento (sin ejército ni castillo de por medio)
 var invited: Dictionary = {}    # batalla ajena: alguien te llamó a filas (ver CombatSetup.invited)
+var field_army: Army = null     # batalla campal: el ejército en marcha al que se sale al paso
 const CHALLENGE_KEY := KEY_D
 const COMBAT_SCENE := "res://scenes/rpg_battle/rpg_battle.tscn"
 var _challenge_mode := false    # el siguiente clic en un jefe enemigo lo reta a duelo
@@ -84,9 +85,12 @@ func _ready() -> void:
 	if not invited.is_empty():
 		skirmish = {}
 		army = ArmyData.find_army(str(invited.get("army_id", ""))) if invited.get("kind", "") == "army" else null
-		castle = MapData.get_castle_by_id(str(invited.get("castle_id", invited.get("ally_castle_id", ""))))
-		if (invited.kind == "army" and (army == null or not army.pending_battle)) or castle == null:
-			# El asedio ya se resolvió (o el castillo no existe): no hay batalla a la que unirse.
+		castle = MapData.get_castle_by_id(str(invited.get("castle_id", "")))
+		if invited.kind == "field":
+			field_army = ArmyData.find_army(str(invited.get("army_id", "")))
+		if (invited.kind == "army" and (army == null or not army.pending_battle)) or castle == null \
+				or (invited.kind == "field" and ArmyData.field_target(field_army) != castle):
+			# El asedio ya se resolvió, el ejército ya no marcha sobre ese castillo (o no existe): no hay batalla.
 			CombatSetup.invited = {}
 			invited = {}
 	if invited.is_empty():
@@ -220,20 +224,23 @@ func _start_invited(player: Character) -> void:
 		_start_fn.call(companions)
 		_show_companions(companions, theirs)
 	else:
-		var ally_castle := castle
-		var enemy_castle: Castle = MapData.get_castle_by_id(str(invited.get("enemy_castle_id", "")))
-		var allies := ArmyData.field_battle_soldiers(ally_castle)
-		var foes := ArmyData.field_battle_soldiers(enemy_castle)
+		# Batalla campal: el ejército en marcha contra la guarnición que sale de "castle" a cortarle el paso.
+		# Tu bando ocupa siempre el primer lugar del tablero (el «atacante» del motor).
+		var with_army: bool = int(invited.get("side", BattleEnums.Side.DEFENSOR)) == BattleEnums.Side.ATACANTE
+		var sortie := ArmyData.field_battle_soldiers(castle)
+		var allies: int = field_army.size if with_army else sortie
+		var foes: int = sortie if with_army else field_army.size
 		battle.ally_soldiers = allies
 		invited["ally_soldiers"] = allies
 		invited["enemy_soldiers"] = foes
-		var ally_cmd: Character = RelationsData.character_of(ally_castle.owner_name)
-		var enemy_cmd: Character = RelationsData.character_of(enemy_castle.owner_name) if enemy_castle != null else null
-		var theirs := _enemy_companions(enemy_cmd, enemy_castle.kingdom if enemy_castle != null else -1)
-		battle.biome = ally_castle.kingdom
-		var place := "los campos de %s" % ally_castle.castle_name
-		title_label.text = "%s · %s\nCon %s contra %s" % [invited.get("title", "Batalla campal"), place, lord,
-			enemy_castle.owner_name if enemy_castle != null else "el enemigo"]
+		var enemy_name: String = castle.owner_name if with_army else field_army.owner_name
+		var ally_cmd: Character = RelationsData.character_of(field_army.owner_name if with_army else castle.owner_name)
+		var enemy_cmd: Character = RelationsData.character_of(enemy_name)
+		var theirs := _enemy_companions(enemy_cmd, castle.kingdom if with_army else field_army.kingdom)
+		battle.biome = castle.kingdom
+		var place := "los campos de %s" % castle.castle_name
+		title_label.text = "%s · %s
+Con %s contra %s" % [invited.get("title", "Batalla campal"), place, lord, enemy_name]
 		_enemy_list = theirs
 		_start_fn = func(comps: Array[Character]) -> void:
 			battle.start_battle(allies + _use_allocation(comps), foes, false, ally_cmd, enemy_cmd, place, comps, theirs)
@@ -1123,15 +1130,14 @@ func _end_invited(winner_side: int, report: Dictionary) -> void:
 			lines.append(ArmyData.resolve_battle(army, winner_side == BattleEnums.Side.ATACANTE,
 				report.attacker_ai_survivors, report.defender_ai_survivors, defending))
 	else:
-		var enemy_castle: Castle = MapData.get_castle_by_id(str(invited.get("enemy_castle_id", "")))
+		# Lo que pasó en el tablero cambia el mundo: bajas del ejército y de la guarnición, y el ejército
+		# vencido se repliega (no hay asedio) o el vencedor sigue su marcha.
+		var with_army: bool = int(invited.get("side", BattleEnums.Side.DEFENSOR)) == BattleEnums.Side.ATACANTE
 		var ally_lost: int = maxi(0, int(invited.get("ally_soldiers", 0)) - int(report.attacker_ai_survivors))
 		var enemy_lost: int = maxi(0, int(invited.get("enemy_soldiers", 0)) - int(report.defender_ai_survivors))
-		castle.garrison_size = maxi(1, castle.garrison_size - ally_lost)
-		if enemy_castle != null:
-			enemy_castle.garrison_size = maxi(1, enemy_castle.garrison_size - enemy_lost)
-		lines.append("La batalla campal cuesta %d hombres a %s y %d a %s." % [ally_lost, castle.castle_name, enemy_lost,
-			enemy_castle.castle_name if enemy_castle != null else "el enemigo"])
-		WorldEvents.record("Batalla campal junto a %s: %s." % [castle.castle_name, report.reason], castle.castle_id)
+		var allies_won: bool = winner_side == BattleEnums.Side.ATACANTE   # tu bando ocupa el lugar del atacante
+		lines.append(ArmyData.resolve_field_battle(field_army, castle, allies_won == with_army,
+			ally_lost if with_army else enemy_lost, enemy_lost if with_army else ally_lost))
 	if not betrayed:
 		lines.append(ArmyData.invitation_reward(str(invited.get("inviter", "")), str(invited.get("lord", "")),
 			int(report.get("own_initial", 0)), player_won))

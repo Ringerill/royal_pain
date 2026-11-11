@@ -86,8 +86,15 @@ func _run() -> void:
 			break
 	if enemy != null:
 		KingdomDiplomacy.declare_war(RD.kingdom_wars, RD.kingdom_alliances, far.kingdom, enemy.kingdom, 0)
-		var ev: Dictionary = root.get_node("ArmyData").volunteer_event(far)
+		var AR = root.get_node("ArmyData")
+		check(AR.volunteer_event(far).is_empty(), "guerra sin ejército en marcha: no hay batalla a la que sumarse")
+		var march = root.get_node("ArmyData").create_army(enemy.owner_name, enemy.kingdom, 100, enemy.castle_id)   # un ejército de verdad en marcha
+		march.origin_castle_id = enemy.castle_id
+		march.destination_castle_id = far.castle_id
+		march.turns_remaining = 2
+		var ev: Dictionary = AR.volunteer_event(far)
 		check(not ev.is_empty() and ev.options.size() >= 2, "se ofrece voluntario en una guerra ajena")
+		AR.disband_army(march)
 		var CS = root.get_node("CombatSetup")
 		check(CS.battle_blocker(p) == "", "el no afiliado sí puede ir a la batalla")
 	else:

@@ -3,7 +3,7 @@
 Uso:  python -I tools/build_skill_icons.py <carpeta icons/ del zip de game-icons.net>
 
 - Lee los nombres de las constantes de scripts/ui/skill_icons.gd (DAMAGE, ARMOR, CAT_ICONS, SHIELD,
-  UNKNOWN, DAMAGE_GENERIC) y copia esos SVG a assets/icons/game-icons/<nombre>.svg (borra los que sobran).
+  UNKNOWN, DAMAGE_GENERIC) y de scripts/ui/stat_icons.gd (ICONS) y copia esos SVG a assets/icons/game-icons/<nombre>.svg (borra los que sobran).
 - Ajusta sus .import (64 px con mipmaps) y escribe assets/icons/game-icons/CREDITOS.txt (CC BY 3.0).
 Tras ejecutarlo: importar en Godot (--import); si se ajustaron .import, importar otra vez.
 El zip: https://game-icons.net/archives/ffffff/transparent/game-icons.net.svg.zip
@@ -20,6 +20,11 @@ for const in ("DAMAGE", "ARMOR", "CAT_ICONS"):
     needed.update(re.findall(r'"([a-z0-9-]+)"', m.group(1)))
 for const in ("SHIELD", "UNKNOWN", "DAMAGE_GENERIC"):
     needed.add(re.search(r'const %s := "([a-z0-9-]+)"' % const, ui).group(1))
+# Iconos de recursos, atributos, relaciones y roles (scripts/ui/stat_icons.gd, const ICONS).
+stat = open(os.path.join(ROOT, "scripts", "ui", "stat_icons.gd"), encoding="utf-8").read()
+m = re.search(r"const ICONS := \{(.*?)\n\}", stat, re.S)
+needed.update(re.findall(r'": "([a-z0-9-]+)"', m.group(1)))
+needed.add("help")
 needed = sorted(needed)
 
 index = {}

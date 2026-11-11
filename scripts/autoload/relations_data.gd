@@ -94,6 +94,12 @@ const CHALLENGE_RANK_GAP := 2             # quien te supera en 2+ rangos rechaza
 const CHALLENGE_FAME_PER_RANK := 20       # ...salvo que tu fama lo justifique (20 por rango de diferencia)
 const FEAR_POWER_GAP := 4                 # si le superas en 4+ de combate+defensa puede negarse por miedo
 const FEAR_REFUSE_CHANCE := 0.6
+const COWARD_REFUSE_CHANCE := 0.6         # un cobarde rehúye el reto aunque no le superes tanto...
+const COWARD_POWER_GAP := 0               # ...si no es claramente más fuerte que tú
+const FRIEND_REFUSE_AFFINITY := 60        # a un amigo le cuesta levantar la espada contra ti
+const FRIEND_REFUSE_CHANCE := 0.4
+const PRUDENT_REFUSE_CHANCE := 0.35       # un prudente no arriesga contra alguien más fuerte
+const PRUDENT_POWER_GAP := 2
 const FAME_DUEL_WIN := 3
 const FAME_PER_RANK_ABOVE := 3            # vencer a alguien de rango superior da más fama
 const FAME_FLED := -2
@@ -720,7 +726,6 @@ func register_duel(rival: Character, player_won: bool, fled: bool) -> String:
 		r.duels_lost_against += 1
 		r.adjust(RIVAL_WIN_AFFINITY)
 		r.adjust_grudge(GRUDGE_PLAYER_LOSS)
-		text = "%s presume de su victoria sobre ti." % rival.full_name()
 	var stage_after := r.rivalry_stage()
 	if stage_after != stage_before:
 		text += " " + _stage_change_text(r, stage_after)
@@ -1607,7 +1612,7 @@ func _settle_suitor_duel(rival_name: String, player_won: bool) -> String:
 		r.adjust_affection(gain)
 		if player_won:
 			return " %s ya no compite por %s (intimidad %+d)." % [rival_name, r.person_name, gain]
-		return " %s presume ante %s de su victoria (intimidad %+d)." % [rival_name, r.person_name, gain]
+		return " %s gana terreno con %s (intimidad %+d)." % [rival_name, r.person_name, gain]
 	return ""
 
 # --- Retos a duelo a la gente de tu zona ---
@@ -1649,15 +1654,48 @@ func challenge(r: Relationship) -> Dictionary:
 	if rank_gap >= CHALLENGE_RANK_GAP and player.renown() < CHALLENGE_FAME_PER_RANK * (rank_gap - 1):
 		return {"accepted": false, "text": "%s: «%s»\n(Necesitas al menos %d de fama para que alguien de su rango acepte.)" % [
 			r.person_name, DialogueCatalog.line("challenge_refuse_rank", rival, player, ctx), CHALLENGE_FAME_PER_RANK * (rank_gap - 1)]}
-	var bold: bool = rival.personality in [Character.Personality.ARROGANTE] or Character.Personality.keys().has("VALIENTE") and rival.personality == Character.Personality.get("VALIENTE")
-	if _power(player) - _power(rival) >= FEAR_POWER_GAP and not bold and randf() < FEAR_REFUSE_CHANCE:
+	if refuses_dishonored(r):
+		return {"accepted": false, "text": "%s: «No cruzo la espada con quien no tiene honor.»\n(Los honorables desprecian a los deshonrados.)" % r.person_name}
+	var bold: bool = rival.personality in [Character.Personality.ARROGANTE, Character.Personality.VALIENTE]
+	var gap: int = _power(player) - _power(rival)
+	if gap >= FEAR_POWER_GAP and not bold and randf() < FEAR_REFUSE_CHANCE:
 		player.add_fame(1)
 		return {"accepted": false, "text": "%s: «%s»\n(Se niega por miedo. Tu fama crece un poco.)" % [
 			r.person_name, DialogueCatalog.line("challenge_refuse_fear", rival, player, ctx)]}
+	if rival.personality == Character.Personality.COBARDE and gap >= COWARD_POWER_GAP and randf() < COWARD_REFUSE_CHANCE:
+		player.add_fame(1)
+		return {"accepted": false, "text": "%s: «%s»\n(Se escabulle: es un cobarde. Tu fama crece un poco.)" % [
+			r.person_name, DialogueCatalog.line("challenge_refuse_fear", rival, player, ctx)]}
+	if rival.personality == Character.Personality.PRUDENTE and gap >= PRUDENT_POWER_GAP and randf() < PRUDENT_REFUSE_CHANCE:
+		return {"accepted": false, "text": "%s: «Hoy no. No gano nada batiéndome contigo.»\n(Es prudente: no arriesga contra alguien más fuerte.)" % r.person_name}
+	if (r.affinity >= FRIEND_REFUSE_AFFINITY or r.affection >= FRIEND_REFUSE_AFFINITY) and not bold and randf() < FRIEND_REFUSE_CHANCE:
+		return {"accepted": false, "text": "%s: «¿Contra ti? Somos amigos; busca a otro.»\n(Rechaza el reto por amistad.)" % r.person_name}
 	rival.current_health = rival.max_health
 	rival.current_stamina = rival.max_stamina
 	rival.current_morale = rival.max_morale
 	return {"accepted": true, "rival": rival, "text": "%s: «%s»" % [r.person_name, DialogueCatalog.line("challenge_accept", rival, player, ctx)]}
+
+## A quién puedes retar desde el castillo (gente de tu zona que se bate en duelo): rivales primero,
+## luego los de fuerza más parecida a la tuya. Incluye a quien no pueda ahora (con el motivo en can_challenge).
+func duel_candidates() -> Array[Relationship]:
+	var player: Character = GameManager.player_character
+	var out: Array[Relationship] = []
+	if player == null:
+		return out
+	for r: Relationship in relations:
+		if not sociable(r) or not in_area(r) or r.kind == Relationship.Kind.CONYUGE or r.person_name in retinue:
+			continue
+		if r.character.role == Character.Role.CAMPESINO or r.person_name == player.full_name():
+			continue
+		out.append(r)
+	var p_power := _power(player)
+	out.sort_custom(func(a: Relationship, b: Relationship) -> bool:
+		var ra := 0 if a.kind == Relationship.Kind.RIVAL_DUELO else 1
+		var rb := 0 if b.kind == Relationship.Kind.RIVAL_DUELO else 1
+		if ra != rb:
+			return ra < rb
+		return absi(_power(a.character) - p_power) < absi(_power(b.character) - p_power))
+	return out
 
 # --- Séquito y compañeros de facción ---
 

@@ -16,6 +16,9 @@ static func make(c: Character, size: int, frame_color: Color = FRAME_COLOR, clic
 	icon.character = c
 	icon.on_click = click
 	icon.custom_minimum_size = Vector2(size, size)
+	# Siempre cuadrado: en una fila con texto de varias líneas no se estira a lo alto.
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	icon._build(size, frame_color, clickable)
 	return icon
 

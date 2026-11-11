@@ -11,6 +11,16 @@ signal embedded_finished(winner: Character)
 const UniqueItems = preload("res://scripts/resources/unique_items.gd")
 const LOG_HEIGHT := 58.0
 const TURN_DELAY := 0.75
+# Ritmo de cada acción: pensar → anunciar (nombre y flecha al objetivo) → embestida → golpe.
+const THINK_TIME := 0.45        # s: la IA «piensa» antes de decidir
+const TELEGRAPH_TIME := 0.75    # s: anuncia su acción y a quién va antes de ejecutarla
+const PLAYER_TELEGRAPH := 0.35  # ...más breve para tus órdenes (ya sabes lo que has elegido)
+const STRIKE_DELAY := 0.12      # s: el golpe llega cuando la embestida alcanza al objetivo
+const LUNGE_DISTANCE := 38.0
+const AIM_WIDTH := 5.0
+const AIM_HOSTILE := Color(1.0, 0.42, 0.3, 0.9)
+const AIM_FRIENDLY := Color(0.55, 0.9, 0.55, 0.9)
+const INTENT_COLOR := Color(1.0, 0.9, 0.6)
 const TIMELINE_N := 8
 const ENEMY_MAX := 5
 const PARTY_MAX := 4
@@ -34,6 +44,8 @@ const TGT_NAMES := {"enemy": "1 enemigo", "enemies": "todos", "random3": "al aza
 ## Pruebas: la IA juega también por ti y las ventanas previas se saltan; retardo entre turnos.
 static var test_auto := false
 static var test_delay := -1.0
+var _aim: Array = []            # objetivos anunciados de la acción en curso (borde y flecha)
+var _aim_layer: Control
 
 var player_character: Character
 var enemy_character: Character
@@ -106,6 +118,10 @@ func _exit_tree() -> void:
 
 func _delay() -> float:
 	return test_delay if test_delay >= 0.0 else TURN_DELAY
+
+## Un tiempo del ritmo de combate (en las pruebas, con test_delay = 0, todo es inmediato).
+func _pace(t: float) -> float:
+	return t * _delay() / TURN_DELAY
 
 # --- Montaje ---
 
@@ -506,12 +522,21 @@ const BiomeBackgrounds = preload("res://scripts/resources/biome_backgrounds.gd")
 
 # Fondo según el bioma del lugar donde estás; torneos y duelos de práctica, en el patio de armas.
 func _pick_background() -> void:
-	var biome := BiomeBackgrounds.TOURNAMENT
-	if is_campaign and not CombatSetup.is_tournament() and not _practice:
-		biome = BiomeBackgrounds.current_biome()
+	var biome := BiomeBackgrounds.TOURNAMENT if _in_castle_fight() else BiomeBackgrounds.current_biome()
 	var tex := BiomeBackgrounds.texture_for(biome)
 	if tex != null:
 		background.texture = tex
+
+## El cuartel (fondo de torneo) solo para lo que pasa dentro del castillo: torneos, prácticas y duelos
+## que retas allí (o desde Relaciones). Choques de batalla, caminos, expediciones y eventos: el bioma.
+func _in_castle_fight() -> bool:
+	if embedded:
+		return false
+	if not is_campaign:
+		return true   # duelo de práctica del menú principal
+	if CombatSetup.is_tournament() or _practice:
+		return true
+	return not CombatSetup.group_fight and CombatSetup.return_scene in [CombatSetup.CASTLE_SCENE, "res://scenes/relations/relations.tscn"]
 
 # --- Pintar el estado ---
 
@@ -562,6 +587,8 @@ func _refresh() -> void:
 		var border := CARD_BORDER
 		if mgr.current == f:
 			border = ACTING_BORDER
+		if f in _aim:   # objetivo anunciado de la acción en curso
+			border = AIM_FRIENDLY if mgr.current != null and f.side == mgr.current.side else AIM_HOSTILE
 		d.style.border_color = border
 		if _targeting.is_empty() or not f in _targeting.targets:
 			d.tag.text = ""
@@ -617,10 +644,14 @@ func _advance() -> void:
 		_clear_menu()
 		actor_label.text = "Turno de %s" % f.c.full_name()
 		hint_label.text = ""
-		await get_tree().create_timer(_delay()).timeout
+		await get_tree().create_timer(_pace(THINK_TIME)).timeout
 		if not is_inside_tree() or mgr.ended:
 			break
-		_perform(f, mgr.ai_choose(f))
+		var action := mgr.ai_choose(f)
+		await _telegraph(f, action, _pace(TELEGRAPH_TIME))
+		if not is_inside_tree() or mgr.ended:
+			break
+		await _perform(f, action)
 		await get_tree().create_timer(_delay() * 0.5).timeout
 		if not is_inside_tree():
 			return
@@ -631,7 +662,8 @@ func _perform(f, action: Dictionary) -> void:
 	var info := mgr.act(f, action)
 	if not is_inside_tree():
 		return
-	_play_fx(info, before)
+	await _play_fx(info, before)
+	_clear_aim()
 	_refresh()
 
 func _player_do(action: Dictionary) -> void:
@@ -641,10 +673,12 @@ func _player_do(action: Dictionary) -> void:
 	_acting = null
 	_targeting = {}
 	_clear_menu()
-	_perform(f, action)
-	if mgr.ended:
-		return
 	_busy = true
+	await _telegraph(f, action, _pace(PLAYER_TELEGRAPH))
+	await _perform(f, action)
+	if mgr.ended or not is_inside_tree():
+		_busy = false
+		return
 	await get_tree().create_timer(_delay() * 0.5).timeout
 	_busy = false
 	if is_inside_tree():
@@ -698,12 +732,15 @@ func _show_main_menu() -> void:
 	_cmd(grid, "Objeto (O)", KEY_O, "No llevas objetos." if no_items else "Usa un objeto (gasta el turno).", _show_items, no_items)
 	_cmd(grid, "Cambiar (C)", KEY_C, "Entra alguien de la reserva (gasta el turno)." if not mgr.reserve_of(0).is_empty() else "No hay nadie en la reserva.",
 		_show_swap, mgr.reserve_of(0).is_empty())
-	_cmd(grid, "Abandonar (R)", KEY_R, "Rendirse o retirarse.", _show_abandon)
+	_cmd(grid, "Retirarse (R)", KEY_R, "Huir del combate: depende de tu Agilidad frente a la del rival. Si falla, pierdes el turno; si sale bien, algo de honor." if mgr.can_flee else "No hay escapatoria.",
+		func(): _player_do({"type": "abandonar", "mode": "retirarse"}), not mgr.can_flee)
 	first.grab_focus.call_deferred()
 
+## «Volver» va arriba de la lista: con muchas técnicas (o en el móvil) el final queda fuera de la vista.
 func _back_button() -> void:
-	var b := _cmd(cmd_box, "◂ Volver", KEY_NONE, "Volver a las órdenes (Esc).", _show_main_menu)
+	var b := _cmd(cmd_box, "◂ Volver", KEY_NONE, "Volver a las órdenes (Esc o el gesto «atrás» del móvil).", _show_main_menu)
 	b.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cmd_box.move_child(b, 0)
 
 func _aff_hint(f, t, dt: int, fx: Dictionary) -> String:
 	if t == null or t.side == f.side or dt < 0:   # dt < 0: objeto, sin afinidad
@@ -762,7 +799,7 @@ func _show_techniques() -> void:
 	if first != null:
 		first.grab_focus.call_deferred()
 	else:
-		cmd_box.get_child(cmd_box.get_child_count() - 1).grab_focus.call_deferred()
+		cmd_box.get_child(0).grab_focus.call_deferred()   # «Volver»
 
 func _show_swap() -> void:
 	_menu = "swap"
@@ -801,18 +838,6 @@ func _show_items() -> void:
 	_back_button()
 	if first != null:
 		first.grab_focus.call_deferred()
-
-func _show_abandon() -> void:
-	_menu = "abandon"
-	_clear_menu()
-	actor_label.text = "Abandonar"
-	var flee := _cmd(cmd_box, "Retirarse", KEY_NONE, "Huir: puede fallar y cuesta honor." if mgr.can_flee else "No hay escapatoria.",
-		func(): _player_do({"type": "abandonar", "mode": "retirarse"}), not mgr.can_flee)
-	_cmd(cmd_box, "Rendirse", KEY_NONE, "Derrota segura: más honor y un rescate, pero sin caer herido." if not mgr.to_the_death else "En una lucha a muerte no hay rendición.",
-		func(): _player_do({"type": "abandonar", "mode": "rendirse"}), mgr.to_the_death)
-	_back_button()
-	var focus: Control = flee if mgr.can_flee else cmd_box.get_child(cmd_box.get_child_count() - 1)
-	focus.grab_focus.call_deferred()
 
 # --- Elegir objetivo (teclado, mando o ratón) ---
 
@@ -903,6 +928,108 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_keys[key.keycode].call()
 
+# --- Anunciar la acción: qué hace y a quién ---
+
+func _action_name(action: Dictionary) -> String:
+	match str(action.get("type", "atacar")):
+		"atacar":
+			return "Ataque"
+		"tecnica":
+			return str(SkillTreeCatalog.node(str(action.get("node", ""))).get("name", "Técnica"))
+		"defender":
+			return "En guardia"
+		"objeto":
+			return ConsumableCatalog.item_name(str(action.get("item", "")))
+		"cambiar":
+			return "Relevo"
+		"abandonar":
+			return "Retirada" if str(action.get("mode", "")) == "retirarse" else "Rendición"
+	return ""
+
+## A quién va la acción (antes de ejecutarla). Las de área marcan a todo el bando.
+func _intended_targets(f, action: Dictionary) -> Array:
+	var t = action.get("target", null)
+	if t != null:
+		return [t]
+	if str(action.get("type", "")) == "tecnica":
+		match str(SkillTreeCatalog.node(str(action.get("node", ""))).get("tgt", "enemy")):
+			"enemies", "random3":
+				return mgr.active_of(1 - f.side)
+			"allies":
+				return mgr.active_of(f.side)
+	return []
+
+## Anuncia la acción: su nombre sobre quien la hace, flecha y borde en sus objetivos; espera `time`.
+func _telegraph(f, action: Dictionary, time: float) -> void:
+	if not is_inside_tree() or not _cards.has(f):
+		return
+	var label := _action_name(action)
+	var targets := _intended_targets(f, action).filter(func(t): return _cards.has(t))
+	_aim = targets
+	var to_txt := ""
+	if targets.size() == 1 and targets[0] != f:
+		to_txt = " → %s" % targets[0].c.full_name()
+	elif targets.size() > 1:
+		to_txt = " → todos"
+	actor_label.text = "%s: %s%s" % [f.c.full_name(), label, to_txt]
+	_refresh()
+	if time <= 0.0:
+		return
+	if _cards[f].root.visible:
+		CombatFx.punch(_cards[f].portrait, -0.08)   # se prepara (crece un poco)
+		if not label.is_empty():
+			_float(f, label, INTENT_COLOR, 20)
+	_draw_aim(f, targets)
+	await get_tree().create_timer(time).timeout
+
+## Flechas de quien actúa a cada objetivo (encima de todo, sin capturar el ratón).
+func _draw_aim(f, targets: Array) -> void:
+	_clear_aim_lines()
+	if _aim_layer == null:
+		_aim_layer = Control.new()
+		_aim_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_aim_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_aim_layer.z_index = 90
+		add_child(_aim_layer)
+	if not _cards[f].root.visible:
+		return
+	var from := _center(f) - _aim_layer.global_position
+	for t in targets:
+		if t == f or not _cards[t].root.visible:
+			continue
+		var to := _center(t) - _aim_layer.global_position
+		var dir := (to - from).normalized()
+		var a := from + dir * 46.0   # sale del borde del retrato, no del centro
+		var b := to - dir * 50.0
+		var color := AIM_FRIENDLY if t.side == f.side else AIM_HOSTILE
+		var line := Line2D.new()
+		line.points = PackedVector2Array([a, b])
+		line.width = AIM_WIDTH
+		line.default_color = color
+		line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		_aim_layer.add_child(line)
+		var head := Polygon2D.new()
+		var side := Vector2(-dir.y, dir.x)
+		head.polygon = PackedVector2Array([b + dir * 18.0, b + side * 11.0, b - side * 11.0])
+		head.color = color
+		_aim_layer.add_child(head)
+		for n: CanvasItem in [line, head]:
+			n.modulate.a = 0.0
+			n.create_tween().tween_property(n, "modulate:a", 1.0, 0.15)
+
+func _clear_aim_lines() -> void:
+	if _aim_layer == null:
+		return
+	for ch in _aim_layer.get_children():
+		var n: CanvasItem = ch
+		var tw := n.create_tween()
+		tw.tween_property(n, "modulate:a", 0.0, 0.2)
+		tw.tween_callback(n.queue_free)
+
+func _clear_aim() -> void:
+	_aim = []
+	_clear_aim_lines()
+
 # --- Sensación de golpe ---
 
 func _center(f) -> Vector2:
@@ -924,7 +1051,16 @@ func _play_fx(info: Dictionary, before: Dictionary) -> void:
 	var actor = info.actor
 	var covered := {}
 	if info.type in ["atacar", "tecnica"] and not info.hits.is_empty() and _cards[actor].root.visible:
-		CombatFx.lunge(_cards[actor].portrait, Vector2.DOWN if actor.side == 1 else Vector2.UP, 22.0)
+		# Embestida hacia su objetivo (el primero que recibe), y el golpe llega al alcanzarlo.
+		var first = info.hits[0].target
+		var dir: Vector2 = Vector2.DOWN if actor.side == 1 else Vector2.UP
+		if first != actor and _cards[first].root.visible:
+			dir = _center(first) - _center(actor)
+		CombatFx.lunge(_cards[actor].portrait, dir, LUNGE_DISTANCE)
+		if _pace(STRIKE_DELAY) > 0.0:
+			await get_tree().create_timer(_pace(STRIKE_DELAY)).timeout
+			if not is_inside_tree():
+				return
 	for h: Dictionary in info.hits:
 		var t = h.target
 		covered[t] = true
@@ -1037,6 +1173,9 @@ func _show_end_panel(won: bool, fled: bool, text: String) -> void:
 		await _trophy_overlay.tree_exited
 	if not is_inside_tree():
 		return
+	text += await _recruit_offers(won)
+	if not is_inside_tree():
+		return
 	var o := _overlay(0.6)
 	var title := Label.new()
 	title.theme_type_variation = &"HeaderLabel"
@@ -1054,6 +1193,26 @@ func _show_end_panel(won: bool, fled: bool, text: String) -> void:
 	await btn.pressed
 	o[0].queue_free()
 	_on_back_pressed()
+
+const RecruitRules = preload("res://scripts/resources/recruit_rules.gd")
+const RecruitDialog = preload("res://scripts/ui/recruit_dialog.gd")
+
+## Tras ganar un combate de grupo en campaña (caminos, expediciones, eventos), algún enemigo genérico
+## vencido puede querer unirse a ti, o puedes encerrarlo. Devuelve el texto de lo decidido.
+func _recruit_offers(won: bool) -> String:
+	if not won or not is_campaign or not group or _practice or CombatSetup.is_tournament() or not GameManager.is_game_active or test_auto:
+		return ""
+	var defeated := []
+	for f in mgr.side_fighters(1):
+		if not f.dead:
+			defeated.append(f.c)
+	var lines: Array[String] = []
+	for offer: Dictionary in RecruitRules.offers_after_fight(defeated):
+		var d := RecruitDialog.open(self, offer.c, offer.mode)
+		var t: String = await d.done
+		if not t.is_empty():
+			lines.append(t)
+	return ("\n" + "\n".join(lines)) if not lines.is_empty() else ""
 
 func _play_end_sound(won: bool, fled: bool) -> void:
 	if fled:

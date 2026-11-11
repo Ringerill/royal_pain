@@ -112,9 +112,12 @@ func _row(c: Character) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	row.add_child(FaceIcon.make(c, 44))
-	var info := Label.new()
+	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.text = "%s · %s\nMando: %s" % [c.full_name(), c.role_title(), mastery_line(c)]
+	info.add_theme_constant_override("separation", 0)
+	StatIcons.named(info, c, c.full_name(), 16)
+	var mando := StatIcons.pair(info, "liderazgo", mastery_line(c), 14, "Mando")
+	mando.modulate = Color(1, 1, 1, 0.85)
 	row.add_child(info)
 	var pick := OptionButton.new()
 	pick.add_item(AUTO_TEXT, AUTO_ID)

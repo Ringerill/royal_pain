@@ -35,7 +35,7 @@ theme_type_variation = &"BarPanel"
 
 [node name="TopHBox" type="HBoxContainer" parent="UILayer/TopBar"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 8
 
 [node name="DateBox" type="VBoxContainer" parent="UILayer/TopBar/TopHBox"]
 layout_mode = 2

@@ -163,16 +163,33 @@ func deliver(event: Dictionary) -> void:
 func _cooling(person_name: String) -> bool:
 	return _now() - int(cooldowns.get(person_name, -1000)) < PERSON_COOLDOWN
 
+const UNLISTED_WEIGHT := 0.35   # un suceso pensado para otros caracteres, poco probable en este
+
+## Peso de un suceso para el carácter del protagonista: coherente con su personalidad.
+##   only  — solo estas personalidades; avoid — nunca estas; bias — más o menos probable.
+static func weight_for(t: Dictionary, personality: int) -> float:
+	if personality in t.get("avoid", []):
+		return 0.0
+	var only: Array = t.get("only", [])
+	if not only.is_empty() and not personality in only:
+		return 0.0
+	var bias: Dictionary = t.get("bias", {})
+	if bias.is_empty():
+		return 1.0
+	return float(bias.get(personality, UNLISTED_WEIGHT))
+
 func _weighted(templates: Array, personality: int) -> Dictionary:
 	var total := 0.0
 	for t: Dictionary in templates:
-		total += float(t.get("bias", {}).get(personality, 1.0))
+		total += weight_for(t, personality)
+	if total <= 0.0:
+		return {}
 	var roll := randf() * total
 	for t: Dictionary in templates:
-		roll -= float(t.get("bias", {}).get(personality, 1.0))
-		if roll <= 0.0:
+		roll -= weight_for(t, personality)
+		if roll <= 0.0 and weight_for(t, personality) > 0.0:
 			return t
-	return templates.back() if not templates.is_empty() else {}
+	return {}
 
 func _make(t: Dictionary, r: Relationship, cat: String, extra: Dictionary = {}) -> Dictionary:
 	var p: Character = GameManager.player_character
@@ -233,7 +250,11 @@ func bond_event(r: Relationship, id: String = "") -> Dictionary:
 		pool = pool.filter(func(t: Dictionary) -> bool: return t.id == id)
 	if pool.is_empty():
 		return {}
-	return _make(_weighted(pool, r.character.personality), r, "lazo")
+	# Pedido por nombre (cadenas de historia, pruebas): ese suceso, sin filtrar por carácter.
+	var t: Dictionary = pool[0] if not id.is_empty() else _weighted(pool, r.character.personality)
+	if t.is_empty():
+		return {}
+	return _make(t, r, "lazo")
 
 # --- 2) Rivalidades ---
 
@@ -261,7 +282,9 @@ func rivalry_event(r: Relationship, id: String = "") -> Dictionary:
 		return true)
 	if pool.is_empty():
 		return {}
-	var t := _weighted(pool, r.character.personality)
+	var t: Dictionary = pool[0] if not id.is_empty() else _weighted(pool, r.character.personality)
+	if t.is_empty():
+		return {}
 	var extra := {}
 	if str(t.get("needs", "")) == "beloved":
 		extra["third"] = beloved.person_name

@@ -243,7 +243,11 @@ func _run() -> void:
 	var foe_castle = enemy
 	ally_castle.garrison_size = 100
 	foe_castle.garrison_size = 100
-	var fe: Dictionary = IC.field_event(ally_castle, foe_castle, ally_castle.owner_name, ally_castle.owner_name, false)
+	var march = root.get_node("ArmyData").create_army(foe_castle.owner_name, foe_castle.kingdom, 100, foe_castle.castle_id)   # un ejército de verdad en marcha
+	march.origin_castle_id = foe_castle.castle_id
+	march.destination_castle_id = ally_castle.castle_id
+	march.turns_remaining = 2
+	var fe: Dictionary = IC.field_event(march, ally_castle, BattleEnums.Side.DEFENSOR, ally_castle.owner_name, ally_castle.owner_name, false)
 	change_scene_to_file(CS.begin_event_fight(fe.options[0].fight, fe.title))
 	await create_timer(0.6).timeout
 	scene = current_scene

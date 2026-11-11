@@ -38,8 +38,8 @@ func _run() -> void:
 		var ok := true
 		for t in 3:
 			var cols := _cols(p, t)
-			ok = ok and cols.size() == 3 and cols.all(func(col: Node) -> bool: return col.get_child_count() >= 4)
-		check(ok, "3 árboles × 3 ramas con nodos")
+			ok = ok and cols.size() == 3 and cols.all(func(col: Node) -> bool: return col.find_children("*", "Button", true, false).filter(func(b): return b.has_meta("skill_id")).size() >= 4)
+		check(ok, "3 árboles × 3 ramas con nodos (en árbol)")
 		p.queue_free()
 		await process_frame
 

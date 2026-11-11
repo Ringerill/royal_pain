@@ -13,6 +13,7 @@ const EndingPanel = preload("res://scripts/ui/ending_panel.gd")
 const ACHIEVEMENTS_KEY := KEY_L   # «Libro de hazañas»
 const PARTY_KEY := KEY_G          # gestor de grupo
 const PartyPanel = preload("res://scripts/ui/party_panel.gd")
+const RecruitDialog = preload("res://scripts/ui/recruit_dialog.gd")
 const KingdomPanel = preload("res://scripts/ui/kingdom_panel.gd")
 const KINGDOM_KEY := KEY_K        # información de los reinos
 const SiteMarkerScript = preload("res://scenes/map/site_marker.gd")
@@ -92,6 +93,7 @@ var _showing_encounter := false   # el panel de eventos muestra un encuentro del
 
 func _ready() -> void:
 	LogView.wrap(events_label, EVENTS_HEIGHT)
+	_compact_for_mobile()
 	# Si el personaje murió, primero se elige heredero (ver DynastyData).
 	if DynastyData.has_method("needs_succession") and DynastyData.needs_succession():
 		get_tree().change_scene_to_file.call_deferred(DynastyData.SUCCESSION_SCENE)
@@ -223,14 +225,54 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 
+## Barra de arriba: [rol] Nombre y, con iconos, oro, honor, fama y vida (sin palabras).
+var _role_icon: TextureRect
+var _top_stats: HBoxContainer
+
+func _refresh_top_icons(p: Character) -> void:
+	var bar := player_summary_label.get_parent()
+	if _role_icon == null:
+		_role_icon = TextureRect.new()
+		bar.add_child(_role_icon)
+		bar.move_child(_role_icon, player_summary_label.get_index())
+		_top_stats = HBoxContainer.new()
+		_top_stats.add_theme_constant_override("separation", 6)
+		bar.add_child(_top_stats)
+		bar.move_child(_top_stats, player_summary_label.get_index() + 1)
+	var fresh := StatIcons.role_icon(p, 20)
+	_role_icon.texture = fresh.texture
+	_role_icon.expand_mode = fresh.expand_mode
+	_role_icon.stretch_mode = fresh.stretch_mode
+	_role_icon.custom_minimum_size = fresh.custom_minimum_size
+	_role_icon.modulate = fresh.modulate
+	_role_icon.tooltip_text = fresh.tooltip_text
+	_role_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	fresh.free()
+	for ch in _top_stats.get_children():
+		ch.queue_free()
+	StatIcons.pair(_top_stats, "oro", str(p.gold), 16)
+	StatIcons.pair(_top_stats, "honor", str(p.honor), 16)
+	StatIcons.pair(_top_stats, "fama", str(p.fame), 16)
+	StatIcons.pair(_top_stats, "vida", str(p.current_health), 16, "Vida %d/%d" % [p.current_health, p.max_health])
+
+## Móvil (APK): sin el panel «Tu destino» (costaba desplazarse por el mapa); la crónica ocupa su sitio.
+func _mobile() -> bool:
+	return OS.has_feature("mobile")
+
+func _compact_for_mobile() -> void:
+	if not _mobile():
+		return
+	%ObjectivePanel.visible = false
+	%EventsPanel.offset_left = %ObjectivePanel.offset_left
+
 # H: oculta o muestra los paneles inferiores para ver mejor el sur del mapa.
 const HUD_TOP := 72.0
 const HUD_BOTTOM := 140.0
 const HUD_BOTTOM_HIDDEN := 84.0   # con los paneles ocultos solo queda el botón de turno
 
 func _toggle_bottom_panels() -> void:
-	var show_panels: bool = not %ObjectivePanel.visible
-	%ObjectivePanel.visible = show_panels
+	var show_panels: bool = not %EventsPanel.visible
+	%ObjectivePanel.visible = show_panels and not _mobile()   # en el móvil «Tu destino» no se muestra
 	%EventsPanel.visible = show_panels
 	camera.set_hud_margins(HUD_TOP, HUD_BOTTOM if show_panels else HUD_BOTTOM_HIDDEN)
 
@@ -537,9 +579,9 @@ func _refresh_turn_ui() -> void:
 	objective_label.text = "Hazañas %d/%d  [L]\n%s" % [AchievementData.achieved_count(), AchievementData.visible().size(), "\n".join(goal_lines)]
 	objective_label.tooltip_text = "Abre el libro de hazañas con L o desde el menú."
 	var p: Character = GameManager.player_character
-	player_summary_label.text = "%s · %s   |   Oro %d  ·  Honor %d  ·  Fama %d" % [p.full_name(), p.role_title(), p.gold, p.honor, p.fame]
-	player_summary_label.tooltip_text = "Vida %d/%d · Duelos %d ganados / %d perdidos" % [
-		p.current_health, p.max_health, p.duels_won, p.duels_lost]
+	player_summary_label.text = ""   # nombre y rol: en el retrato y el icono (sin texto en la barra)
+	player_summary_label.tooltip_text = "%s · %s · Duelos %d ganados / %d perdidos" % [p.full_name(), p.role_title(), p.duels_won, p.duels_lost]
+	_refresh_top_icons(p)
 	if CaptureData.is_captive():
 		player_summary_label.text = "%s   |   %s" % [CaptureData.captive_text(), p.full_name()]
 		player_summary_label.tooltip_text = "Estás preso: sin acciones hasta que salgas libre. Avanza el turno para esperar o intentar fugarte."
@@ -547,6 +589,9 @@ func _refresh_turn_ui() -> void:
 	var story := get_node_or_null("/root/StoryData")
 	if story != null and not story.travel_target().is_empty() and story.summary_line().contains("Viaja a"):
 		objective_label.text += "\n📜 " + story.summary_line()
+		if _mobile():
+			player_summary_label.text += "📜 " + story.summary_line()   # en el móvil no hay «Tu destino»
+	player_summary_label.visible = not player_summary_label.text.is_empty()   # sin texto no ocupa sitio
 	_update_advance_pulse()
 	_refresh_level_button()
 
@@ -920,19 +965,25 @@ func _spawn_sites() -> void:
 		marker.setup(site, ExplorationData.site_name(site), Color(SiteCatalog.site_def(site.type).get("color", "ffffff")))
 		marker.site_clicked.connect(_show_site)
 
-func _show_site(uid: String) -> void:
+func _show_site(uid: String, prefix: String = "") -> void:
 	var site := ExplorationData.find(uid)
-	if site.is_empty() or event_overlay.visible:
+	if site.is_empty() or (event_overlay.visible and prefix.is_empty()):
 		return
 	_site_uid = uid
-	var event := SiteCatalog.as_event(site.type)
+	var started := bool(site.get("started", false))
+	var event := SiteCatalog.as_event(site.type, str(site.get("step", "start")))
 	var player: Character = GameManager.player_character
 	var home := MapData.get_castle_by_id(GameManager.home_castle_id)
 	var near := MapData.get_castle_by_id(site.castle_id)
 	event_title.text = event.title
-	event_text.text = "%s\n\nCerca de %s · %d %s · 1 acción (te quedan %d)" % [
-		event.text, near.castle_name if near != null else "?", int(site.months_left),
-		"mes" if int(site.months_left) == 1 else "meses", GameManager.actions_remaining]
+	var body: String = event.text
+	if not prefix.is_empty():
+		body = prefix + ("\n\n" + body if not body.is_empty() else "")
+	if not started:
+		body += "\n\nCerca de %s · %d %s · 1 acción (te quedan %d)" % [
+			near.castle_name if near != null else "?", int(site.months_left),
+			"mes" if int(site.months_left) == 1 else "meses", GameManager.actions_remaining]
+	event_text.text = body
 	event_speaker.visible = false
 	event_result.visible = false
 	btn_event_close.visible = false
@@ -944,27 +995,29 @@ func _show_site(uid: String) -> void:
 		var btn := Button.new()
 		btn.text = option.label
 		if option.has("chance"):
-			btn.text += " (%d%% de éxito)" % roundi(EventCatalog.success_chance(option, player) * 100)
+			btn.text += " (%d%%)" % roundi(EventCatalog.success_chance(option, player) * 100)
 		if not EventCatalog.can_choose(option, player, home):
 			btn.disabled = true
 			btn.tooltip_text = EventCatalog.requirement_text(option)
-		elif not GameManager.has_actions_remaining():
+		elif not started and not GameManager.has_actions_remaining():
 			btn.disabled = true
 			btn.tooltip_text = "No te quedan acciones este mes."
 		btn.pressed.connect(_on_site_option_pressed.bind(i))
 		event_options.add_child(btn)
-	var leave := Button.new()
-	leave.text = "Marcharse (sin gastar acción)"
-	leave.theme_type_variation = &"FlatButton"
-	leave.pressed.connect(func():
-		_site_uid = ""
-		event_overlay.visible = false
-		for child in event_options.get_children():
-			child.queue_free())
-	event_options.add_child(leave)
+	if not started:   # empezada la expedición, hay que llegar al final (una de sus opciones es salir)
+		var leave := Button.new()
+		leave.text = "Marcharse (sin gastar acción)"
+		leave.theme_type_variation = &"FlatButton"
+		leave.pressed.connect(func():
+			_site_uid = ""
+			event_overlay.visible = false
+			for child in event_options.get_children():
+				child.queue_free())
+		event_options.add_child(leave)
 	castle_details_panel.visible = false
-	event_overlay.visible = true
-	UiAnim.fade_in(event_panel, 0.25)
+	if not event_overlay.visible:
+		event_overlay.visible = true
+		UiAnim.fade_in(event_panel, 0.25)
 	_focus_default.call_deferred()
 
 # --- Viaje (ver TravelData) ---
@@ -1110,12 +1163,22 @@ func _on_encounter_option_pressed(index: int) -> void:
 	_focus_default.call_deferred()
 
 func _on_site_option_pressed(index: int) -> void:
-	var r := ExplorationData.visit(_site_uid, index)
-	_site_uid = ""
+	var uid := _site_uid
+	var r := ExplorationData.visit(uid, index)
 	if not r.ok:
 		event_result.text = r.text
 		event_result.visible = true
 		return
+	if r.get("continue", false):   # la expedición sigue: el resultado y el paso siguiente
+		_refresh_turn_ui()
+		_show_site(uid, r.text)
+		return
+	_site_uid = ""
+	if r.get("rescue") != null:   # rescatas a alguien: que se una a ti, hacerlo siervo o liberarlo
+		var d = RecruitDialog.open($UILayer, r.rescue, "rescue")
+		var told: String = await d.done
+		if not told.is_empty():
+			r.text += "\n" + told
 	for child in event_options.get_children():
 		child.queue_free()
 	event_result.text = r.text

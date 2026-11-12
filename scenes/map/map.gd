@@ -502,22 +502,53 @@ func _on_castle_clicked(castle: Castle) -> void:
 	var is_visible: bool = castle.castle_id in visible_castle_ids
 	_show_castle_details(castle, is_visible)
 
+## Pone un icono delante de una etiqueta de la ficha (una sola vez) y lo devuelve.
+func _iconize(label: Label, key: String) -> TextureRect:
+	if label.has_meta("icon"):
+		return label.get_meta("icon")
+	var parent := label.get_parent()
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	parent.add_child(row)
+	parent.move_child(row, label.get_index())
+	label.reparent(row)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL   # que no se parta letra a letra
+	var icon := StatIcons.icon(key, 18)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
+	row.move_child(icon, 0)
+	label.tooltip_text = StatIcons.NAMES.get(key, "")
+	label.mouse_filter = Control.MOUSE_FILTER_PASS
+	label.set_meta("icon", icon)
+	return icon
+
 func _show_castle_details(castle: Castle, is_visible: bool) -> void:
 	details_castle_name.text = castle.castle_name
 	details_banner.color = KingdomEnums.kingdom_color(castle.kingdom) if is_visible else Color(0.3, 0.3, 0.3)
 
+	# Con iconos: [rol] gobernante, [soldados] guarnición, [oro], [comida] (el nombre, en la ayuda).
+	_iconize(details_garrison, "soldados")
+	_iconize(details_gold, "oro")
+	_iconize(details_food, "comida")
+	var owner_icon := _iconize(details_owner, "rol_soldado")
 	if is_visible:
-		details_kingdom.text = "Reino: %s" % KingdomEnums.kingdom_name(castle.kingdom)
-		details_owner.text = "Gobernante: %s" % castle.owner_name
-		details_garrison.text = "Guarnición: %d soldados" % castle.garrison_size
-		details_gold.text = "Oro: %d" % castle.gold
-		details_food.text = "Comida: %d" % castle.food
+		details_kingdom.text = KingdomEnums.kingdom_name(castle.kingdom)
+		details_owner.text = castle.owner_name
+		details_garrison.text = str(castle.garrison_size)
+		details_gold.text = str(castle.gold)
+		details_food.text = str(castle.food)
+		var lord: Character = RelationsData.character_of(castle.owner_name)
+		owner_icon.visible = lord != null
+		if lord != null:
+			owner_icon.texture = StatIcons.texture(StatIcons.role_key(lord.role))
+			owner_icon.tooltip_text = lord.role_title()
 	else:
-		details_kingdom.text = "Reino: Desconocido"
-		details_owner.text = "Gobernante: ???"
-		details_garrison.text = "Guarnición: ???"
-		details_gold.text = "Oro: ???"
-		details_food.text = "Comida: ???"
+		details_kingdom.text = "Reino desconocido"
+		details_owner.text = "???"
+		details_garrison.text = "???"
+		details_gold.text = "???"
+		details_food.text = "???"
+		owner_icon.visible = false
 
 	if not GameManager.is_game_active:
 		btn_enter_castle.disabled = true

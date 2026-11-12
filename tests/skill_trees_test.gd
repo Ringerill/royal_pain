@@ -109,11 +109,22 @@ func _run() -> void:
 	print("[PNJ]")
 	var npc := _char(F.ESTRATEGA, P.PIADOSO, A.PACIFISTA, 12)
 	S.auto_learn(npc)
-	var basics_ok := true
+	var one_path := true
 	for tid: String in S.trees_for(npc):
-		for b in 3:
-			basics_ok = basics_ok and S.basic_nodes(tid, b).any(func(id: String) -> bool: return S.knows(npc, id))
-	check(basics_ok and S.points_free(npc) == 0, "auto_learn: un básico por rama y gasta los puntos (%d nodos)" % S.known_ids(npc).size())
+		one_path = one_path and S.chosen_branches(npc, tid).size() == 1
+	check(one_path and S.points_free(npc) == 0, "auto_learn: una sola vía por árbol y gasta los puntos (%d nodos)" % S.known_ids(npc).size())
+	print("[vías y Tomo del olvido]")
+	var v := _char(F.DUELISTA, P.LEAL, A.HUMILDE, 9)
+	S.ensure_kit(v)
+	var tv: String = S.trees_for(v)[1]   # personalidad (sin kit base que cuente)
+	var b1: Array = S.basic_nodes(tv, 1)
+	var b2: Array = S.basic_nodes(tv, 2)
+	check(S.learn(v, b1[0]) and S.chosen_branches(v, tv) == [1], "la primera habilidad de una rama la elige como vía")
+	check(S.branch_locked(v, b2[0]) and not S.can_learn(v, b2[0]), "las otras ramas del árbol quedan cerradas")
+	check(not S.branch_locked(v, S.basic_nodes(S.trees_for(v)[2], 2)[0]), "en los otros árboles aún puedes elegir")
+	var lost: int = S.forget_trees(v)
+	check(lost >= 1 and S.chosen_branches(v, tv).is_empty() and S.can_learn(v, b2[0]), "el Tomo del olvido reabre las vías (olvida %d)" % lost)
+	check(not ConsumableCatalog.combat_item("tomo_olvido") and not "tomo_olvido" in ConsumableCatalog.common_ids(), "el Tomo es raro y no se usa en combate")
 	check(S.available_techniques(npc).size() >= 4 and not S.passive_fx(npc).is_empty(), "auto_learn deja técnicas y pasivas")
 	var old := _char(F.BERSERKER, P.CRUEL, A.CONQUISTADOR, 4)
 	old.learned_skills.append("com_grito")

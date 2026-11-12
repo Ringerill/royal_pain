@@ -289,6 +289,8 @@ const AI_RESERVE_LOSING := 0.1         # ...o si su bando va perdiendo por esta 
 const AI_ESCORT_MIN_UNITS := 3         # con tantos pelotones, uno escolta al general
 const AI_ESCORT_RADIUS := 3            # la escolta ataca a quien se acerque a esto del general
 var ai_difficulty := 1                 # 0 Fácil, 1 Normal, 2 Difícil (Ajustes)
+const ENEMY_EDGE := [1.0, 1.2, 1.35]   # bajas que causa el bando enemigo (×), por dificultad
+const ENEMY_GRIT := [1.0, 0.9, 0.85]   # bajas que recibe (×): sin esto, tus aliados ganaban solos
 var _ai_flank := false                 # la IA valora flanquear en esta decisión
 var _roles_done := {}                  # bando -> ya repartió reserva y escolta
 var player_officer_override := -1      # pruebas: 0/1 fija si vas de oficial
@@ -1160,6 +1162,12 @@ func _compute_casualties(attacker: BattleUnit, target: BattleUnit, dist: int, wi
 	if attacker.order == BattleEnums.Order.CARGAR and dist == 1:
 		strength *= HEAVY_CHARGE_POWER if attacker.type == BattleEnums.UnitType.CABALLERIA_PESADA else CHARGE_POWER
 	strength *= attacker.surge * float(_power.get(attacker.side, 1.0))
+	# Ventaja del enemigo según la dificultad: pega más fuerte y aguanta más (tu bando y tus aliados no).
+	var dif := clampi(ai_difficulty, 0, ENEMY_EDGE.size() - 1)
+	if attacker.side != player_side:
+		strength *= ENEMY_EDGE[dif]
+	elif target.side != player_side:
+		strength *= ENEMY_GRIT[dif]
 	if BattleEnums.is_ranged(attacker.type) and weather == BattleEnums.Weather.LLUVIA:
 		strength *= RAIN_ARCHER_FACTOR
 	if BattleEnums.is_cavalry(attacker.type) and attacker.side == BattleEnums.Side.DEFENSOR and has_walls:

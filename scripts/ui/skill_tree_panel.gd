@@ -29,6 +29,8 @@ var _confirm_row: HBoxContainer
 var _confirm_label: Label
 var _confirm_btn: Button
 var _pending := ""
+var _tome_btn: Button
+var _tome_confirm := false
 var _focus_id := ""
 
 ## Líneas entre una habilidad y sus requisitos (detrás de los iconos de una rama).
@@ -42,12 +44,16 @@ class TreeLines extends Control:
 			if a == null or b == null or not a.is_inside_tree() or not b.is_inside_tree():
 				continue
 			var inv := get_global_transform().affine_inverse()
-			var pa: Vector2 = inv * a.get_global_rect().get_center()
-			var pb: Vector2 = inv * b.get_global_rect().get_center()
-			var mid := (pa.y + pb.y) / 2.0
+			# Del pie del requisito (por debajo de su nombre) a lo alto del icono siguiente: así la
+			# línea corre por el hueco entre escalones y no tapa los nombres.
+			var widget: Control = b.get_parent().get_parent()   # icono + nombre del requisito
+			var wr := widget.get_global_rect()
+			var pb: Vector2 = inv * Vector2(wr.get_center().x, wr.end.y + 1.0)
+			var ar := a.get_global_rect()
+			var pa: Vector2 = inv * Vector2(ar.get_center().x, ar.position.y - 1.0)
+			var mid := pb.y + maxf(3.0, (pa.y - pb.y) / 2.0)
 			var col: Color = LINE_ON if l[2] else LINE_OFF
 			var w := 3.0 if l[2] else 2.0
-			# En escuadra: baja del requisito, cruza y entra por arriba (más legible que en diagonal).
 			draw_polyline(PackedVector2Array([pb, Vector2(pb.x, mid), Vector2(pa.x, mid), pa]), col, w, true)
 
 static func open(host: Node, c: Character) -> Control:
@@ -81,6 +87,10 @@ func _ready() -> void:
 	var title := _label("Habilidades de %s · nivel %d" % [character.full_name(), character.level], &"BodyBoldLabel")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
+	_tome_btn = Button.new()
+	_tome_btn.tooltip_text = "Olvidas lo aprendido en tus árboles (no las técnicas de arma), recuperas los puntos y eliges vía de nuevo."
+	_tome_btn.pressed.connect(_use_tome)
+	head.add_child(_tome_btn)
 	_points = _label("", &"BodyBoldLabel")
 	_points.autowrap_mode = TextServer.AUTOWRAP_OFF
 	head.add_child(_points)
@@ -168,6 +178,10 @@ func _rebuild() -> void:
 	_tabs.add_child(_tree_page(WEAPON_TAB, SkillTreeCatalog.weapon_tree_of(character)))
 	_tabs.current_tab = clampi(current, 0, _tabs.get_tab_count() - 1)
 	_points.text = "Puntos libres: %d" % SkillTreeCatalog.points_free(character)
+	var tomes := _tomes()
+	_tome_btn.visible = tomes > 0
+	_tome_btn.text = "Tomo del olvido (%d)" % tomes
+	_tome_confirm = false
 	_redraw_lines.call_deferred()
 
 func _tree_page(tab_name: String, tree_id: String) -> Control:
@@ -295,12 +309,24 @@ func _redraw_lines() -> void:
 func node_state(id: String) -> String:
 	if SkillTreeCatalog.knows(character, id):
 		return "aprendida"
+	if SkillTreeCatalog.is_weapon_node(id):   # arma: sin elegir vía, cualquiera de las tres se puede elegir
+		return "disponible" if _weapon_choosable(id) else "bloqueada"
 	return "disponible" if SkillTreeCatalog.can_learn(character, id) else "bloqueada"
+
+## ¿Esta técnica de arma pertenece a una vía que aún puedes elegir?
+func _weapon_choosable(id: String) -> bool:
+	var n := SkillTreeCatalog.node(id)
+	return int(n.tier) > 1 and not SkillTreeCatalog.weapon_path_chosen(character, str(n.tree))
+
+func _branch_name(n: Dictionary) -> String:
+	return str(SkillTreeCatalog.tree(str(n.tree)).branches[int(n.branch)].name)
 
 func _lock_reason(id: String) -> String:
 	var n := SkillTreeCatalog.node(id)
 	if SkillTreeCatalog.knows(character, id):
 		return "Ya aprendida."
+	if SkillTreeCatalog.branch_locked(character, id):
+		return "Ya elegiste otra vía en este árbol. Con un Tomo del olvido puedes elegir de nuevo."
 	if character.level < SkillTreeCatalog.required_level(n):
 		return "Requiere nivel %d." % SkillTreeCatalog.required_level(n)
 	var missing := []
@@ -339,8 +365,14 @@ func _show_hint(id: String) -> void:
 		var lv := SkillTreeCatalog.required_level(n)
 		var have := SkillTreeCatalog.knows(character, id)
 		parts.append("Técnica de arma · nivel %d" % lv)
-		_hint.text = "%s\n\n%s\n\n%s" % [n.desc, "\n".join(parts),
-			"La tienes mientras lleves esta arma." if have else "Se desbloquea sola al llegar al nivel %d." % lv]
+		if int(n.tier) > 1:
+			parts.append("Vía: %s" % _branch_name(n))
+		var tail := "La tienes mientras lleves esta arma." if have else "Se desbloquea sola al llegar al nivel %d." % lv
+		if _weapon_choosable(id):
+			tail = "Aún no has elegido vía para esta arma: pulsa para elegir «%s» (las otras dos se cerrarán)." % _branch_name(n)
+		elif SkillTreeCatalog.branch_locked(character, id):
+			tail = "Elegiste otra vía para esta arma. Con un Tomo del olvido puedes elegir de nuevo."
+		_hint.text = "%s\n\n%s\n\n%s" % [n.desc, "\n".join(parts), tail]
 		return
 	var cost := SkillTreeCatalog.cost_for(character, id)
 	parts.append("Escalón %s · nivel %d" % [TIER_MARK[clampi(int(n.tier), 0, 4)], SkillTreeCatalog.required_level(n)])
@@ -356,10 +388,44 @@ func _show_hint(id: String) -> void:
 	var tail := "Aprendida." if state == "aprendida" else ("Puedes aprenderla." if state == "disponible" else _lock_reason(id))
 	_hint.text = "%s\n\n%s\n\n%s" % [n.desc, "\n".join(parts), tail]
 
+# --- Tomo del olvido ---
+
+func _bag() -> Dictionary:
+	var p: Character = GameManager.player_character
+	return p.consumables if p != null and "consumables" in p else {}
+
+func _tomes() -> int:
+	return ConsumableCatalog.count(_bag(), "tomo_olvido")
+
+## Primer toque: pide confirmación; segundo: olvida y devuelve los puntos.
+func _use_tome() -> void:
+	if _tomes() <= 0:
+		return
+	if not _tome_confirm:
+		_tome_confirm = true
+		_tome_btn.text = "¿Seguro? Pulsa otra vez"
+		_detail_title.text = "Tomo del olvido"
+		_hint.text = "%s olvidará lo aprendido en sus árboles y recuperará los puntos para elegir otras vías." % character.first_name
+		return
+	ConsumableCatalog.take(_bag(), "tomo_olvido")
+	var lost := SkillTreeCatalog.forget_trees(character)
+	cancel_learn(false)
+	_rebuild()
+	_detail_title.text = "Tomo del olvido"
+	_hint.text = "%s olvida %d habilidades. Puntos libres: %d. Elige tus vías de nuevo." % [character.first_name, lost, SkillTreeCatalog.points_free(character)]
+
 # --- Aprender ---
 
 func request_learn(id: String) -> void:
 	_show_hint(id)
+	if SkillTreeCatalog.is_weapon_node(id):   # en el arma no se aprende: se elige la vía
+		_confirm_row.visible = _weapon_choosable(id)
+		_pending = ("path:" + id) if _weapon_choosable(id) else ""
+		if _confirm_row.visible:
+			_confirm_label.text = "¿Elegir la vía «%s»?" % _branch_name(SkillTreeCatalog.node(id))
+			_confirm_btn.text = "Elegir la vía «%s»" % _branch_name(SkillTreeCatalog.node(id))
+			_focus_later(_confirm_btn)
+		return
 	if not SkillTreeCatalog.can_learn(character, id):
 		_confirm_row.visible = false
 		_pending = ""
@@ -375,6 +441,14 @@ func request_learn(id: String) -> void:
 func confirm_learn() -> bool:
 	var id := _pending
 	cancel_learn(false)
+	if id.begins_with("path:"):
+		var n := SkillTreeCatalog.node(id.trim_prefix("path:"))
+		if not SkillTreeCatalog.choose_weapon_path(character, str(n.tree), int(n.branch)):
+			return false
+		_rebuild()
+		_detail_title.text = "Vía «%s»" % _branch_name(n)
+		_hint.text = "Eliges la vía «%s» para tu %s. Sus técnicas llegarán con el nivel." % [_branch_name(n), str(SkillTreeCatalog.tree(str(n.tree)).name).to_lower()]
+		return true
 	if id == "" or not SkillTreeCatalog.learn(character, id):
 		return false
 	_rebuild()

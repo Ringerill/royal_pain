@@ -43,6 +43,8 @@ const ITEMS := {
 	"agua_bendita": {"name": "Agua bendita", "price": 40, "tgt": "ally", "market": 2, "desc": "Quita Aturdido y Provocado; da moral."},
 	"humo": {"name": "Bomba de humo", "price": 45, "tgt": "allies", "market": 2, "desc": "El grupo esquiva más y huye mejor."},
 	"red": {"name": "Red de caza", "price": 30, "tgt": "enemy", "market": 1, "desc": "Puede derribar al objetivo."},
+	"tomo_olvido": {"name": "Tomo del olvido", "price": 260, "tgt": "none", "market": 3, "rare": true,
+		"desc": "Fuera de combate (en Habilidades): olvidas lo aprendido en tus árboles, recuperas los puntos y eliges vía de nuevo."},
 	"hierbas": {"name": "Hierbas", "price": 18, "tgt": "ally", "market": 0, "desc": "Purgan Debilitado, Cegado y Ardiendo; curan algo."},
 }
 
@@ -74,6 +76,16 @@ static func take(bag: Dictionary, id: String) -> bool:
 	return true
 
 ## Objetos que vende la tienda según el nivel del Mercado del castillo.
+const TOME_LOOT_CHANCE := 0.04   # tras ganar, rara vez aparece un Tomo del olvido
+
+## Objetos que se usan en combate (el Tomo del olvido no).
+static func combat_item(id: String) -> bool:
+	return str(item(id).get("tgt", "")) != "none"
+
+## Objetos comunes (para botín y sucesos): sin los raros.
+static func common_ids() -> Array:
+	return ITEMS.keys().filter(func(id: String) -> bool: return not ITEMS[id].get("rare", false))
+
 static func shop_items(market_level: int) -> Array:
 	return ITEMS.keys().filter(func(id: String) -> bool: return int(ITEMS[id].market) <= market_level)
 
@@ -96,8 +108,10 @@ static func grant_loot(bag: Dictionary, result: Dictionary) -> void:
 	if randf() >= LOOT_CHANCE:
 		return
 	var loot: Array = result.get("loot", [])
+	if randf() < TOME_LOOT_CHANCE and add(bag, "tomo_olvido") > 0:
+		loot.append("tomo_olvido")
 	for i in randi_range(1, LOOT_MAX):
-		var id: String = ITEMS.keys().pick_random()
+		var id: String = common_ids().pick_random()
 		if add(bag, id) > 0:
 			loot.append(id)
 	result["loot"] = loot
@@ -106,7 +120,7 @@ static func grant_loot(bag: Dictionary, result: Dictionary) -> void:
 static func grant_random(bag: Dictionary, n: int) -> String:
 	var got := []
 	for i in n:
-		var id: String = ITEMS.keys().pick_random()
+		var id: String = common_ids().pick_random()
 		if add(bag, id) > 0:
 			got.append(item_name(id))
 	return ("Consigues: " + ", ".join(got)) if not got.is_empty() else ""

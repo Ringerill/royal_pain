@@ -312,20 +312,29 @@ func _row(list: VBoxContainer, item: Equipment, action: String, disabled_reason:
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(text)
+	# [tipo de daño o armadura] Nombre ★★ — el tipo, con su icono (Tajo, Malla…)
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 6)
+	text.add_child(name_row)
+	StatIcons.item_badges(name_row, item, 18, false)
 	var name_label := Label.new()
 	name_label.theme_type_variation = &"BodyBoldLabel"
 	name_label.text = "%s%s  %s" % [prefix, item.equipment_name, item_stars(item)]
 	if unique:
 		name_label.add_theme_color_override("font_color", UNIQUE_COLOR)
-	text.add_child(name_label)
-	var detail := Label.new()
-	detail.theme_type_variation = &"MutedLabel"
-	detail.add_theme_font_size_override("font_size", 14)
+	name_row.add_child(name_label)
+	var detail := RichTextLabel.new()   # bonos con iconos de atributo
+	detail.bbcode_enabled = true
+	detail.fit_content = true
+	detail.scroll_active = false
+	detail.add_theme_font_size_override("normal_font_size", 14)
+	detail.add_theme_color_override("default_color", Color(0.8, 0.75, 0.66))
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var effects: String = GameData.effect_summary(item.equipment_name)
-	detail.text = effects if not effects.is_empty() else "%s · %s" % [item.slot, item.description]
+	var raw := effects if not effects.is_empty() else "%s · %s" % [item.slot, item.description]
 	if unique:
-		detail.text = "%s · %s%s" % [item.slot, item.description, (" (%s)" % effects) if not effects.is_empty() else ""]
+		raw = "%s · %s%s" % [item.slot, item.description, (" (%s)" % effects) if not effects.is_empty() else ""]
+	detail.text = StatIcons.richify(raw, 14)
 	text.add_child(detail)
 	var btn := Button.new()
 	btn.text = action

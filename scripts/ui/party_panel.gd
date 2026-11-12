@@ -126,8 +126,14 @@ Oficio: %s" % job]
 		off.toggle_mode = true
 		off.set_pressed_no_signal(PartyData.is_officer(c))
 		off.tooltip_text = "Va de oficial en tu pelotón en las batallas campales."
+	_button(row, "Equipo", c, true, func(): _open_equipment(c), false)
 	_button(row, "Gestionar", c, r != null, func(): _open_companion(r), false)
 	_button(row, "Mejorar", c, player or ResourceLoader.exists(SKILL_TREE_PANEL), func(): _open_upgrade(c), false)
+
+## Equipo de un personaje (y el almacén del grupo); al cerrar, se refresca el grupo.
+func _open_equipment(c: Character) -> void:
+	var panel: Control = load("res://scripts/ui/equipment_panel.gd").open(get_parent(), c)
+	panel.tree_exited.connect(func(): if is_inside_tree(): _rebuild())
 
 func _button(parent: Node, text: String, c: Character, enabled: bool, action: Callable, rebuild: bool = true) -> Button:
 	var btn := Button.new()

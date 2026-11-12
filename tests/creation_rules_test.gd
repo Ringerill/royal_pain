@@ -94,14 +94,14 @@ func _run() -> void:
 	if Character.tree_api_ready(TREES):
 		check(not c.creation_skill_errors().is_empty(), "sin básicas: inválido")
 		var opts: Array = c.basic_tree_options()
-		check(opts.size() == 9, "9 ramas (3 árboles × 3)")
+		check(opts.size() == 3, "3 vías a elegir (una por árbol)")
 		for o in opts:
 			c.choose_basic(o, str(o.ids[0]))
-		check(c.creation_skill_errors().is_empty() and c.is_creation_valid().valid, "9 básicas: personaje válido")
+		check(c.creation_skill_errors().is_empty() and c.is_creation_valid().valid, "una vía por árbol: personaje válido")
 		c.choose_basic(opts[0], str(opts[0].ids[-1]))
-		check(c.creation_skill_errors().is_empty(), "cambiar la básica de una rama mantiene una por rama")
+		check(c.creation_skill_errors().is_empty(), "cambiar de vía mantiene una por árbol")
 	else:
-		print("  (árboles sin API nueva: se omite la comprobación de las 9 básicas)")
+		print("  (árboles sin API nueva: se omite la comprobación de las vías)")
 		check(c.is_creation_valid().valid, "personaje válido")
 	c.traits_locked = true
 	var n := c.advantages.size()

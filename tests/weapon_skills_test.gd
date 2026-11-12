@@ -111,5 +111,29 @@ func _run() -> void:
 	check("nivel 12" in str(panel._hint.text), "la ayuda dice el nivel del escalón")
 	holder.queue_free()
 	await process_frame
+	print("[vías del arma]")
+	var S := SkillTreeCatalog
+	var wv := Character.new()
+	wv.first_name = "Vía"
+	wv.level = 12
+	var sword := Equipment.new()
+	sword.equipment_name = "Espada Larga"
+	sword.slot = "Arma"
+	wv.equipment.append(sword)
+	var wt: String = S.weapon_tree_of(wv)
+	check(wt == "w_espada" and S.tree(wt).branches.size() == 3, "cada arma tiene tres vías")
+	check(S.knows(wv, "esp_tajo") and S.knows(wv, "esp_media_luna") and not S.knows(wv, "esp_maestro"), "sin elegir: la raíz y la primera vía")
+	check(S.choose_weapon_path(wv, wt, 1) and S.knows(wv, "esp_tajo") and S.knows(wv, "esp_maestro") and not S.knows(wv, "esp_media_luna"),
+		"eliges «Esgrima»: la raíz y sus técnicas, no las de «Filo»")
+	check(S.branch_locked(wv, "esp_muro") and not S.choose_weapon_path(wv, wt, 2), "las otras dos vías quedan cerradas")
+	wv.level = 4
+	check(S.knows(wv, "esp_finta") and not S.knows(wv, "esp_paso"), "las técnicas de la vía siguen llegando por nivel")
+	S.forget_trees(wv)
+	check(not S.weapon_path_chosen(wv, wt) and S.choose_weapon_path(wv, wt, 2), "el Tomo del olvido deja elegir otra vía")
+	var paths := {}
+	for i in 12:
+		var g: Character = EnemyCatalog.make_enemy("soldado", 12)
+		paths[S.weapon_path(g, S.weapon_tree_of(g))] = true
+	check(paths.size() >= 2, "los enemigos genéricos usan vías distintas (%d)" % paths.size())
 	print("FALLAS: %d" % fails if fails else "TODO OK")
 	quit(1 if fails else 0)

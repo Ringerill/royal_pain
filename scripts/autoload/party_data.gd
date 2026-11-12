@@ -13,6 +13,7 @@ const PLAYER_KEY := "@jugador"
 var _order: Array[String] = []   # claves de los activos, en orden (PLAYER_KEY = tú)
 var officers: Array[String] = []   # claves de quienes van de oficial en tu pelotón (campales)
 var _customized := false         # true en cuanto el jugador ordena el grupo a mano
+var stash: Array[Equipment] = []   # almacén del grupo: piezas que nadie lleva puestas
 
 func _ready() -> void:
 	GameManager.game_started.connect(func(_c: Character): reset())
@@ -21,6 +22,7 @@ func _ready() -> void:
 func reset() -> void:
 	_order.clear()
 	_customized = false
+	stash.clear()
 
 # --- Consultas ---
 
@@ -187,7 +189,8 @@ func set_officer(c: Character, on: bool) -> void:
 		officers.append(k)
 
 func save_state() -> Dictionary:
-	return {"order": _order.duplicate(), "customized": _customized, "officers": officers.duplicate()}
+	return {"order": _order.duplicate(), "customized": _customized, "officers": officers.duplicate(),
+		"stash": DataCodec.encode(stash)}
 
 func load_state(data: Dictionary) -> void:
 	_order.clear()
@@ -197,3 +200,43 @@ func load_state(data: Dictionary) -> void:
 	officers.clear()
 	for k in data.get("officers", []):
 		officers.append(str(k))
+	stash.clear()
+	var items = DataCodec.decode(data.get("stash", []))
+	if items is Array:
+		for e in items:
+			if e is Equipment:
+				stash.append(e)
+
+# --- Equipo y almacén ---
+
+## Quién puedes equipar: tú, tu cónyuge y tu séquito.
+func gear_members() -> Array[Character]:
+	var out: Array[Character] = [GameManager.player_character]
+	if RelationsData.is_married():
+		var sp := RelationsData.spouse_relation()
+		if sp != null and sp.character != null and not sp.character in out:
+			out.append(sp.character)
+	for r: Relationship in RelationsData.retinue_members():
+		if r.character != null and not r.character in out and not CaptureData.is_serf(r.person_name):
+			out.append(r.character)
+	return out
+
+## Le quitas una pieza y va al almacén.
+func store(c: Character, item: Equipment) -> String:
+	if c == null or item == null or not c.equipment.has(item):
+		return ""
+	c.unequip(item)
+	stash.append(item)
+	party_changed.emit()
+	return "%s deja %s en el almacén." % [c.first_name, item.equipment_name]
+
+## Se pone una pieza del almacén; la que llevaba en esa ranura vuelve al almacén.
+func equip_from_stash(c: Character, item: Equipment) -> String:
+	if c == null or item == null or not stash.has(item):
+		return ""
+	stash.erase(item)
+	var replaced := c.equip(item)
+	if replaced != null:
+		stash.append(replaced)
+	party_changed.emit()
+	return "%s se equipa %s%s." % [c.first_name, item.equipment_name, (" (guarda %s)" % replaced.equipment_name) if replaced != null else ""]

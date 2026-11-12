@@ -82,7 +82,7 @@ var timeline_box: HBoxContainer
 var btn_back: Button
 var enemy_row: HBoxContainer
 var party_row: HBoxContainer
-var log_label: Label
+var log_label: RichTextLabel   # registro con iconos (daño, oro, honor…)
 var log_panel: PanelContainer
 var actor_label: Label
 var hint_label: Label
@@ -188,7 +188,7 @@ func _set_title() -> void:
 	var t := title_text
 	if t.is_empty():
 		if embedded:
-			t = "Duelo singular"
+			t = ""   # duelo en mitad de una batalla: sin título
 		elif CombatSetup.is_tournament():
 			t = "Torneo · ronda %d de %d" % [CombatSetup.tournament_round, CombatSetup.tournament_opponents.size()]
 		elif _practice:
@@ -198,10 +198,11 @@ func _set_title() -> void:
 		else:
 			t = "Duelo de honor"
 	if mgr.to_the_death:
-		t = "☠ " + t + " · a muerte"
+		t = ("☠ " + t + " · a muerte") if not t.is_empty() else "☠ A muerte"
 		title_label.add_theme_color_override("font_color", TO_DEATH_COLOR)
 	title_label.text = t
 	title_label.tooltip_text = t
+	title_label.visible = not t.is_empty()
 
 func _build_ui() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -267,12 +268,14 @@ func _build_ui() -> void:
 	# Registro de alto fijo.
 	log_panel = PanelContainer.new()
 	root.add_child(log_panel)
-	log_label = Label.new()
+	log_label = RichTextLabel.new()
+	log_label.bbcode_enabled = true
+	log_label.scroll_following = true   # siempre en la última línea
 	log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	log_label.add_theme_font_size_override("font_size", 13)
+	log_label.add_theme_font_size_override("normal_font_size", 13)
 	log_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	log_label.custom_minimum_size.y = LOG_HEIGHT
 	log_panel.add_child(log_label)
-	LogView.wrap(log_label, LOG_HEIGHT)
 	# Abajo: tu grupo y el menú de órdenes.
 	var bottom := HBoxContainer.new()
 	bottom.add_theme_constant_override("separation", 10)
@@ -315,6 +318,10 @@ func _bar(parent: Node, color: Color) -> Array:
 	row.add_theme_constant_override("separation", 4)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(row)
+	var icon := StatIcons.icon("vida" if color == HP_COLOR else "pt", 12)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
 	var bar := ProgressBar.new()
 	bar.show_percentage = false
 	bar.custom_minimum_size = Vector2(0, 10)
@@ -572,7 +579,7 @@ func _refresh() -> void:
 		if d.has("pt"):
 			d.pt.max_value = maxi(1, f.max_pt)
 			d.pt.value = f.pt
-			d.pt_label.text = "%d PT" % f.pt
+			d.pt_label.text = str(f.pt)   # el icono de la barra ya dice que son PT
 			d.level.text = "Nv %d · %s" % [f.c.level, RpgStats.DAMAGE_NAMES[int(f.s.weapon)]]
 		if d.has("intel"):
 			_refresh_intel(f, d)
@@ -615,7 +622,7 @@ func _update_music() -> void:
 func _log(text: String) -> void:
 	_log_text = text if _log_text.is_empty() else _log_text + "\n" + text
 	_log_text = LogView.cap(_log_text)
-	LogView.show(log_label, _log_text)
+	log_label.text = StatIcons.richify(_log_text, 13)
 
 # --- Turnos ---
 
@@ -823,6 +830,8 @@ func _show_items() -> void:
 	actor_label.text = "Objetos"
 	var first: Button = null
 	for id in mgr.bags[0].keys():
+		if not ConsumableCatalog.combat_item(id):
+			continue   # el Tomo del olvido se usa fuera de combate
 		var it := ConsumableCatalog.item(id)
 		var tgt := str(it.get("tgt", "ally"))
 		var text := "%s ×%d · %s" % [it.name, ConsumableCatalog.count(mgr.bags[0], id), TGT_NAMES.get(tgt, tgt)]
@@ -1261,8 +1270,11 @@ func _overlay(alpha: float = 0.65, tint := Color(0, 0, 0)) -> Array:
 	return [overlay, box]
 
 func _note(box: Node, text: String) -> void:
-	var note := Label.new()
-	note.text = text
+	var note := RichTextLabel.new()   # con iconos: «Oro −20» pasa a ser la moneda y el número
+	note.bbcode_enabled = true
+	note.fit_content = true
+	note.scroll_active = false
+	note.text = StatIcons.richify(text)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.custom_minimum_size = Vector2(520, 0)
 	box.add_child(note)

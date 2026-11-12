@@ -109,7 +109,8 @@ const TREES := {
 			["due_guardia_alta", "Guardia alta", {"pt": 7, "tgt": "self", "st": [["guardia_esgrima", 1.0, 3]], "d": "3 turnos en guardia de esgrima: más esquiva y contraataque."}],
 			["due_pies", "Pies ligeros", {"t": 2, "fx": {"agilidad": 1, "evasion": 0.03}, "d": "+1 de Agilidad y +3% de esquiva."}],
 			["due_vals", "Vals de acero", {"t": 3, "pt": 9, "tgt": "enemies", "pow": 0.6, "fx": {"agi": 0.3}, "d": "Recorre la fila enemiga sumando su Agilidad."}],
-			["due_desafio", "Desafío", {"t": 4, "pt": 12, "tgt": "enemy", "st": [["provocado", 1.0, 2], ["marcado", 1.0, 2]], "fx": {"self_st": [["guardia_esgrima", 2]]}, "d": "Reta al rival: le obliga a atacarle, lo marca y queda en guardia de esgrima."}]]],
+			["due_desafio", "Desafío", {"t": 4, "pt": 12, "tgt": "enemy", "st": [["provocado", 1.0, 2], ["marcado", 1.0, 2]], "fx": {"self_st": [["guardia_esgrima", 2]]}, "d": "Reta al rival: le obliga a atacarle, lo marca y queda en guardia de esgrima."}],
+			["due_gracia_maestra", "Gracia del maestro", {"t": 4, "fx": {"evasion": 0.06, "crit": 0.05}, "d": "+6% de esquiva y +5% de crítico."}]]],
 	]],
 	"tanque": ["Tanque", [
 		["Baluarte", [
@@ -166,7 +167,8 @@ const TREES := {
 			["est_contramedida", "Contramedida", {"fx": {"status_res": 0.2, "ally_crit": 0.03}, "d": "Resiste estados; su grupo +3% de crítico."}],
 			["est_distraccion", "Distracción", {"t": 2, "pt": 5, "tgt": "enemy", "st": [["cegado", 0.55, 2]], "d": "Le echa polvo a los ojos: puede cegarlo."}],
 			["est_reserva", "Planes de reserva", {"t": 3, "fx": {"pt_pct": 0.1, "pt_regen": 1}, "d": "+10% de PT y +1 PT por turno."}],
-			["est_jugada", "Jugada maestra", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.1, "st": [["analizado", 1.0, 2]], "fx": {"estr": 0.5}, "d": "Golpe calculado que deja al rival analizado."}]]],
+			["est_jugada", "Jugada maestra", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.1, "st": [["analizado", 1.0, 2]], "fx": {"estr": 0.5}, "d": "Golpe calculado que deja al rival analizado."}],
+			["est_mente", "Mente de general", {"t": 4, "fx": {"ally_hit": 0.05, "ally_crit": 0.04}, "d": "Tus aliados aciertan un 5% más y logran +4% de crítico."}]]],
 	]],
 	"berserker": ["Berserker", [
 		["Furia", [
@@ -598,7 +600,8 @@ const TREES := {
 			["acon_plaza", "Tomar la plaza", {"fx": {"fuerza_pct": 0.06}, "d": "+6% de Fuerza."}],
 			["acon_escalas", "Escalas", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 0.95, "fx": {"pierce": 1}, "d": "Ataque que ignora la armadura."}],
 			["acon_cerco", "Cerco", {"t": 3, "fx": {"pt_regen": 1, "defensa": 1}, "d": "+1 PT por turno y +1 de Defensa."}],
-			["acon_saqueo", "Saqueo", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.15, "st": [["desarmado", 0.5, 2]], "fx": {"pt_drain": 10}, "d": "Le roba 10 PT y puede desarmarlo."}]]],
+			["acon_saqueo", "Saqueo", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.15, "st": [["desarmado", 0.5, 2]], "fx": {"pt_drain": 10}, "d": "Le roba 10 PT y puede desarmarlo."}],
+			["acon_muralla", "Rompemurallas", {"t": 4, "fx": {"fuerza_pct": 0.08, "defensa": 1}, "d": "+8% de fuerza y +1 de defensa."}]]],
 		["Expansión", [
 			["acon_reparto", "Reparto del botín", {"fx": {"ally_morale": 6}, "d": "+6 de moral al grupo al empezar."}],
 			["acon_marcha", "Marcha forzada", {"fx": {"agilidad": 2}, "d": "+2 de Agilidad."}],
@@ -606,7 +609,8 @@ const TREES := {
 			["acon_imperio", "Sueño de imperio", {"pt": 9, "tgt": "allies", "st": [["fortaleza", 1.0, 2]], "fx": {"morale": 6}, "req_morale": 50, "d": "Refuerza al grupo y sube la moral."}],
 			["acon_botin", "Botín de guerra", {"t": 2, "fx": {"lifesteal": 0.04}, "d": "Recupera el 4% del daño que hace."}],
 			["acon_banderas", "Banderas", {"t": 3, "pt": 9, "tgt": "allies", "st": [["inspirado", 1.0, 1]], "fx": {"morale": 10}, "d": "+10 de moral e inspira al grupo 1 turno."}],
-			["acon_dominio", "Dominio", {"t": 4, "fx": {"ally_dmg": 0.04, "fear": 5}, "d": "+4% de daño al grupo; el enemigo empieza con −5 de moral."}]]],
+			["acon_dominio", "Dominio", {"t": 4, "fx": {"ally_dmg": 0.04, "fear": 5}, "d": "+4% de daño al grupo; el enemigo empieza con −5 de moral."}],
+			["acon_estandarte", "Estandarte del imperio", {"t": 4, "fx": {"ally_dmg": 0.04, "ally_morale": 5}, "d": "Tus aliados pegan un 4% más y su moral sube 5."}]]],
 	]],
 	"a_pacifista": ["Pacifista", [
 		["Calma", [
@@ -625,7 +629,8 @@ const TREES := {
 			["apac_refugio", "Refugio", {"fx": {"regen": 0.03, "ally_taken": -0.03}, "d": "Recupera un 3% de vida por turno; grupo −3% de daño."}],
 			["apac_panos", "Paños tibios", {"t": 2, "pt": 5, "tgt": "ally", "heal": 0.18, "d": "Cura el 18% de la vida."}],
 			["apac_cobijo", "Cobijo", {"t": 3, "pt": 10, "tgt": "allies", "st": [["sereno", 1.0, 2]], "d": "Serena al grupo 2 turnos."}],
-			["apac_santuario", "Santuario", {"t": 4, "fx": {"ally_taken": -0.06, "heal_bonus": 0.1}, "d": "Su grupo recibe −6% de daño; curas mejores."}]]],
+			["apac_santuario", "Santuario", {"t": 4, "fx": {"ally_taken": -0.06, "heal_bonus": 0.1}, "d": "Su grupo recibe −6% de daño; curas mejores."}],
+			["apac_justos", "Amparo de los justos", {"t": 4, "fx": {"heal_bonus": 0.15, "regen": 0.02}, "d": "Tus curas rinden un 15% más y recuperas un 2% de PV por turno."}]]],
 		["No violencia", [
 			["apac_esquivar", "No devolver el golpe", {"fx": {"evasion": 0.05}, "d": "+5% de esquiva."}],
 			["apac_parar", "Parar sin herir", {"fx": {"guard": 0.2}, "d": "Defender reduce más el daño."}],
@@ -633,7 +638,8 @@ const TREES := {
 			["apac_dialogo", "Diálogo", {"fx": {"fear": 6}, "d": "Los enemigos empiezan con −6 de moral."}],
 			["apac_sujetar", "Sujetar", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 0.3, "st": [["derribado", 0.4, 1]], "d": "Lo inmoviliza: puede derribarlo."}],
 			["apac_sin_rencor", "Sin rencor", {"t": 3, "fx": {"evasion": 0.04, "guard": 0.15}, "d": "+4% de esquiva; defender protege más."}],
-			["apac_firmeza", "Firmeza serena", {"t": 4, "fx": {"immune_derribo": 1, "taken": -0.04}, "d": "No lo derriban; −4% de daño recibido."}]]],
+			["apac_firmeza", "Firmeza serena", {"t": 4, "fx": {"immune_derribo": 1, "taken": -0.04}, "d": "No lo derriban; −4% de daño recibido."}],
+			["apac_serenidad", "Serenidad", {"t": 4, "fx": {"status_res": 0.15, "voluntad": 2}, "d": "+15% de resistencia a estados y +2 de voluntad."}]]],
 	]],
 	"a_ambicioso": ["Ambicioso", [
 		["Poder", [
@@ -652,7 +658,8 @@ const TREES := {
 			["aamb_punal", "Puñal en la sombra", {"pt": 9, "tgt": "enemy", "pow": 1.2, "fx": {"crit": 0.2, "estr": 0.3}, "d": "+20% de crítico; suma su Estrategia."}],
 			["aamb_rumor", "Rumor", {"t": 2, "pt": 5, "tgt": "enemies", "fx": {"morale": -8}, "d": "−8 de moral a los enemigos."}],
 			["aamb_copa", "Copa envenenada", {"t": 3, "pt": 9, "tgt": "enemy", "pow": 0.6, "st": [["debilitado", 0.7, 2], ["sangrado", 0.5, 2]], "d": "Debilita y hace sangrar."}],
-			["aamb_traicion", "Traición", {"t": 4, "pt": 15, "tgt": "enemy", "pow": 1.4, "fx": {"vs_status": 1.4, "crit": 0.1}, "d": "Mucho más daño si el rival está tocado."}]]],
+			["aamb_traicion", "Traición", {"t": 4, "pt": 15, "tgt": "enemy", "pow": 1.4, "fx": {"vs_status": 1.4, "crit": 0.1}, "d": "Mucho más daño si el rival está tocado."}],
+			["aamb_sombra", "Mano en la sombra", {"t": 4, "fx": {"crit": 0.06, "crit_mult": 0.15}, "d": "+6% de crítico y críticos un 15% más fuertes."}]]],
 		["Fortuna", [
 			["aamb_oro", "Bolsa de oro", {"fx": {"pt_pct": 0.1}, "d": "+10% de PT."}],
 			["aamb_suerte", "Suerte", {"fx": {"crit": 0.04}, "d": "+4% de crítico."}],
@@ -660,7 +667,8 @@ const TREES := {
 			["aamb_inversion", "Inversión", {"pt": 4, "tgt": "ally", "fx": {"pt_give": 10}, "d": "Da 10 PT a un aliado."}],
 			["aamb_mercenarios", "Mercenarios", {"t": 2, "fx": {"ally_hit": 0.02, "ally_dmg": 0.02}, "d": "+2% de acierto y daño al grupo."}],
 			["aamb_tesoro", "Tesoro", {"t": 3, "fx": {"pt_pct": 0.1, "pv_pct": 0.05}, "d": "+10% de PT y +5% de PV."}],
-			["aamb_fortuna", "Golpe de fortuna", {"t": 4, "fx": {"crit": 0.04, "crit_mult": 0.15, "pt_regen": 1}, "d": "+4% de crítico, críticos más fuertes y +1 PT."}]]],
+			["aamb_fortuna", "Golpe de fortuna", {"t": 4, "fx": {"crit": 0.04, "crit_mult": 0.15, "pt_regen": 1}, "d": "+4% de crítico, críticos más fuertes y +1 PT."}],
+			["aamb_estrella", "Buena estrella", {"t": 4, "fx": {"evasion": 0.05, "pt_regen": 1}, "d": "+5% de esquiva y +1 PT por turno."}]]],
 	]],
 	"a_humilde": ["Humilde", [
 		["Servicio", [
@@ -679,7 +687,8 @@ const TREES := {
 			["ahum_tenacidad", "Tenacidad humilde", {"fx": {"regen": 0.03}, "d": "Recupera el 3% de la vida cada turno."}],
 			["ahum_pan", "Pan y agua", {"t": 2, "fx": {"regen": 0.02, "pt_pct": 0.05}, "d": "Recupera vida; +5% de PT."}],
 			["ahum_curtido", "Curtido", {"t": 3, "fx": {"pv_pct": 0.08, "status_res": 0.08}, "d": "+8% de PV y resiste estados."}],
-			["ahum_constancia", "Constancia", {"t": 4, "fx": {"low_hp_taken": -0.12, "pv_pct": 0.06}, "d": "+6% de PV y −12% de daño con poca vida."}]]],
+			["ahum_constancia", "Constancia", {"t": 4, "fx": {"low_hp_taken": -0.12, "pv_pct": 0.06}, "d": "+6% de PV y −12% de daño con poca vida."}],
+			["ahum_aguante", "Aguante del labriego", {"t": 4, "fx": {"pv_pct": 0.08, "regen": 0.02}, "d": "+8% de PV y recuperas un 2% por turno."}]]],
 		["Pueblo", [
 			["ahum_azada", "Golpe de azada", {"pt": 3, "tgt": "enemy", "pow": 1.1, "d": "Golpe con la azada."}],
 			["ahum_honda", "Honda", {"pt": 4, "tgt": "enemy", "pow": 1.0, "dt": T3, "d": "Proyectil: no provoca respuesta."}],
@@ -687,7 +696,8 @@ const TREES := {
 			["ahum_pueblo", "Fuerza del pueblo", {"pt": 10, "tgt": "enemy", "pow": 0.5, "fx": {"per_ally": 1}, "d": "Daño según los aliados en pie."}],
 			["ahum_horca", "Horca", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 1.15, "d": "Golpe con la horca."}],
 			["ahum_mayal", "Mayal", {"t": 3, "pt": 9, "tgt": "enemy", "pow": 1.15, "st": [["aturdido", 0.35, 1]], "d": "Puede aturdir."}],
-			["ahum_levantamiento", "Levantamiento", {"t": 4, "pt": 16, "tgt": "enemies", "pow": 0.85, "st": [["debilitado", 0.3, 2]], "d": "Golpea a todos y puede debilitarlos."}]]],
+			["ahum_levantamiento", "Levantamiento", {"t": 4, "pt": 16, "tgt": "enemies", "pow": 0.85, "st": [["debilitado", 0.3, 2]], "d": "Golpea a todos y puede debilitarlos."}],
+			["ahum_unidos", "Todos a una", {"t": 4, "fx": {"ally_dmg": 0.03, "ally_hit": 0.04}, "d": "Tus aliados pegan un 3% más y aciertan un 4% más."}]]],
 	]],
 	"a_diplomatico": ["Diplomático", [
 		["Palabra", [
@@ -706,7 +716,8 @@ const TREES := {
 			["adip_concierto", "Concierto", {"fx": {"ally_init": 0.1}, "d": "Su grupo empieza el combate antes."}],
 			["adip_consejo", "Consejo", {"t": 2, "pt": 8, "tgt": "allies", "fx": {"pt_give": 5}, "d": "Da 5 PT a todo el grupo."}],
 			["adip_frente", "Frente común", {"t": 3, "fx": {"ally_hit": 0.03, "ally_init": 0.05}, "d": "Su grupo acierta más y actúa antes."}],
-			["adip_gran_alianza", "Gran alianza", {"t": 4, "pt": 16, "tgt": "allies", "st": [["inspirado", 1.0, 2]], "fx": {"haste": 1}, "d": "Inspira al grupo y actúan antes."}]]],
+			["adip_gran_alianza", "Gran alianza", {"t": 4, "pt": 16, "tgt": "allies", "st": [["inspirado", 1.0, 2]], "fx": {"haste": 1}, "d": "Inspira al grupo y actúan antes."}],
+			["adip_concordia", "Concordia", {"t": 4, "fx": {"ally_morale": 6, "voluntad": 2}, "d": "La moral de tu grupo sube 6 y tu voluntad 2."}]]],
 		["Mediación", [
 			["adip_intenciones", "Leer intenciones", {"pt": 4, "tgt": "enemy", "st": [["analizado", 1.0, 3]], "d": "Revela sus debilidades 3 turnos."}],
 			["adip_mano", "Mano tendida", {"pt": 5, "tgt": "ally", "heal": 0.12, "fx": {"cleanse": 1}, "d": "Quita los estados y cura un poco."}],
@@ -714,7 +725,8 @@ const TREES := {
 			["adip_salida", "Salida honrosa", {"fx": {"retreat": 0.3}, "d": "+30% de éxito al retirarse."}],
 			["adip_templar", "Templar ánimos", {"t": 2, "pt": 5, "tgt": "ally", "fx": {"cleanse": 1, "morale": 5}, "d": "Quita los estados y da +5 de moral."}],
 			["adip_neutral", "Neutralidad", {"t": 3, "fx": {"evasion": 0.03, "taken": -0.03}, "d": "+3% de esquiva y −3% de daño recibido."}],
-			["adip_tregua", "Tregua forzada", {"t": 4, "pt": 14, "tgt": "enemy", "st": [["aturdido", 0.6, 1], ["desarmado", 0.5, 2]], "d": "Puede aturdirlo y desarmarlo."}]]],
+			["adip_tregua", "Tregua forzada", {"t": 4, "pt": 14, "tgt": "enemy", "st": [["aturdido", 0.6, 1], ["desarmado", 0.5, 2]], "d": "Puede aturdirlo y desarmarlo."}],
+			["adip_palabra", "Palabra de honor", {"t": 4, "fx": {"status_res": 0.1, "pt_pct": 0.1}, "d": "+10% de resistencia a estados y +10% de PT máximos."}]]],
 	]],
 	"a_tirano": ["Tirano", [
 		["Terror", [
@@ -733,7 +745,8 @@ const TREES := {
 			["atir_canon", "Carne de cañón", {"pt": 8, "tgt": "allies", "st": [["furia", 1.0, 2]], "d": "Todo el grupo en furia 2 turnos."}],
 			["atir_grilletes", "Grilletes", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 0.6, "st": [["desequilibrado", 0.6, 2]], "d": "Puede desequilibrar."}],
 			["atir_capataz", "Capataz", {"t": 3, "fx": {"ally_dmg": 0.03, "ally_init": 0.04}, "d": "Su grupo pega +3% y actúa antes."}],
-			["atir_marcha", "Marcha forzada", {"t": 4, "pt": 14, "tgt": "allies", "st": [["furia", 1.0, 2]], "fx": {"haste": 1}, "d": "El grupo actúa antes y entra en furia."}]]],
+			["atir_marcha", "Marcha forzada", {"t": 4, "pt": 14, "tgt": "allies", "st": [["furia", 1.0, 2]], "fx": {"haste": 1}, "d": "El grupo actúa antes y entra en furia."}],
+			["atir_hierro", "Puño de hierro", {"t": 4, "fx": {"fuerza_pct": 0.06, "fear": 6}, "d": "+6% de fuerza; tus enemigos pierden 6 de moral."}]]],
 		["Castigo", [
 			["atir_castigo", "Castigo ejemplar", {"pt": 7, "tgt": "enemy", "pow": 1.2, "fx": {"exec": 1.6}, "d": "×1,6 a quien tenga menos del 30% de vida."}],
 			["atir_mano", "Mano dura", {"fx": {"fuerza_pct": 0.05}, "d": "+5% de Fuerza."}],
@@ -741,61 +754,118 @@ const TREES := {
 			["atir_cadalso", "Cadalso", {"fx": {"crit_mult": 0.2}, "d": "Críticos más dañinos."}],
 			["atir_azote", "Azote", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 0.9, "st": [["sangrado", 0.5, 2]], "d": "Puede hacer sangrar."}],
 			["atir_implacable", "Implacable", {"t": 3, "fx": {"crit": 0.04, "lifesteal": 0.04}, "d": "+4% de crítico; recupera el 4% del daño."}],
-			["atir_sentencia", "Sentencia", {"t": 4, "pt": 16, "tgt": "enemy", "pow": 1.3, "fx": {"exec": 2.0}, "d": "Ejecución: daño enorme a los débiles."}]]],
+			["atir_sentencia", "Sentencia", {"t": 4, "pt": 16, "tgt": "enemy", "pow": 1.3, "fx": {"exec": 2.0}, "d": "Ejecución: daño enorme a los débiles."}],
+			["atir_puno", "Mano dura", {"t": 4, "fx": {"fear": 8, "crit": 0.04}, "d": "Tus enemigos pierden 8 de moral; +4% de crítico."}]]],
 	]],
 	# ================= ENEMIGOS Y MINI JEFES (no se aprenden) =================
 	# ================= ARMAS =================
 	# Una rama por familia; se desbloquean solas por nivel (WEAPON_TIER_LEVEL), sin puntos.
 	"w_espada": ["Espada", [
-		["Espada", [
+		["Filo", [
 			["esp_tajo", "Tajo limpio", {"t": 1, "pt": 4, "tgt": "enemy", "pow": 1.2, "fx": {"acc": 0.05}, "d": "Corte limpio y seguro."}],
 			["due_tendon", "Corte al tendón", {"t": 2, "pt": 8, "tgt": "enemy", "pow": 1.0, "st": [["desequilibrado", 0.6, 2], ["sangrado", 0.4, 2]], "d": "Desequilibra y puede hacer sangrar."}],
 			["ber_tajo_bajo", "Tajo bajo", {"t": 3, "pt": 6, "tgt": "enemy", "pow": 1.0, "st": [["derribado", 0.35, 1]], "d": "Corta las piernas: puede derribar."}],
 			["esp_media_luna", "Media luna", {"t": 4, "pt": 14, "tgt": "enemies", "pow": 0.65, "st": [["sangrado", 0.3, 2]], "d": "Un arco de acero contra todos: puede hacerlos sangrar."}]]],
+		["Esgrima", [
+			["esp_finta", "Finta de espada", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 0.9, "st": [["marcado", 0.5, 2]], "fx": {"acc": 0.15}, "d": "Engaña su guardia: puede dejarlo marcado."}],
+			["esp_paso", "Paso y estocada", {"t": 3, "pt": 8, "tgt": "enemy", "pow": 1.3, "fx": {"crit": 0.12}, "d": "Avanza y clava: +12% de crítico."}],
+			["esp_maestro", "Corte del maestro", {"t": 4, "pt": 13, "tgt": "enemy", "pow": 1.8, "fx": {"crit": 0.15, "acc": 0.1}, "d": "El mejor corte de su escuela."}]]],
+		["Guardia", [
+			["esp_cruzar", "Cruzar aceros", {"t": 2, "pt": 5, "tgt": "self", "st": [["guardia", 1.0, 2]], "d": "Se cubre con la hoja dos turnos."}],
+			["esp_contra", "Contraataque de espada", {"t": 3, "pt": 7, "tgt": "enemy", "pow": 1.0, "fx": {"self_st": [["guardia_esgrima", 1]]}, "d": "Golpea y queda listo para responder."}],
+			["esp_muro", "Muro de acero", {"t": 4, "pt": 12, "tgt": "allies", "st": [["fortaleza", 1.0, 2]], "d": "Su grupo resiste mejor dos turnos."}]]],
 	]],
 	"w_hacha": ["Hacha", [
-		["Hacha", [
+		["Carnicería", [
 			["hac_hendir", "Hendir", {"t": 1, "pt": 4, "tgt": "enemy", "pow": 1.4, "fx": {"acc": -0.05}, "d": "Hachazo de arriba abajo, algo impreciso."}],
 			["hac_romper", "Romper la guardia", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 0.9, "st": [["debilitado", 0.5, 2]], "d": "Parte su defensa: puede debilitarlo."}],
 			["ber_hachazo", "Hachazo", {"t": 3, "pt": 8, "tgt": "enemy", "pow": 1.8, "fx": {"acc": -0.1}, "d": "Muy fuerte, algo impreciso."}],
 			["ber_decapitar", "Decapitar", {"t": 4, "pt": 15, "tgt": "enemy", "pow": 2.4, "d": "El golpe más brutal."}]]],
+		["Leñador", [
+			["hac_barrido", "Barrido de hacha", {"t": 2, "pt": 7, "tgt": "enemies", "pow": 0.55, "d": "Un tajo amplio contra todos."}],
+			["hac_giro", "Tajo giratorio", {"t": 3, "pt": 10, "tgt": "enemies", "pow": 0.7, "st": [["sangrado", 0.3, 2]], "d": "Gira con el hacha: puede hacerlos sangrar."}],
+			["hac_tormenta", "Tormenta de hachas", {"t": 4, "pt": 14, "tgt": "enemies", "pow": 0.85, "st": [["desequilibrado", 0.3, 2]], "d": "Golpes a todos lados que los desequilibran."}]]],
+		["Rompedor", [
+			["hac_escudo", "Golpe al escudo", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 0.8, "st": [["desarmado", 0.4, 2]], "d": "Le arranca el arma o el escudo de las manos."}],
+			["hac_yelmo", "Partir yelmos", {"t": 3, "pt": 9, "tgt": "enemy", "pow": 1.3, "fx": {"pierce": 1}, "d": "Atraviesa la armadura: sus resistencias no cuentan."}],
+			["hac_verdugo", "Hacha del verdugo", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.4, "fx": {"exec": 2.0}, "d": "Remata: muchísimo daño a quien está malherido."}]]],
 	]],
 	"w_estoque": ["Estoque y daga", [
-		["Estoque y daga", [
+		["Precisión", [
 			["ase_punal", "Puñalada", {"t": 1, "pt": 4, "tgt": "enemy", "pow": 1.2, "fx": {"crit": 0.12}, "d": "+12% de crítico."}],
 			["ase_deguello", "Degüello", {"t": 2, "pt": 7, "tgt": "enemy", "pow": 0.9, "fx": {"exec": 1.6}, "d": "Mucho más daño a enemigos con poca vida."}],
 			["due_relampago", "Estocada relámpago", {"t": 3, "pt": 9, "tgt": "enemy", "pow": 1.0, "fx": {"agi": 0.6}, "d": "Suma su Agilidad a la fuerza del golpe."}],
 			["due_cisne", "Estocada del cisne", {"t": 4, "pt": 15, "tgt": "enemy", "pow": 1.3, "st": [["marcado", 0.7, 2]], "fx": {"agi": 0.5, "acc": 0.15}, "d": "Golpe ágil que marca al rival."}],
 			["due_corazon", "Estocada al corazón", {"t": 4, "pt": 12, "tgt": "enemy", "pow": 1.9, "fx": {"crit": 0.2}, "d": "Golpe muy fuerte con +20% de crítico."}]]],
+		["Sombra", [
+			["est_traicion", "Golpe a traición", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 1.0, "fx": {"crit": 0.25}, "d": "Por donde no mira: +25% de crítico."}],
+			["est_veneno", "Hoja emponzoñada", {"t": 3, "pt": 8, "tgt": "enemy", "pow": 0.8, "st": [["sangrado", 0.8, 3]], "d": "La herida no deja de sangrar."}],
+			["est_mil", "Mil cortes", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.2, "st": [["sangrado", 0.6, 3]], "fx": {"crit": 0.15}, "d": "Cortes rápidos que lo desangran."}]]],
+		["Duelo", [
+			["est_desvio", "Desvío", {"t": 2, "pt": 5, "tgt": "self", "st": [["guardia_esgrima", 1.0, 2]], "d": "Desvía los golpes: más esquiva y contraataque."}],
+			["est_riposte", "Riposte", {"t": 3, "pt": 8, "tgt": "enemy", "pow": 1.1, "fx": {"acc": 0.1, "self_st": [["guardia_esgrima", 1]]}, "d": "Responde y queda en guardia."}],
+			["est_perfecta", "Estocada perfecta", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.6, "fx": {"acc": 0.2, "pierce": 1}, "d": "Por la juntura de la armadura: ignora sus resistencias."}]]],
 	]],
 	"w_asta": ["Lanza y pica", [
-		["Lanza y pica", [
+		["Punta", [
 			["ast_lanzada", "Lanzada", {"t": 1, "pt": 4, "tgt": "enemy", "pow": 1.2, "fx": {"acc": 0.1}, "d": "Golpe con la punta, desde lejos."}],
 			["ast_raya", "Mantener a raya", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 0.7, "st": [["desequilibrado", 0.5, 2]], "fx": {"self_st": [["fortaleza", 1]]}, "d": "Lo mantiene a distancia: puede desequilibrarlo y se refuerza."}],
 			["ast_ensartar", "Ensartar", {"t": 3, "pt": 10, "tgt": "enemy", "pow": 1.6, "st": [["sangrado", 0.5, 2]], "d": "Atraviesa al rival: puede hacerlo sangrar."}],
 			["ast_erizo", "Erizo", {"t": 4, "pt": 14, "tgt": "enemies", "pow": 0.6, "fx": {"self_st": [["guardia", 1]]}, "d": "Barre la fila con la punta y queda en guardia."}]]],
+		["Muro de picas", [
+			["ast_filas", "Cerrar filas", {"t": 2, "pt": 6, "tgt": "allies", "st": [["fortaleza", 0.8, 1]], "d": "Su grupo aprieta las filas y resiste mejor."}],
+			["ast_jinete", "Pica contra el jinete", {"t": 3, "pt": 9, "tgt": "enemy", "pow": 1.3, "st": [["derribado", 0.4, 1]], "d": "Clava la pica: puede derribarlo."}],
+			["ast_bosque", "Bosque de picas", {"t": 4, "pt": 14, "tgt": "enemies", "pow": 0.55, "st": [["derribado", 0.25, 1]], "d": "Un muro de puntas contra todos: puede derribarlos."}]]],
+		["Alcance", [
+			["ast_asta", "Golpe de asta", {"t": 2, "pt": 5, "tgt": "enemy", "pow": 1.0, "st": [["aturdido", 0.2, 1]], "d": "Con el palo: puede aturdirlo."}],
+			["ast_barrido", "Barrido largo", {"t": 3, "pt": 9, "tgt": "enemies", "pow": 0.6, "st": [["desequilibrado", 0.35, 2]], "d": "Barre a todos desde lejos."}],
+			["ast_campeon", "Lanza del campeón", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 2.0, "fx": {"acc": 0.1, "crit": 0.1}, "d": "La carga perfecta: golpe enorme y certero."}]]],
 	]],
 	"w_maza": ["Maza", [
-		["Maza", [
+		["Aplastar", [
 			["maz_porrazo", "Porrazo", {"t": 1, "pt": 4, "tgt": "enemy", "pow": 1.2, "st": [["aturdido", 0.15, 1]], "d": "Golpe seco: puede aturdir."}],
 			["tan_rompe", "Rompearmaduras", {"t": 2, "pt": 7, "tgt": "enemy", "pow": 1.0, "st": [["desequilibrado", 0.65, 2]], "d": "Desequilibra al rival."}],
 			["tan_martillo", "Martillazo", {"t": 3, "pt": 10, "tgt": "enemy", "pow": 1.4, "st": [["aturdido", 0.4, 1]], "d": "Golpe brutal que puede aturdir."}],
 			["tan_terremoto", "Terremoto", {"t": 4, "pt": 14, "tgt": "enemies", "pow": 0.65, "st": [["desequilibrado", 0.35, 2]], "d": "Golpea a todos y puede desequilibrarlos."}],
 			["tan_demoler", "Demoledor", {"t": 4, "pt": 16, "tgt": "enemy", "pow": 1.5, "fx": {"pierce": 1, "vs_status": 1.3}, "d": "Atraviesa la armadura; más daño si el rival está tocado."}]]],
+		["Penitencia", [
+			["maz_penitente", "Maza del penitente", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 1.1, "st": [["debilitado", 0.4, 2]], "d": "Golpe que le quita las fuerzas."}],
+			["maz_yelmo", "Golpe al yelmo", {"t": 3, "pt": 9, "tgt": "enemy", "pow": 1.2, "st": [["aturdido", 0.35, 1]], "d": "A la cabeza: puede aturdirlo."}],
+			["maz_juicio", "Juicio", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.7, "fx": {"vs_status": 1.4}, "d": "Mucho más daño si el rival ya está tocado."}]]],
+		["Escudo y maza", [
+			["maz_pomo", "Golpe de pomo", {"t": 2, "pt": 5, "tgt": "enemy", "pow": 0.8, "st": [["desequilibrado", 0.5, 2]], "fx": {"self_st": [["guardia", 1]]}, "d": "Lo empuja y queda en guardia."}],
+			["maz_aguante", "Aguantar", {"t": 3, "pt": 7, "tgt": "self", "st": [["fortaleza", 1.0, 2]], "d": "Aprieta los dientes: resiste mejor dos turnos."}],
+			["maz_guerra", "Martillo de guerra", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.6, "fx": {"pierce": 1}, "d": "Atraviesa la armadura: sus resistencias no cuentan."}]]],
 	]],
 	"w_arco": ["Arco", [
-		["Arco", [
+		["Tirador", [
 			["arc_tiro", "Tiro certero", {"t": 1, "pt": 4, "tgt": "enemy", "pow": 1.15, "fx": {"acc": 0.1}, "d": "Flecha bien apuntada."}],
 			["arc_doble", "Tiro doble", {"t": 2, "pt": 7, "tgt": "random3", "pow": 0.7, "hits": 2, "d": "Dos flechas seguidas a enemigos al azar."}],
 			["arc_lluvia", "Lluvia de flechas", {"t": 3, "pt": 12, "tgt": "enemies", "pow": 0.5, "d": "Una andanada contra todos."}],
 			["arc_ojo", "Flecha al ojo", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.5, "st": [["cegado", 0.4, 2]], "fx": {"crit": 0.25}, "d": "+25% de crítico; puede cegarlo."}]]],
+		["Cazador", [
+			["arc_pierna", "Flecha a la pierna", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 0.9, "st": [["derribado", 0.35, 1]], "d": "Puede derribarlo."}],
+			["arc_sangre", "Flecha sangrante", {"t": 3, "pt": 8, "tgt": "enemy", "pow": 1.0, "st": [["sangrado", 0.7, 3]], "d": "Punta dentada: la herida sangra."}],
+			["arc_cazador", "Disparo del cazador", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.6, "fx": {"crit": 0.2, "vs_status": 1.3}, "d": "Remata a la presa herida o caída."}]]],
+		["Hostigar", [
+			["arc_aviso", "Disparo de aviso", {"t": 2, "pt": 5, "tgt": "enemy", "pow": 0.5, "st": [["marcado", 0.8, 2]], "d": "Lo señala: recibe más daño."}],
+			["arc_rasante", "Andanada rasante", {"t": 3, "pt": 10, "tgt": "enemies", "pow": 0.45, "st": [["desequilibrado", 0.3, 2]], "d": "Flechas bajas contra todos."}],
+			["arc_lluvia_roja", "Lluvia roja", {"t": 4, "pt": 14, "tgt": "enemies", "pow": 0.55, "st": [["sangrado", 0.35, 2]], "d": "Una andanada que los deja sangrando."}]]],
 	]],
 	"w_ballesta": ["Ballesta", [
-		["Ballesta", [
+		["Perforar", [
 			["bal_virote", "Virote", {"t": 1, "pt": 4, "tgt": "enemy", "pow": 1.4, "fx": {"acc": -0.05}, "d": "Disparo potente pero lento de apuntar."}],
 			["bal_apuntar", "Fijar el blanco", {"t": 2, "pt": 5, "tgt": "enemy", "st": [["marcado", 1.0, 2]], "d": "Lo señala: recibe más daño 2 turnos."}],
 			["bal_atravesar", "Atravesar", {"t": 3, "pt": 10, "tgt": "enemy", "pow": 1.3, "fx": {"pierce": 1}, "d": "El virote atraviesa la armadura: sus resistencias no cuentan."}],
 			["bal_quemarropa", "A quemarropa", {"t": 4, "pt": 15, "tgt": "enemy", "pow": 2.0, "st": [["derribado", 0.3, 1]], "fx": {"crit": 0.1}, "d": "Disparo brutal de cerca: puede derribarlo."}]]],
+		["Asedio", [
+			["bal_pesado", "Virote pesado", {"t": 2, "pt": 7, "tgt": "enemy", "pow": 1.3, "st": [["desequilibrado", 0.4, 2]], "d": "Lo tumba hacia atrás: puede desequilibrarlo."}],
+			["bal_descarga", "Descarga", {"t": 3, "pt": 10, "tgt": "random3", "pow": 0.6, "hits": 2, "d": "Dos virotes a enemigos al azar."}],
+			["bal_asedio", "Virote de asedio", {"t": 4, "pt": 15, "tgt": "enemy", "pow": 2.2, "fx": {"acc": -0.1, "pierce": 1}, "d": "Enorme y lento: atraviesa cualquier armadura."}]]],
+		["Emboscada", [
+			["bal_sombra", "Tiro desde las sombras", {"t": 2, "pt": 6, "tgt": "enemy", "pow": 1.1, "fx": {"crit": 0.2}, "d": "Sin que lo vea venir: +20% de crítico."}],
+			["bal_veneno", "Virote envenenado", {"t": 3, "pt": 8, "tgt": "enemy", "pow": 0.9, "st": [["sangrado", 0.7, 3]], "d": "La herida no cierra."}],
+			["bal_mortal", "Tiro mortal", {"t": 4, "pt": 14, "tgt": "enemy", "pow": 1.5, "fx": {"exec": 1.8}, "d": "Remata a quien está malherido."}]]],
 	]],
 	"boss": ["Enemigos", [
 		["Tropa", [
@@ -973,10 +1043,47 @@ static func weapon_ids(c: Character) -> Array:
 		return []
 	var out := []
 	var max_tier := int(c.get_meta(EnemyCatalog.META_WEAPON_TIER, 4))   # genéricos: tope según su rango
-	for n: Dictionary in nodes_of_tree(weapon_tree_of(c)):
+	var tid := weapon_tree_of(c)
+	var path := weapon_path(c, tid)
+	for n: Dictionary in nodes_of_tree(tid):
+		if int(n.tier) > 1 and int(n.branch) != path:
+			continue   # otra vía del arma
 		if c.level >= required_level(n) and int(n.tier) <= max_tier:
 			out.append(n.id)
 	return out
+
+# --- Vías del arma ---
+# Cada arma tiene una técnica raíz y tres vías. La vía elegida se guarda en learned_skills como
+# «@wpath:<árbol>=<rama>» (los «@» no son habilidades). Sin elegir: la primera vía (la clásica);
+# los enemigos genéricos llevan una al azar (estable) para variar los combates.
+const WPATH_PREFIX := "@wpath:"
+
+static func _wpath_marker(c: Character, tid: String) -> String:
+	for lid: String in c.learned_skills:
+		if lid.begins_with(WPATH_PREFIX + tid + "="):
+			return lid
+	return ""
+
+static func weapon_path_chosen(c: Character, tid: String) -> bool:
+	return not _wpath_marker(c, tid).is_empty()
+
+static func weapon_path(c: Character, tid: String) -> int:
+	var m := _wpath_marker(c, tid)
+	if not m.is_empty():
+		return int(m.get_slice("=", 1))
+	var n_branches: int = tree(tid).get("branches", []).size()
+	if c.has_meta("enemy_type") and n_branches > 1:   # genéricos: una vía al azar, la misma todo el combate
+		if not c.has_meta("rpg_weapon_path"):
+			c.set_meta("rpg_weapon_path", randi() % n_branches)
+		return int(c.get_meta("rpg_weapon_path")) % n_branches
+	return 0
+
+## Eliges la vía de un arma (una vez; para cambiarla, el Tomo del olvido). Devuelve si se pudo.
+static func choose_weapon_path(c: Character, tid: String, branch: int) -> bool:
+	if weapon_path_chosen(c, tid) or not tid in WEAPON_TREES or branch < 0 or branch >= tree(tid).branches.size():
+		return false
+	c.learned_skills.append("%s%s=%d" % [WPATH_PREFIX, tid, branch])
+	return true
 
 static func is_weapon_node(id: String) -> bool:
 	return node(id).get("tree", "") in WEAPON_TREES
@@ -1086,12 +1193,53 @@ static func can_learn(c: Character, id: String) -> bool:
 		return false
 	if c.level < required_level(n):
 		return false
+	if branch_locked(c, id):   # ya elegiste otra vía en este árbol
+		return false
 	for r in n.req:
 		if not knows(c, r):
 			return false
 	if not n.req_any.is_empty() and not n.req_any.any(func(r: String) -> bool: return knows(c, r)):
 		return false
 	return points_free(c) >= cost_for(c, id)
+
+## Vías elegidas en un árbol: ramas donde ya aprendiste algo (sin contar el kit base gratis).
+## Desde la primera habilidad de una rama, esa es tu vía: las otras dos quedan cerradas
+## hasta que olvides lo aprendido con un Tomo del olvido (forget_trees).
+static func chosen_branches(c: Character, tree_id: String) -> Array:
+	var out := []
+	for lid: String in c.learned_skills:
+		var n := node(lid)
+		if n.is_empty() or n.tree != tree_id or n.get("base", false) or n.branch in out:
+			continue
+		out.append(n.branch)
+	return out
+
+static func branch_locked(c: Character, id: String) -> bool:
+	var n := node(id)
+	if n.is_empty() or n.tree == TREE_BOSS or n.get("base", false):
+		return false
+	if n.tree in WEAPON_TREES:   # la raíz es de todos; el resto, solo el de la vía del arma
+		return int(n.tier) > 1 and int(n.branch) != weapon_path(c, n.tree)
+	var chosen := chosen_branches(c, n.tree)
+	return not chosen.is_empty() and not n.branch in chosen
+
+## Tomo del olvido: olvida lo aprendido en sus árboles (no las técnicas de arma ni el kit base) y
+## recupera los puntos; vuelve a elegir vía. Devuelve cuántas habilidades olvidó.
+static func forget_trees(c: Character) -> int:
+	var trees := trees_for(c)
+	var kept: Array[String] = []
+	var lost := 0
+	for lid: String in c.learned_skills:
+		if lid.begins_with(WPATH_PREFIX):
+			continue   # vía de arma: se vuelve a elegir
+		var n := node(lid)
+		if not n.is_empty() and n.tree in trees and not n.get("base", false):
+			lost += 1
+			continue
+		kept.append(lid)
+	c.learned_skills = kept
+	ensure_kit(c)
+	return lost
 
 static func learn(c: Character, id: String) -> bool:
 	if not can_learn(c, id):
@@ -1123,7 +1271,10 @@ static func ensure_kit(c: Character) -> void:
 			continue
 		var bases := nodes_of_tree(tid).filter(func(n: Dictionary) -> bool: return n.get("base", false))
 		if bases.is_empty():
-			bases = [node(tree(tid).branches[0].nodes[0])]
+			if c.has_meta("enemy_type"):   # los genéricos llevan el primer básico de su tipo
+				bases = [node(tree(tid).branches[0].nodes[0])]
+			else:
+				continue   # sin kit base: la vía la eliges tú (creación, PNJ con auto_learn)
 		for n: Dictionary in bases:
 			if not n.id in c.learned_skills:
 				c.learned_skills.append(n.id)
@@ -1136,17 +1287,21 @@ static func _auto_score(c: Character, n: Dictionary) -> float:
 		score += AUTO_ACTIVE_WEIGHT
 	return score + float(abs(hash(c.first_name + n.id)) % 100) / 1000.0   # desempate estable
 
-## PNJ y séquito: un básico en cada rama de sus tres árboles y luego gastan los puntos (su tipo primero).
+## PNJ y séquito: eligen una vía en cada uno de sus tres árboles y gastan los puntos en ella (su tipo primero).
 static func auto_learn(c: Character) -> void:
 	ensure_kit(c)
+	var wt := weapon_tree_of(c)
+	if wt in WEAPON_TREES and not weapon_path_chosen(c, wt) and not c.has_meta("enemy_type"):
+		choose_weapon_path(c, wt, absi(hash(c.first_name + c.last_name + wt)) % tree(wt).branches.size())
 	for tid: String in trees_for(c):
+		if not chosen_branches(c, tid).is_empty():
+			continue
+		var opts := []
 		for b in 3:
-			if _learned_basic_in(c, tid, b):
-				continue
-			var opts := basic_nodes(tid, b)
-			opts.sort_custom(func(x: String, y: String) -> bool: return _auto_score(c, node(x)) > _auto_score(c, node(y)))
-			if not opts.is_empty():
-				c.learned_skills.append(opts[0])
+			opts.append_array(basic_nodes(tid, b))
+		opts.sort_custom(func(x: String, y: String) -> bool: return _auto_score(c, node(x)) > _auto_score(c, node(y)))
+		if not opts.is_empty():
+			c.learned_skills.append(opts[0])
 	while points_free(c) > 0:
 		var best := ""
 		var best_score := -INF

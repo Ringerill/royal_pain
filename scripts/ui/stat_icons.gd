@@ -15,7 +15,7 @@ const ICONS := {
 	"combate": "crossed-swords", "defensa": "checked-shield", "agilidad": "running-ninja",
 	"estrategia": "chess-knight", "liderazgo": "flying-flag", "carisma": "conversation",
 	"odio": "angry-eyes", "rivalidad": "sword-clash", "amistad": "shaking-hands", "amor": "heart-wings",
-	"casados": "linked-rings", "neutral": "person", "castillo": "castle", "batalla": "crossed-swords",
+	"casados": "linked-rings", "neutral": "person", "castillo": "castle", "batalla": "crossed-swords", "pt": "sparkles",
 	"rol_campesino": "farmer", "rol_soldado": "swordman", "rol_caballero": "visored-helm",
 	"rol_capitan": "captain-hat-profile", "rol_nobleza_baja": "tiara", "rol_nobleza_alta": "crown",
 	"rol_duque": "crown", "rol_regente": "imperial-crown", "rol_inafiliado": "bindle",
@@ -24,7 +24,7 @@ const NAMES := {
 	"oro": "Oro", "soldados": "Soldados", "honor": "Honor", "fama": "Fama", "comida": "Comida",
 	"vida": "Vida", "nivel": "Nivel", "acciones": "Acciones", "combate": "Combate", "defensa": "Defensa",
 	"agilidad": "Agilidad", "estrategia": "Estrategia", "liderazgo": "Liderazgo", "carisma": "Carisma",
-	"odio": "Odio", "rivalidad": "Rivalidad", "amistad": "Amistad", "amor": "Amor", "casados": "Matrimonio", "castillo": "Castillo", "batalla": "Batalla",
+	"odio": "Odio", "rivalidad": "Rivalidad", "amistad": "Amistad", "amor": "Amor", "casados": "Matrimonio", "castillo": "Castillo", "batalla": "Batalla", "pt": "Puntos de técnica",
 	"neutral": "Sin lazos",
 }
 const COLORS := {
@@ -33,7 +33,7 @@ const COLORS := {
 	"combate": Color("e8826e"), "defensa": Color("9fc4e0"), "agilidad": Color("9fd08a"),
 	"estrategia": Color("c48ae0"), "liderazgo": Color("f0d48a"), "carisma": Color("f0b4c8"),
 	"odio": Color("d0453a"), "rivalidad": Color("e8906a"), "amistad": Color("8fd08a"), "amor": Color("f07a9a"),
-	"casados": Color("f0c75a"), "neutral": Color("a89a88"), "castillo": Color("e8d9a0"), "batalla": Color("e8826e"),
+	"casados": Color("f0c75a"), "neutral": Color("a89a88"), "castillo": Color("e8d9a0"), "batalla": Color("e8826e"), "pt": Color("7fb8e8"),
 }
 const ROLE_COLOR := Color("e8d9a0")
 # Atributo del personaje (propiedad de Character) -> clave del icono.
@@ -146,13 +146,47 @@ static func relation_icon(r: Relationship, size: int = 16) -> TextureRect:
 		tip += " · afinidad %+d · intimidad %d" % [r.affinity, r.affection]
 	return icon(key, size, tip)
 
+## Una pieza de equipo con iconos: el tipo de daño (arma) o la clase de armadura, el escudo, y sus
+## bonos como iconos de atributo («[combate] +1»). Devuelve el HBox (sin el nombre).
+const ITEM_MODS := {"combat_mod": "combate", "defense_mod": "defensa", "agility_mod": "agilidad",
+	"leadership_mod": "liderazgo", "charisma_mod": "carisma", "strategy_mod": "estrategia"}
+
+static func item_badges(parent: Node, e: Equipment, size: int = 16, with_mods: bool = true) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	var type_icon: TextureRect = null
+	if RpgStats.WEAPON_BY_ITEM.has(e.equipment_name):
+		var dt: int = RpgStats.WEAPON_BY_ITEM[e.equipment_name]
+		type_icon = SkillIcons.damage_icon(dt, size)
+		type_icon.tooltip_text = "Daño: " + RpgStats.DAMAGE_NAMES[dt]
+	elif RpgStats.ARMOR_BY_ITEM.has(e.equipment_name):
+		var ac: int = RpgStats.ARMOR_BY_ITEM[e.equipment_name]
+		type_icon = SkillIcons.armor_icon(ac, size)
+		type_icon.tooltip_text = "Armadura: " + RpgStats.ARMOR_NAMES[ac]
+	elif e.slot == "Escudo":
+		type_icon = SkillIcons.make(SkillIcons.texture(SkillIcons.SHIELD), size, SkillIcons.ARMOR_COLOR, "Escudo")
+	if type_icon != null:
+		type_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		type_icon.mouse_filter = Control.MOUSE_FILTER_PASS
+		h.add_child(type_icon)
+	for prop: String in (ITEM_MODS if with_mods else {}):
+		var v := int(e.get(prop))
+		if v != 0:
+			pair(h, ITEM_MODS[prop], "%+d" % v, size - 2)
+	if parent != null:
+		parent.add_child(h)
+	return h
+
 ## Texto con iconos en vez de palabras, para un RichTextLabel con bbcode: «+30 oro», «20 de oro»,
 ## «Honor +3», «+3 favor», «15 soldados»… pasan a ser el número con su icono. Los corchetes del
 ## texto original se escapan para que no se lean como bbcode.
 const RICH_WORDS := {"oro": "oro", "honor": "honor", "fama": "fama", "vida": "vida", "comida": "comida",
 	"soldados": "soldados", "favor": "amistad", "afinidad": "amistad", "intimidad": "amor", "exp\\.": "nivel",
-	"experiencia": "nivel"}
+	"experiencia": "nivel", "pv": "vida", "pt": "pt", "combate": "combate", "defensa": "defensa",
+	"agilidad": "agilidad", "estrategia": "estrategia", "liderazgo": "liderazgo", "carisma": "carisma"}
 static var _rich_res := []
+static var _rich_with: RegEx
+static var _rich_hit: RegEx
 
 static func richify(text: String, size: int = 16) -> String:
 	if _rich_res.is_empty():
@@ -162,7 +196,17 @@ static func richify(text: String, size: int = 16) -> String:
 			var before := RegEx.new()   # «Honor +3», «Oro: 100»
 			before.compile("(?i)(?<![\\wáéíóúñ])" + word + "\\s*:?\\s*([+−\\-]?\\d+)")
 			_rich_res.append([after, before, RICH_WORDS[word]])
+	if _rich_with == null:   # «Afinidad con Lord X +5», «intimidad con Ana −3»: icono, nombre y número
+		_rich_with = RegEx.new()
+		_rich_with.compile("(?i)(?<![\\wáéíóúñ])(afinidad|intimidad) con ([^+−\\-\\d(),.;\\n]+?)\\s*([+−\\-]\\d+)")
 	var s := text.replace("[", "[lb]")
+	if _rich_hit == null:   # combate: «Ana recibe 21» → «Ana −21 [vida]»
+		_rich_hit = RegEx.new()
+		_rich_hit.compile("(?i)recibe (\\d+)(?!\\s*(?:de\\s+)?(?:oro|honor|fama))")
+	s = _rich_hit.sub(s, "−$1 " + bb("vida", size), true)
+	for m: RegExMatch in _rich_with.search_all(s):
+		var key := "amistad" if m.get_string(1).to_lower() == "afinidad" else "amor"
+		s = s.replace(m.get_string(), "%s %s %s" % [bb(key, size), m.get_string(2), m.get_string(3)])
 	for r: Array in _rich_res:
 		var icon := bb(r[2], size)
 		s = (r[0] as RegEx).sub(s, "$1 " + icon, true)

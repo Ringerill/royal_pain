@@ -372,7 +372,7 @@ func creation_equipment_errors() -> Array[String]:
 		errors.append("Solo un escudo.")
 	return errors
 
-## Una habilidad básica por rama de cada árbol (personalidad, alineación y tipo de luchador).
+## Una vía (una habilidad básica) en cada árbol: personalidad, alineación y tipo de luchador.
 func creation_skill_errors() -> Array[String]:
 	var errors: Array[String] = []
 	var api: Script = load("res://scripts/resources/skill_tree_catalog.gd")
@@ -380,12 +380,12 @@ func creation_skill_errors() -> Array[String]:
 		return errors   # árboles aún sin la API nueva: no se exige
 	for tree_id in api.call("trees_for", self):
 		var tree: Dictionary = api.call("tree", tree_id)
-		var branches: Array = tree.get("branches", [])
-		for b in branches.size():
+		var picked := 0
+		for b in tree.get("branches", []).size():
 			var basics: Array = api.call("basic_nodes", tree_id, b)
-			var picked := basics.filter(func(id): return id in learned_skills).size()
-			if picked != 1:
-				errors.append("%s · %s: elige una habilidad básica." % [tree.get("name", "?"), branches[b].get("name", "?")])
+			picked += basics.filter(func(id): return id in learned_skills).size()
+		if picked != 1:
+			errors.append("%s: elige tu vía (una habilidad básica)." % tree.get("name", "?"))
 	return errors
 
 ## Opciones básicas de sus tres árboles: [{"tree", "branch", "ids"}] (vacío si la API no está lista).
@@ -396,10 +396,11 @@ func basic_tree_options() -> Array:
 		return out
 	for tree_id in api.call("trees_for", self):
 		var tree: Dictionary = api.call("tree", tree_id)
-		var branches: Array = tree.get("branches", [])
-		for b in branches.size():
-			out.append({"tree": str(tree.get("name", "")), "branch": str(branches[b].get("name", "")),
-				"ids": api.call("basic_nodes", tree_id, b)})
+		var ids := []
+		for b in tree.get("branches", []).size():
+			ids.append_array(api.call("basic_nodes", tree_id, b))
+		# Una sola vía por árbol: la rama de la habilidad elegida (las otras se cierran).
+		out.append({"tree": str(tree.get("name", "")), "branch": "Elige tu vía", "ids": ids})
 	return out
 
 ## Elige una habilidad básica de una rama (quita la que hubiera elegida en esa misma rama).

@@ -437,6 +437,10 @@ func _build_skills_lists() -> void:
 		lbl.text = opt.branch
 		list.add_child(lbl)
 		var ob := OptionButton.new()
+		ob.fit_to_longest_item = false   # «Vía · habilidad» es largo: que no ensanche la columna
+		ob.clip_text = true
+		ob.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		ob.add_item("—")
 		ob.set_item_metadata(0, "")
 		ob.add_theme_constant_override("icon_max_width", SKILL_ICON)
@@ -444,7 +448,8 @@ func _build_skills_lists() -> void:
 		for id in opt.ids:
 			var n: Dictionary = SkillTreeCatalog.node(str(id))
 			var k := ob.item_count
-			ob.add_icon_item(SkillIcons.texture(SkillIcons.node_icon_name(str(id))), str(n.get("name", id)))
+			var br_name: String = SkillTreeCatalog.tree(str(n.get("tree", ""))).branches[int(n.get("branch", 0))].name
+			ob.add_icon_item(SkillIcons.texture(SkillIcons.node_icon_name(str(id))), "%s · %s" % [br_name, n.get("name", id)])
 			ob.set_item_metadata(k, str(id))
 			ob.set_item_tooltip(k, str(n.get("desc", "")))
 			ob.get_popup().set_item_icon_modulate(k, INK_ACTIVE if n.get("kind", "") == "act" else INK_PASSIVE)

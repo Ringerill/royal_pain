@@ -89,7 +89,14 @@ func _kingdom_page(k: int) -> Control:
 	if ruler == null:
 		_label(info, "Sin gobernante conocido.", "BodyBoldLabel")
 	else:
-		_label(info, "Gobierna %s · %s · afinidad contigo %d" % [ruler.person_name, ruler.character.role_name() if ruler.character != null else "", ruler.affinity], "BodyBoldLabel")
+		# [rol] Gobernante [lazo] afinidad: con iconos
+		var ruler_row := StatIcons.named(info, ruler.character, ruler.person_name, 18)
+		var rel := StatIcons.relation_icon(ruler, 18)
+		rel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		ruler_row.add_child(rel)
+		var aff := Label.new()
+		aff.text = "%+d" % ruler.affinity
+		ruler_row.add_child(aff)
 		var dip := _diplomacy_text(k, ruler)
 		if not dip.is_empty():
 			_label(info, dip, "MutedLabel")
@@ -137,11 +144,29 @@ func _kingdom_page(k: int) -> Control:
 			totals.upkeep += f.upkeep
 			totals.food_net += f.food
 	var known_txt := "" if totals.known == totals.n else " (conoces %d)" % totals.known
-	_label(page, "%d castillos%s · %d soldados · %d de oro en las arcas · %d de comida" % [totals.n, known_txt, totals.garrison, totals.gold, totals.food], "BodyBoldLabel")
+	var sum_row := HBoxContainer.new()
+	sum_row.add_theme_constant_override("separation", 14)
+	page.add_child(sum_row)
+	StatIcons.pair(sum_row, "castillo", "%d%s" % [totals.n, known_txt], 18, "Castillos")
+	StatIcons.pair(sum_row, "soldados", str(totals.garrison), 18, "Soldados")
+	StatIcons.pair(sum_row, "oro", str(totals.gold), 18, "Oro en las arcas")
+	StatIcons.pair(sum_row, "comida", str(totals.food), 18, "Comida")
 	var balance: int = totals.income - totals.upkeep
-	_label(page, "Cada mes%s: ingresos +%d, paga de la tropa −%d → balance %+d de oro · comida %+d%s" % [
-		" (invierno)" if winter else "", totals.income, totals.upkeep, balance, totals.food_net,
-		" · ¡en números rojos!" if balance < 0 or totals.food_net < 0 else ""], "MutedLabel")
+	# Al mes (invierno incluido): ingresos, paga de la tropa, balance de oro y comida, con iconos.
+	var month_row := HBoxContainer.new()
+	month_row.add_theme_constant_override("separation", 14)
+	month_row.modulate = Color(1, 1, 1, 0.85)
+	page.add_child(month_row)
+	var per := Label.new()
+	per.text = "/mes%s:" % (" (invierno)" if winter else "")
+	month_row.add_child(per)
+	StatIcons.pair(month_row, "oro", "+%d" % totals.income, 16, "Ingresos al mes")
+	StatIcons.pair(month_row, "soldados", "−%d" % totals.upkeep, 16, "Paga de la tropa al mes")
+	var bal := StatIcons.pair(month_row, "oro", "= %+d" % balance, 16, "Balance de oro al mes")
+	var food := StatIcons.pair(month_row, "comida", "%+d" % totals.food_net, 16, "Comida al mes")
+	for pr: Array in [[bal, balance], [food, totals.food_net]]:
+		if int(pr[1]) < 0:
+			(pr[0] as HBoxContainer).modulate = Color(1.0, 0.55, 0.5)   # en números rojos
 	# Integrantes.
 	_label(page, "Integrantes", "SubheaderLabel")
 	var people: Array = []

@@ -98,9 +98,10 @@ func _speak(attitude: String) -> void:
 	_result_text = result.text
 	for child in _choices.get_children():
 		child.queue_free()
-	_reply_label.text = result.text
-	_reply_label.visible = true
-	UiAnim.fade_in(_reply_label, 0.25)
+	StatIcons.set_rich(_reply_label, result.text)   # intimidad y afinidad con su icono
+	var shown: Control = StatIcons.rich_twin(_reply_label)
+	shown.visible = true
+	UiAnim.fade_in(shown, 0.25)
 	_close.grab_focus.call_deferred()
 
 func _focus_first() -> void:

@@ -52,6 +52,8 @@ static func fix_gender(c: Character) -> void:
 ## ajustes de enemigo, y una ficha en el mundo. Devuelve su relación.
 static func make_person(c: Character, first: String, last: String) -> Relationship:
 	fix_gender(c)
+	var wtree := SkillTreeCatalog.weapon_tree_of(c)
+	var wpath := SkillTreeCatalog.weapon_path(c, wtree)   # la vía de arma con la que luchaba se queda
 	var weapon := str(c.get_meta(EnemyCatalog.META_WEAPON, ""))
 	var armor := int(c.get_meta(RpgStats.META_ARMOR, -1))
 	c.first_name = first.strip_edges() if not first.strip_edges().is_empty() else "Sin Nombre"
@@ -75,6 +77,10 @@ static func make_person(c: Character, first: String, last: String) -> Relationsh
 			RpgStats.META_PV_MULT, RpgStats.META_ACTIONS]:
 		if c.has_meta(m):
 			c.remove_meta(m)
+	if c.has_meta("rpg_weapon_path"):
+		c.remove_meta("rpg_weapon_path")
+	if wtree in SkillTreeCatalog.WEAPON_TREES:
+		SkillTreeCatalog.choose_weapon_path(c, wtree, wpath)
 	c.honor = CharacterLoader.honor_for_personality(c.personality)
 	c.current_health = maxi(1, c.current_health)
 	var RD := _node("RelationsData")

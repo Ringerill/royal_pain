@@ -2034,10 +2034,7 @@ func _on_month_passed(_month: int, _year: int) -> void:
 			r.adjust_affection(-((ROMANCE_DECAY_LEAL if leal else ROMANCE_DECAY) if r.romance else FRIEND_DECAY))
 		if not r.romance:
 			continue
-		if not r.rival_suitor.is_empty():
-			r.adjust_affection(-SUITOR_MONTHLY_DECAY)
-		elif r.affection >= SUITOR_MIN_AFFECTION and not is_married() and randf() < SUITOR_CHANCE:
-			r.rival_suitor = _pick_suitor_for(r)
+		r.rival_suitor = ""   # ya no hay pretendientes rivales (se limpian los de partidas antiguas)
 	_pay_retinue(player)
 	_apply_occupations(player)
 	if GameManager.pending_event.is_empty():
@@ -2081,12 +2078,6 @@ func roll_social_event() -> Dictionary:
 	var player: Character = GameManager.player_character
 	if player == null:
 		return {}
-	# Un pretendiente rival es lo más urgente.
-	for r: Relationship in relations:
-		if not r.rival_suitor.is_empty() and r.romance and courtable(r) and randf() < 0.5:
-			var suitor := get_relation(r.rival_suitor)
-			if suitor != null and suitor.character != null:
-				return _suitor_event(r, suitor, player)
 	var rivals := duel_rivals()
 	rivals.shuffle()
 	for r: Relationship in rivals:

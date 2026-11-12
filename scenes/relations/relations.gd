@@ -402,7 +402,7 @@ func _detail_text(r: Relationship) -> String:
 	return "%s · Gobierna: %s" % [personality, ", ".join(names)]
 
 func _show_feedback(text: String, rebuild: bool = true) -> void:
-	feedback_label.text = text
+	StatIcons.set_rich(feedback_label, text)   # con iconos (oro, honor…)
 	feedback_panel.visible = not text.is_empty()
 	UiAnim.fade_in(feedback_panel, 0.2)
 	if rebuild:

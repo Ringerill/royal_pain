@@ -60,9 +60,9 @@ const EVENTS_HEIGHT := 120.0  # noticias del mes: alto fijo, con desplazamiento
 
 @onready var event_overlay: Control = %EventOverlay
 @onready var event_title: Label = %EventTitle
-@onready var event_text: Label = %EventText
+@onready var event_text: RichTextLabel = %EventText
 @onready var event_options: VBoxContainer = %EventOptions
-@onready var event_result: Label = %EventResult
+@onready var event_result: RichTextLabel = %EventResult
 @onready var btn_event_close: Button = %BtnEventClose
 
 @onready var army_panel: PanelContainer = %ArmyPanel
@@ -254,6 +254,51 @@ func _refresh_top_icons(p: Character) -> void:
 	StatIcons.pair(_top_stats, "honor", str(p.honor), 16)
 	StatIcons.pair(_top_stats, "fama", str(p.fame), 16)
 	StatIcons.pair(_top_stats, "vida", str(p.current_health), 16, "Vida %d/%d" % [p.current_health, p.max_health])
+	_refresh_quick_buttons()
+
+## Accesos rápidos tras «Menú» (donde la barra tiene sitio, p. ej. pantallas anchas de móvil):
+## entrar al castillo donde estás y, si hay una batalla cerca, pedir unirte a ella.
+const QUICK_MIN_WIDTH := 1300.0   # ancho de pantalla (virtual) a partir del cual caben
+var _btn_quick_castle: Button
+var _btn_quick_battle: Button
+
+func _refresh_quick_buttons() -> void:
+	var bar := btn_menu.get_parent()
+	if _btn_quick_castle == null:
+		_btn_quick_castle = _quick_button("castillo", "Castillo", "Entrar al castillo donde estás.", _quick_enter_castle)
+		_btn_quick_battle = _quick_button("batalla", "Batalla", "Hay una batalla cerca: pide unirte a ella.", _quick_join_battle)
+		for b: Button in [_btn_quick_castle, _btn_quick_battle]:
+			bar.add_child(b)
+	var wide := get_viewport().get_visible_rect().size.x >= QUICK_MIN_WIDTH
+	var here: Castle = TravelData.current_castle()
+	_btn_quick_castle.visible = wide and here != null
+	_btn_quick_battle.visible = wide and not ArmyData.nearby_battle_event().is_empty() and GameManager.has_actions_remaining()
+
+func _quick_button(key: String, text: String, tip: String, cb: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.tooltip_text = tip
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	SkillIcons.set_button_icon(b, StatIcons.texture(key), StatIcons.COLORS.get(key, Color.WHITE), 18)
+	b.pressed.connect(cb)
+	return b
+
+func _quick_enter_castle() -> void:
+	var here: Castle = TravelData.current_castle()
+	if here == null or event_overlay.visible:
+		return
+	selected_castle = here
+	_on_enter_castle_pressed()
+
+func _quick_join_battle() -> void:
+	if event_overlay.visible or GameManager.has_pending_event():
+		return
+	var e := ArmyData.nearby_battle_event()
+	if e.is_empty():
+		_refresh_quick_buttons()
+		return
+	GameManager.queue_event(e, true)
+	_show_pending_event()
 
 ## Móvil (APK): sin el panel «Tu destino» (costaba desplazarse por el mapa); la crónica ocupa su sitio.
 func _mobile() -> bool:
@@ -337,7 +382,7 @@ func _show_next_notification() -> void:
 
 func _show_message(title: String, text: String) -> void:
 	event_title.text = title
-	event_text.text = text
+	event_text.text = StatIcons.richify(text)
 	event_speaker.visible = false
 	event_result.visible = false
 	for child in event_options.get_children():
@@ -789,7 +834,7 @@ func _show_pending_event() -> void:
 	var player: Character = GameManager.player_character
 	var castle := MapData.get_castle_by_id(GameManager.home_castle_id)
 	event_title.text = e.title
-	event_text.text = e.text
+	event_text.text = StatIcons.richify(e.text)
 	event_result.visible = false
 	btn_event_close.visible = false
 	# Eventos con protagonista: su retrato y lo que dice, según su personalidad.
@@ -832,7 +877,7 @@ func _on_event_option_pressed(index: int) -> void:
 	WorldEvents.record("%s: %s. %s" % [e.get("title", "Suceso"), chosen_label, result.get_slice("\n", 0)], "", true)
 	for child in event_options.get_children():
 		child.queue_free()
-	event_result.text = result
+	event_result.text = StatIcons.richify(result)
 	event_result.visible = true
 	btn_event_close.visible = true
 	_refresh_turn_ui()
@@ -983,7 +1028,7 @@ func _show_site(uid: String, prefix: String = "") -> void:
 		body += "\n\nCerca de %s · %d %s · 1 acción (te quedan %d)" % [
 			near.castle_name if near != null else "?", int(site.months_left),
 			"mes" if int(site.months_left) == 1 else "meses", GameManager.actions_remaining]
-	event_text.text = body
+	event_text.text = StatIcons.richify(body)
 	event_speaker.visible = false
 	event_result.visible = false
 	btn_event_close.visible = false
@@ -1120,7 +1165,7 @@ func _show_encounter() -> void:
 	var home := MapData.get_castle_by_id(GameManager.home_castle_id)
 	_showing_encounter = true
 	event_title.text = "En el camino: %s" % event.title
-	event_text.text = event.text
+	event_text.text = StatIcons.richify(event.text)
 	event_speaker.visible = false
 	event_result.visible = false
 	btn_event_close.visible = false
@@ -1147,12 +1192,12 @@ func _on_encounter_option_pressed(index: int) -> void:
 	var r := TravelData.resolve_encounter(index)
 	_showing_encounter = false
 	if not r.ok:
-		event_result.text = r.text
+		event_result.text = StatIcons.richify(r.text)
 		event_result.visible = true
 		return
 	for child in event_options.get_children():
 		child.queue_free()
-	event_result.text = r.text
+	event_result.text = StatIcons.richify(r.text)
 	event_result.visible = true
 	btn_event_close.visible = true
 	_pending_fight = r.fight
@@ -1166,7 +1211,7 @@ func _on_site_option_pressed(index: int) -> void:
 	var uid := _site_uid
 	var r := ExplorationData.visit(uid, index)
 	if not r.ok:
-		event_result.text = r.text
+		event_result.text = StatIcons.richify(r.text)
 		event_result.visible = true
 		return
 	if r.get("continue", false):   # la expedición sigue: el resultado y el paso siguiente
@@ -1181,7 +1226,7 @@ func _on_site_option_pressed(index: int) -> void:
 			r.text += "\n" + told
 	for child in event_options.get_children():
 		child.queue_free()
-	event_result.text = r.text
+	event_result.text = StatIcons.richify(r.text)
 	event_result.visible = true
 	btn_event_close.visible = true
 	_pending_fight = r.fight

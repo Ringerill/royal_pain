@@ -5,7 +5,7 @@ cathelineau: swordman
 
 darkzaitzev: running-ninja
 
-delapouite: angry-eyes, bindle, captain-hat-profile, farmer, heart-wings, imperial-crown, person, shaking-hands, spartan-helmet, tiara, trumpet, two-coins, upgrade
+delapouite: angry-eyes, bindle, captain-hat-profile, castle, farmer, heart-wings, imperial-crown, person, shaking-hands, spartan-helmet, tiara, trumpet, two-coins, upgrade
 
 lorc: barbed-spear, beveled-star, breastplate, broadsword, checked-shield, conversation, crossed-swords, crown, flying-flag, high-shot, laurel-crown, leather-vest, linked-rings, muscle-up, spiked-mace, sprint, sword-clash, visored-helm, wheat
 

@@ -767,6 +767,38 @@ func resolve_field_battle(a: Army, castle: Castle, army_won: bool, army_lost: in
 	events_changed.emit()
 	return " ".join(lines)
 
+## Acceso rápido «Unirte a una batalla»: la llamada a la batalla más cercana a la que puedes sumarte
+## (un ejército que marcha sobre un castillo junto a ti, o un asedio en curso a tu alcance). {} si no hay.
+func nearby_battle_event() -> Dictionary:
+	var player: Character = GameManager.player_character
+	if player == null or not CombatSetup.battle_blocker(player).is_empty():
+		return {}
+	var travel := get_node_or_null("/root/TravelData")
+	var here: Castle = travel.current_castle() if travel != null else MapData.get_castle_by_id(GameManager.home_castle_id)
+	var e := volunteer_event(here)
+	if not e.is_empty():
+		return e
+	var best := {}
+	for a: Army in armies:
+		var target := field_target(a)
+		if target != null and _player_near(target, a.origin_castle_id):
+			var pick := _field_pick(a, target)
+			if not pick.is_empty() and (best.is_empty() or pick.score > best.score):
+				best = pick
+	if not best.is_empty():
+		return InvitationCatalog.field_event(best.army, best.target, best.side, best.lord, best.inviter, best.liege)
+	for a: Army in armies:   # asedios que esperan resolverse junto a ti
+		var castle: Castle = MapData.get_castle_by_id(a.current_castle_id)
+		if not a.pending_battle or is_player_army(a) or castle == null or is_player_defended(castle) or not _player_near(castle, a.origin_castle_id):
+			continue
+		for side: int in [BattleEnums.Side.ATACANTE, BattleEnums.Side.DEFENSOR]:
+			var with_army := side == BattleEnums.Side.ATACANTE
+			var pick := _inviter_for(a.owner_name if with_army else castle.owner_name, a.kingdom if with_army else castle.kingdom,
+				castle.kingdom if with_army else a.kingdom)
+			if not pick.is_empty():
+				return InvitationCatalog.army_event(a, castle, side, pick.lord, pick.inviter, pick.liege)
+	return {}
+
 ## Soldados que salen a una batalla campal desde un castillo.
 func field_battle_soldiers(castle: Castle) -> int:
 	if castle == null:

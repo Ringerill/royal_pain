@@ -203,6 +203,21 @@ func _is_fulfilled(m: Dictionary) -> bool:
 			return _owned_castles() > int(m.baseline)
 	return false
 
+## Una acción del castillo que ya gastaste cuenta para el encargo que pide justo eso (la siega con
+## «Trabajar la Tierra», instruir a los reclutas con «Entrenar con la Tropa»…). Devuelve el texto ("" si nada).
+func credit_action(mission_id: String) -> String:
+	for m: Dictionary in active:
+		if str(m.get("id", "")) != mission_id or str(m.get("type", "")) != "actions":
+			continue
+		m.progress = int(m.get("progress", 0)) + 1
+		var step := _apply(m.get("step", {}), m)
+		if int(m.progress) >= int(m.amount):
+			_complete(m)
+			return "Encargo «%s» cumplido." % m.get("title", "")
+		missions_changed.emit()
+		return "Encargo «%s»: %d/%d. %s" % [m.get("title", ""), m.progress, m.amount, step]
+	return ""
+
 func _complete(m: Dictionary) -> void:
 	active.erase(m)
 	completed_count += 1

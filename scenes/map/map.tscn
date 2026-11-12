@@ -372,10 +372,13 @@ layout_mode = 2
 theme_type_variation = &"BodyBoldLabel"
 autowrap_mode = 3
 
-[node name="EventText" type="Label" parent="UILayer/EventOverlay/EventCenter/EventPanel/EventVBox"]
+[node name="EventText" type="RichTextLabel" parent="UILayer/EventOverlay/EventCenter/EventPanel/EventVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(540, 0)
 layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
 autowrap_mode = 3
 
 [node name="EventOptions" type="VBoxContainer" parent="UILayer/EventOverlay/EventCenter/EventPanel/EventVBox"]
@@ -383,12 +386,14 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="EventResult" type="Label" parent="UILayer/EventOverlay/EventCenter/EventPanel/EventVBox"]
+[node name="EventResult" type="RichTextLabel" parent="UILayer/EventOverlay/EventCenter/EventPanel/EventVBox"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(540, 0)
 layout_mode = 2
-theme_type_variation = &"BodyBoldLabel"
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
 autowrap_mode = 3
 
 [node name="BtnEventClose" type="Button" parent="UILayer/EventOverlay/EventCenter/EventPanel/EventVBox"]

@@ -607,7 +607,7 @@ func _action_promulgar_edicto(id: String) -> void:
 	_show_feedback("Promulgas el %s. %s" % [EdictCatalog.title(id), EdictCatalog.description(id)])
 
 func _show_feedback(text: String) -> void:
-	action_feedback_label.text = text
+	StatIcons.set_rich(action_feedback_label, text)   # con iconos (oro, honor…)
 	feedback_panel.visible = not text.is_empty()
 	UiAnim.fade_in(feedback_panel, 0.25)
 
@@ -615,7 +615,8 @@ func _show_feedback(text: String) -> void:
 
 func _action_trabajar_tierra() -> void:
 	character.gold += TIERRA_GOLD_GAIN
-	_show_feedback("Trabajaste la tierra y ganaste %d de oro." % TIERRA_GOLD_GAIN)
+	var mission := MissionData.credit_action("cosecha")   # la siega del señor cuenta
+	_show_feedback("Trabajaste la tierra y ganaste %d de oro.%s" % [TIERRA_GOLD_GAIN, (" " + mission) if not mission.is_empty() else ""])
 	_refresh_ui()
 
 func _action_migrar() -> void:
@@ -1070,6 +1071,9 @@ func _action_drill() -> void:
 			return
 		character.gold -= DRILL_COST
 		_note_drill("entrenar")
+		var mission := MissionData.credit_action("reclutas")   # instruir a las levas cuenta
+		if not mission.is_empty():
+			_show_feedback.call_deferred(mission)
 		var levels := character.add_mastery_xp(f, DRILL_XP + character.leadership)
 		var char_levels := character.gain_xp(DRILL_CHAR_XP, XpRules.SOURCE_TRAINING)
 		_show_feedback("Maniobras con %s. Experiencia +%d%s.%s" % [BattleEnums.family_name(f).to_lower(), character.last_xp_gained,

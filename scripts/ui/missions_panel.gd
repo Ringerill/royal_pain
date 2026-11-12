@@ -120,10 +120,13 @@ func _row(m: Dictionary) -> Control:
 	head.add_child(deadline)
 	box.add_child(head)
 
-	var desc := Label.new()
+	var desc := RichTextLabel.new()   # con iconos en la recompensa (oro, honor…)
+	desc.bbcode_enabled = true
+	desc.fit_content = true
+	desc.scroll_active = false
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 16)
-	desc.text = "%s\nEncarga: %s · Recompensa: %s" % [MissionData.describe_text(m), m.get("giver", "?"), MissionData.reward_text(m)]
+	desc.add_theme_font_size_override("normal_font_size", 16)
+	desc.text = StatIcons.richify("%s\nEncarga: %s · Recompensa: %s" % [MissionData.describe_text(m), m.get("giver", "?"), MissionData.reward_text(m)])
 	box.add_child(desc)
 	var progress := MissionData.progress_text(m)
 	if not progress.is_empty():

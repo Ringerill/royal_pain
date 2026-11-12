@@ -15,7 +15,7 @@ const ICONS := {
 	"combate": "crossed-swords", "defensa": "checked-shield", "agilidad": "running-ninja",
 	"estrategia": "chess-knight", "liderazgo": "flying-flag", "carisma": "conversation",
 	"odio": "angry-eyes", "rivalidad": "sword-clash", "amistad": "shaking-hands", "amor": "heart-wings",
-	"casados": "linked-rings", "neutral": "person",
+	"casados": "linked-rings", "neutral": "person", "castillo": "castle", "batalla": "crossed-swords",
 	"rol_campesino": "farmer", "rol_soldado": "swordman", "rol_caballero": "visored-helm",
 	"rol_capitan": "captain-hat-profile", "rol_nobleza_baja": "tiara", "rol_nobleza_alta": "crown",
 	"rol_duque": "crown", "rol_regente": "imperial-crown", "rol_inafiliado": "bindle",
@@ -24,7 +24,7 @@ const NAMES := {
 	"oro": "Oro", "soldados": "Soldados", "honor": "Honor", "fama": "Fama", "comida": "Comida",
 	"vida": "Vida", "nivel": "Nivel", "acciones": "Acciones", "combate": "Combate", "defensa": "Defensa",
 	"agilidad": "Agilidad", "estrategia": "Estrategia", "liderazgo": "Liderazgo", "carisma": "Carisma",
-	"odio": "Odio", "rivalidad": "Rivalidad", "amistad": "Amistad", "amor": "Amor", "casados": "Matrimonio",
+	"odio": "Odio", "rivalidad": "Rivalidad", "amistad": "Amistad", "amor": "Amor", "casados": "Matrimonio", "castillo": "Castillo", "batalla": "Batalla",
 	"neutral": "Sin lazos",
 }
 const COLORS := {
@@ -33,7 +33,7 @@ const COLORS := {
 	"combate": Color("e8826e"), "defensa": Color("9fc4e0"), "agilidad": Color("9fd08a"),
 	"estrategia": Color("c48ae0"), "liderazgo": Color("f0d48a"), "carisma": Color("f0b4c8"),
 	"odio": Color("d0453a"), "rivalidad": Color("e8906a"), "amistad": Color("8fd08a"), "amor": Color("f07a9a"),
-	"casados": Color("f0c75a"), "neutral": Color("a89a88"),
+	"casados": Color("f0c75a"), "neutral": Color("a89a88"), "castillo": Color("e8d9a0"), "batalla": Color("e8826e"),
 }
 const ROLE_COLOR := Color("e8d9a0")
 # Atributo del personaje (propiedad de Character) -> clave del icono.
@@ -145,6 +145,58 @@ static func relation_icon(r: Relationship, size: int = 16) -> TextureRect:
 	if r != null:
 		tip += " · afinidad %+d · intimidad %d" % [r.affinity, r.affection]
 	return icon(key, size, tip)
+
+## Texto con iconos en vez de palabras, para un RichTextLabel con bbcode: «+30 oro», «20 de oro»,
+## «Honor +3», «+3 favor», «15 soldados»… pasan a ser el número con su icono. Los corchetes del
+## texto original se escapan para que no se lean como bbcode.
+const RICH_WORDS := {"oro": "oro", "honor": "honor", "fama": "fama", "vida": "vida", "comida": "comida",
+	"soldados": "soldados", "favor": "amistad", "afinidad": "amistad", "intimidad": "amor", "exp\\.": "nivel",
+	"experiencia": "nivel"}
+static var _rich_res := []
+
+static func richify(text: String, size: int = 16) -> String:
+	if _rich_res.is_empty():
+		for word: String in RICH_WORDS:
+			var after := RegEx.new()   # «+30 oro», «20 de oro», «+3 favor de quien encarga»
+			after.compile("(?i)([+−\\-]?\\d+)\\s+(?:de\\s+)?" + word + "(?![\\wáéíóúñ])")
+			var before := RegEx.new()   # «Honor +3», «Oro: 100»
+			before.compile("(?i)(?<![\\wáéíóúñ])" + word + "\\s*:?\\s*([+−\\-]?\\d+)")
+			_rich_res.append([after, before, RICH_WORDS[word]])
+	var s := text.replace("[", "[lb]")
+	for r: Array in _rich_res:
+		var icon := bb(r[2], size)
+		s = (r[0] as RegEx).sub(s, "$1 " + icon, true)
+		s = (r[1] as RegEx).sub(s, icon + " $1", true)
+	return s
+
+## Un RichTextLabel «gemelo» de un Label ya existente (mismo sitio y tamaño), para mostrar texto con
+## iconos sin cambiar la escena: el Label se oculta pero conserva su texto (pruebas, accesibilidad).
+## Uso: var rich := StatIcons.rich_twin(label) · luego set_rich(label, texto).
+static func rich_twin(label: Label) -> RichTextLabel:
+	if label.has_meta("rich_twin"):
+		return label.get_meta("rich_twin")
+	var r := RichTextLabel.new()
+	r.bbcode_enabled = true
+	r.fit_content = true
+	r.scroll_active = false
+	r.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	r.size_flags_horizontal = label.size_flags_horizontal
+	r.size_flags_vertical = label.size_flags_vertical
+	r.custom_minimum_size = label.custom_minimum_size
+	r.mouse_filter = Control.MOUSE_FILTER_PASS
+	var fs := label.get_theme_font_size("font_size")
+	r.add_theme_font_size_override("normal_font_size", fs)
+	r.add_theme_color_override("default_color", label.get_theme_color("font_color"))
+	label.get_parent().add_child(r)
+	label.get_parent().move_child(r, label.get_index() + 1)
+	label.visible = false
+	label.set_meta("rich_twin", r)
+	return r
+
+## Pone el texto en el Label (oculto) y, con iconos, en su gemelo.
+static func set_rich(label: Label, text: String) -> void:
+	label.text = text
+	rich_twin(label).text = richify(text)
 
 ## «[img]» de un icono para RichTextLabel (con su color).
 static func bb(key: String, size: int = 16) -> String:

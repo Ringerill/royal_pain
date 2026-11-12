@@ -24,11 +24,18 @@ const INTENT_COLOR := Color(1.0, 0.9, 0.6)
 const TIMELINE_N := 8
 const ENEMY_MAX := 5
 const PARTY_MAX := 4
-const ENEMY_CARD_W := 168
+const ENEMY_CARD_W := 168   # (antiguas tarjetas; hoy, ancho mínimo de cada figura: FIGURE_MIN_W)
 const PARTY_CARD_W := 172
+# Escenario (opción A): figuras de cuerpo entero sin marco, que llenan el alto disponible.
+const FIGURE_MIN_W := 96
+const FIGURE_MIN_H := 150
+const FIGURE_GAP := 6
+const STAGE_GAP := 40
+const BOTTOM_H := 206   # cabe el menú principal (3 filas) sin desplazar
+const FIGURE_FRAME := Color(0, 0, 0, 0)   # sin marco salvo al actuar o ser objetivo
 const KO_SLOW_MO := 0.5
 const SIDE_COLORS := [Color("5b8fd0"), Color("c9584c")]
-const CARD_BORDER := Color("4a3a24")
+const CARD_BORDER := Color(0.29, 0.23, 0.14, 0.0)   # transparente: las figuras van sin marco
 const ACTING_BORDER := Color("f0d48a")
 const TARGET_BORDER := Color("ff7a5a")
 const ALLY_TARGET_BORDER := Color("8ee08a")
@@ -37,6 +44,10 @@ const PT_COLOR := Color("3f78a8")
 const TO_DEATH_COLOR := Color("e0503c")
 const WEAK_COLOR := Color("ffd25a")
 const RESIST_COLOR := Color("9fb4c8")
+const CMD_SCROLL_DEADZONE := 12   # px que el dedo puede moverse antes de que el toque pase a desplazar la lista
+const CMD_SCROLLBAR_WIDTH := 16
+const CMD_SCROLL_GRACE_MS := 180   # tras desplazar la lista, un instante en que soltar no pulsa
+var _last_scroll_ms := -100000
 const MENU_ICON := 16   # icono de las órdenes y técnicas (más grande alargaría los botones)
 const TGT_NAMES := {"enemy": "1 enemigo", "enemies": "todos", "random3": "al azar", "ally": "1 aliado",
 	"allies": "aliados", "self": "tú", "ko_ally": "caído"}
@@ -84,6 +95,52 @@ var enemy_row: HBoxContainer
 var party_row: HBoxContainer
 var log_label: RichTextLabel   # registro con iconos (daño, oro, honor…)
 var log_panel: PanelContainer
+# Vistas (Settings.combat_view): los mismos combatientes, colocados de otra forma (ver _apply_view).
+enum View { ESCENARIO, CLASICA, ENFOCADA, PRIMERA }
+# Primera persona: enemigos arriba (75% del alto), comandos abajo (25%) y, a la derecha, el retrato de
+# quien tiene el turno o es objetivo, con el resto de tu grupo en una franja bajo él.
+const FP_ENEMY_SHARE := 3.4     # enemigos : comandos en alto (algo más de 3 : 1)
+const FP_LEFT_SHARE := 2.0      # zona izquierda : columna del retrato = 2 : 1 en ancho
+const FP_ZOOM := 1.3            # el personaje activo, más grande que su hueco…
+const FP_DROP := 0.14           # …y algo más abajo (fracción de su alto): las piernas pueden salirse de la pantalla
+const FP_BOTTOM_MIN := 156
+const FP_STRIP_W := 80          # aliados sin retrato: solo nombre y barras
+var _fp_main: HBoxContainer
+var _fp_left: VBoxContainer
+var _fp_spot: HBoxContainer
+var _cmd_panel: PanelContainer
+const FP_CMD_W := 500           # Primera persona: el menú, más ancho (3 columnas, 2 filas)
+var _fp_ready := false          # Primera persona: el foco ya se colocó una vez
+const FOCUS_RATIO := 4.0        # cuánto más ancho es quien está en foco (vista Enfocada)
+const FOCUS_MIN_W := 64
+const FOCUS_DIM := Color(0.72, 0.72, 0.72)
+const CLASSIC_BOTTOM_H := 206
+const CLASSIC_PARTY_PORTRAIT_H := 96
+const CLASSIC_ENEMY_PORTRAIT_H := 196
+const CLASSIC_BG := Color(0.06, 0.045, 0.03, 0.85)
+const CLASSIC_BORDER := Color("4a3a24")
+# Sin bordes de color: lo que pasa se ve en el propio personaje, con un destello.
+const GLOW_ACT := Color(1.45, 1.45, 1.45)      # blanco: empieza su turno (un destello, no dura todo el turno)
+const GLOW_HEAL := Color(0.6, 1.7, 0.65)       # verde: se cura
+const GLOW_BUFF := Color(0.6, 0.9, 1.9)        # azul: un efecto a favor
+const GLOW_DEBUFF := Color(1.5, 0.55, 1.8)     # morado: un efecto en contra
+# (rojo al recibir daño: CombatFx.flash por defecto, en _impact)
+const DEBUFFS := ["ardiendo"]                  # además de RpgBattleManager.NEGATIVE
+# Todo en un segundo como mucho: aparece la X, se ve, se va a negro y desaparece.
+const KO_DELAY := 0.1
+const KO_IN_TIME := 0.1
+const KO_MARK_TIME := 0.35
+const KO_BLACK_TIME := 0.25
+const KO_FADE_TIME := 0.2
+var _glow_f = null
+var _glow_tw: Tween
+var _dying := {}    # combatiente → true mientras se ve su X y se apaga
+var _gone := {}     # combatientes derrotados que ya no se muestran
+var _view := -1
+var _root_box: VBoxContainer
+var _stage: HBoxContainer
+var _bottom: HBoxContainer
+var _focus: Array = []
 var actor_label: Label
 var hint_label: Label
 var cmd_box: VBoxContainer
@@ -165,6 +222,9 @@ func _begin() -> void:
 		var card := _make_card(f, f.side == 1)
 		(enemy_row if f.side == 1 else party_row).add_child(card.root)
 		_cards[f] = card
+	_apply_view(Settings.combat_view)
+	if not Settings.changed.is_connected(_on_settings_changed):
+		Settings.changed.connect(_on_settings_changed)
 	_pick_background()
 	_set_title()
 	if not embedded:
@@ -227,6 +287,7 @@ func _build_ui() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 6)
 	screen.add_child(root)
+	_root_box = root
 	# Barra superior: título, línea de turnos, ronda y volver.
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
@@ -255,38 +316,54 @@ func _build_ui() -> void:
 	round_label.custom_minimum_size.x = 64
 	round_label.add_theme_font_size_override("font_size", 13)
 	top.add_child(round_label)
+	var btn_options := Button.new()
+	btn_options.text = "Opciones"
+	btn_options.tooltip_text = "Sonido, efectos y vista de combate."
+	btn_options.add_theme_font_size_override("font_size", 13)
+	btn_options.focus_mode = Control.FOCUS_NONE
+	btn_options.pressed.connect(func(): OptionsPanel.open(self))
+	top.add_child(btn_options)
 	btn_back = Button.new()
 	btn_back.add_theme_font_size_override("font_size", 13)
 	btn_back.pressed.connect(_on_back_pressed)
 	top.add_child(btn_back)
-	# Enemigos.
+	# Escenario: tu grupo a la izquierda y los enemigos a la derecha, de cuerpo entero y frente a frente.
+	var stage := HBoxContainer.new()
+	stage.add_theme_constant_override("separation", STAGE_GAP)
+	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(stage)
+	_stage = stage
+	party_row = HBoxContainer.new()
+	party_row.alignment = BoxContainer.ALIGNMENT_BEGIN
+	party_row.add_theme_constant_override("separation", FIGURE_GAP)
+	party_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stage.add_child(party_row)
 	enemy_row = HBoxContainer.new()
-	enemy_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	enemy_row.add_theme_constant_override("separation", 10)
-	enemy_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(enemy_row)
-	# Registro de alto fijo.
+	enemy_row.alignment = BoxContainer.ALIGNMENT_END
+	enemy_row.add_theme_constant_override("separation", FIGURE_GAP)
+	enemy_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stage.add_child(enemy_row)
+	# Abajo: la crónica (izquierda) y el menú de órdenes (derecha).
+	var bottom := HBoxContainer.new()
+	bottom.add_theme_constant_override("separation", 10)
+	bottom.custom_minimum_size.y = BOTTOM_H
+	root.add_child(bottom)
+	_bottom = bottom
 	log_panel = PanelContainer.new()
-	root.add_child(log_panel)
+	log_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom.add_child(log_panel)
 	log_label = RichTextLabel.new()
 	log_label.bbcode_enabled = true
 	log_label.scroll_following = true   # siempre en la última línea
 	log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	log_label.add_theme_font_size_override("normal_font_size", 13)
 	log_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	log_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_label.custom_minimum_size.y = LOG_HEIGHT
 	log_panel.add_child(log_label)
-	# Abajo: tu grupo y el menú de órdenes.
-	var bottom := HBoxContainer.new()
-	bottom.add_theme_constant_override("separation", 10)
-	bottom.custom_minimum_size.y = 206
-	root.add_child(bottom)
-	party_row = HBoxContainer.new()
-	party_row.add_theme_constant_override("separation", 8)
-	party_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom.add_child(party_row)
 	var cmd_panel := PanelContainer.new()
 	cmd_panel.custom_minimum_size.x = 340
+	_cmd_panel = cmd_panel
 	bottom.add_child(cmd_panel)
 	var cmd_col := VBoxContainer.new()
 	cmd_col.add_theme_constant_override("separation", 4)
@@ -307,6 +384,12 @@ func _build_ui() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Listas largas (técnicas, objetos): se desplazan arrastrando sobre ellas (táctil), con una barra
+	# ancha y siguiendo al botón elegido con teclado o mando.
+	scroll.scroll_deadzone = CMD_SCROLL_DEADZONE
+	scroll.follow_focus = true
+	scroll.get_v_scroll_bar().custom_minimum_size.x = CMD_SCROLLBAR_WIDTH
+	scroll.get_v_scroll_bar().value_changed.connect(func(_v: float): _last_scroll_ms = Time.get_ticks_msec())
 	cmd_col.add_child(scroll)
 	cmd_box = VBoxContainer.new()
 	cmd_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -357,13 +440,15 @@ func _small_label(parent: Node, size: int = 12) -> Label:
 func _make_card(f, enemy: bool) -> Dictionary:
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.045, 0.03, 0.85)
+	style.bg_color = Color(0, 0, 0, 0)   # sin fondo: la figura está sobre el escenario
 	style.border_color = CARD_BORDER
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
-	style.set_content_margin_all(5)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(4)
 	panel.add_theme_stylebox_override("panel", style)
-	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.custom_minimum_size = Vector2(FIGURE_MIN_W, 0)
 	panel.gui_input.connect(_on_card_input.bind(f))
 	panel.mouse_entered.connect(_on_card_hover.bind(f))
 	panel.tooltip_text = _card_tip(f)
@@ -375,8 +460,7 @@ func _make_card(f, enemy: bool) -> Dictionary:
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	d.tag = tag
-	if enemy:
-		panel.custom_minimum_size.x = ENEMY_CARD_W
+	if true:   # enemigos y tu grupo, con la misma figura (los tuyos llevan además nivel y PT)
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 3)
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -385,14 +469,30 @@ func _make_card(f, enemy: bool) -> Dictionary:
 		tex.texture = f.c.get_portrait()
 		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED   # figura completa, sin recortar cabeza ni pies
-		tex.custom_minimum_size = Vector2(ENEMY_CARD_W - 10, 196)
+		tex.custom_minimum_size = Vector2(FIGURE_MIN_W - 8, FIGURE_MIN_H)
+		tex.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		tex.flip_h = not enemy   # los tuyos miran hacia los enemigos
 		tex.clip_contents = true
 		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(tex)
 		tex.add_child(tag)
 		tag.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 		d.portrait = tex
+		d.enemy = enemy
+		d.full_tex = tex.texture
+		d.bust_tex = _upper_body(f.c).texture if not enemy else tex.texture
 		d.name = _small_label(box, 13)
+		d.name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		d.name.add_theme_color_override("font_outline_color", Color.BLACK)
+		d.name.add_theme_constant_override("outline_size", 4)
+		if not enemy:
+			var lv_row := HBoxContainer.new()
+			lv_row.add_theme_constant_override("separation", 4)
+			lv_row.alignment = BoxContainer.ALIGNMENT_CENTER
+			lv_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			box.add_child(lv_row)
+			lv_row.add_child(SkillIcons.damage_icon(int(f.s.weapon), 16))
+			d.level = _small_label(lv_row, 11)
 		# Lo que se sabe del rival: su tipo de daño y cómo encaja cada tipo (se rellena en _refresh_intel).
 		var intel := HBoxContainer.new()
 		intel.add_theme_constant_override("separation", 2)
@@ -401,46 +501,18 @@ func _make_card(f, enemy: bool) -> Dictionary:
 		box.add_child(intel)
 		d.intel = intel
 		d.intel_sig = ""
+		intel.visible = enemy
 		var hp := _bar(box, HP_COLOR)
 		d.hp = hp[0]
 		d.hp_label = hp[1]
+		if not enemy:
+			var pt := _bar(box, PT_COLOR)
+			d.pt = pt[0]
+			d.pt_label = pt[1]
 		d.status = _small_label(box, 11)
-	else:
-		panel.custom_minimum_size.x = PARTY_CARD_W
-		var col := VBoxContainer.new()
-		col.add_theme_constant_override("separation", 3)
-		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		panel.add_child(col)
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		col.add_child(row)
-		var face := _upper_body(f.c)
-		row.add_child(face)
-		face.add_child(tag)
-		tag.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-		d.portrait = face
-		var info := VBoxContainer.new()
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		info.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(info)
-		d.name = _small_label(info, 13)
-		d.name.custom_minimum_size.x = 80
-		var lv_row := HBoxContainer.new()
-		lv_row.add_theme_constant_override("separation", 4)
-		lv_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		info.add_child(lv_row)
-		var w := int(f.s.weapon)
-		lv_row.add_child(SkillIcons.damage_icon(w, 16))
-		d.level = _small_label(lv_row, 11)
-		d.level.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var hp := _bar(col, HP_COLOR)
-		d.hp = hp[0]
-		d.hp_label = hp[1]
-		var pt := _bar(col, PT_COLOR)
-		d.pt = pt[0]
-		d.pt_label = pt[1]
-		d.status = _small_label(col, 11)
+		d.status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if not enemy:
+			d.erase("intel")
 	return d
 
 ## Lo que el jugador sabe de un combatiente: los suyos, todo; los rivales, lo descubierto (IntelData).
@@ -557,7 +629,7 @@ func _shown(side: int, cap: int) -> Array:
 	var list: Array = mgr.side_fighters(side)
 	var up_active := list.filter(func(f) -> bool: return f.active and f.up())
 	var res := list.filter(func(f) -> bool: return not f.active and f.up()) if side == 1 else []
-	var fallen := list.filter(func(f) -> bool: return not f.up() and f.participated)
+	var fallen := list.filter(func(f) -> bool: return not f.up() and f.participated and not _gone.has(f))
 	return (up_active + res + fallen).slice(0, cap)
 
 func _refresh() -> void:
@@ -568,8 +640,12 @@ func _refresh() -> void:
 		var row := enemy_row if side == 1 else party_row
 		for f in mgr.side_fighters(side):
 			_cards[f].root.visible = f in shown
-		for i in shown.size():
-			row.move_child(_cards[shown[i]].root, i)
+		var idx := 0
+		for g in shown:
+			var card_root: Control = _cards[g].root
+			if card_root.get_parent() == row:   # (en Primera persona, el aliado en grande está en otra columna)
+				row.move_child(card_root, idx)
+				idx += 1
 	for f in mgr.fighters:
 		var d: Dictionary = _cards[f]
 		d.name.text = f.c.full_name()
@@ -590,17 +666,19 @@ func _refresh() -> void:
 			st = "En reserva"
 		d.status.text = st
 		d.status.tooltip_text = st
-		d.root.modulate = Color(0.45, 0.45, 0.45) if not f.up() else (Color(0.75, 0.75, 0.75) if not f.active else Color.WHITE)
-		var border := CARD_BORDER
-		if mgr.current == f:
-			border = ACTING_BORDER
-		if f in _aim:   # objetivo anunciado de la acción en curso
-			border = AIM_FRIENDLY if mgr.current != null and f.side == mgr.current.side else AIM_HOSTILE
-		d.style.border_color = border
+		if f.up() and (_dying.has(f) or _gone.has(f)):   # volvió a levantarse (lo reanimaron)
+			_revive_card(f)
+		if not _dying.has(f):   # (mientras se apaga, su color lo lleva la animación)
+			d.root.modulate = Color(0.45, 0.45, 0.45) if not f.up() else (Color(0.75, 0.75, 0.75) if not f.active else Color.WHITE)
+			if _view == View.ENFOCADA and mgr.current != null and not f in _focus and f.up():
+				d.root.modulate *= FOCUS_DIM
+		d.style.border_color = CLASSIC_BORDER if _view == View.CLASICA else CARD_BORDER
 		if _targeting.is_empty() or not f in _targeting.targets:
 			d.tag.text = ""
 	if not _targeting.is_empty():
 		_mark_targets()
+	_update_focus()
+	_update_act_glow()
 	for ch in timeline_box.get_children():
 		ch.queue_free()
 	for f in mgr.timeline(TIMELINE_N):
@@ -628,8 +706,11 @@ func _log(text: String) -> void:
 
 func _hp_snapshot() -> Dictionary:
 	var out := {}
+	var st := {}
 	for f in mgr.fighters:
 		out[f] = f.hp
+		st[f] = f.statuses.keys()
+	out["_st"] = st
 	return out
 
 func _advance() -> void:
@@ -708,7 +789,9 @@ func _cmd(parent: Node, text: String, key: Key, tip: String, cb: Callable, disab
 	b.clip_text = true
 	b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.pressed.connect(cb)
+	b.mouse_filter = Control.MOUSE_FILTER_PASS   # arrastrar sobre el botón desplaza la lista (el toque sigue pulsándolo)
+	# Si la lista acaba de moverse, el dedo estaba desplazando, no eligiendo: no se pulsa.
+	b.pressed.connect(func(): if Time.get_ticks_msec() - _last_scroll_ms > CMD_SCROLL_GRACE_MS: cb.call())
 	b.focus_entered.connect(func(): hint_label.text = tip)
 	b.mouse_entered.connect(func(): hint_label.text = tip)
 	parent.add_child(b)
@@ -723,7 +806,7 @@ func _show_main_menu() -> void:
 	actor_label.text = "Turno de %s" % f.c.full_name()
 	hint_label.text = "Elige una orden."
 	var grid := GridContainer.new()
-	grid.columns = 2
+	grid.columns = 3 if _view == View.PRIMERA else 2   # Primera persona: franja baja y ancha
 	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 4)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -842,6 +925,7 @@ func _show_items() -> void:
 			else:
 				_choose_target({"type": "objeto", "item": item_id}, ConsumableCatalog.targets(mgr, f, item_id), -1, {})
 		var b := _cmd(cmd_box, text, KEY_NONE, str(it.desc), cb)
+		SkillIcons.set_button_icon(b, StatIcons.consumable_texture(item_id), StatIcons.CONSUMABLE_COLOR, MENU_ICON)
 		if first == null:
 			first = b
 	_back_button()
@@ -869,8 +953,6 @@ func _mark_targets() -> void:
 	var cur = targets[_targeting.idx]
 	for t in targets:
 		var d: Dictionary = _cards[t]
-		var ally: bool = t.side == 0
-		d.style.border_color = (ALLY_TARGET_BORDER if ally else TARGET_BORDER) if t == cur else d.style.border_color
 		var hint := _aff_hint(_acting, t, _targeting.dt, _targeting.fx) if _acting != null else ""
 		d.tag.text = ("▼ " + hint) if t == cur else hint
 		d.tag.add_theme_color_override("font_color", WEAK_COLOR if hint == "Débil" else (RESIST_COLOR if hint == "Resiste" else Color.WHITE))
@@ -975,6 +1057,9 @@ func _telegraph(f, action: Dictionary, time: float) -> void:
 	var label := _action_name(action)
 	var targets := _intended_targets(f, action).filter(func(t): return _cards.has(t))
 	_aim = targets
+	if _view in [View.ENFOCADA, View.PRIMERA] and _update_focus():
+		await get_tree().process_frame   # el foco cambia el diseño: las flechas, con las posiciones nuevas
+		await get_tree().process_frame
 	var to_txt := ""
 	if targets.size() == 1 and targets[0] != f:
 		to_txt = " → %s" % targets[0].c.full_name()
@@ -985,7 +1070,7 @@ func _telegraph(f, action: Dictionary, time: float) -> void:
 	if time <= 0.0:
 		return
 	if _cards[f].root.visible:
-		CombatFx.punch(_cards[f].portrait, -0.08)   # se prepara (crece un poco)
+		CombatFx.punch(_cards[f].portrait, 0.06)   # se prepara (se encoge un poco, sin salirse del marco)
 		if not label.is_empty():
 			_float(f, label, INTENT_COLOR, 20)
 	_draw_aim(f, targets)
@@ -1026,6 +1111,244 @@ func _draw_aim(f, targets: Array) -> void:
 			n.modulate.a = 0.0
 			n.create_tween().tween_property(n, "modulate:a", 1.0, 0.15)
 
+# --- Vistas ---
+
+func _on_settings_changed() -> void:
+	if Settings.combat_view != _view and not _cards.is_empty():
+		_apply_view(Settings.combat_view)
+		if _menu == "main" and _acting != null:
+			_show_main_menu()   # el menú cambia de columnas según la vista
+
+## Coloca filas y figuras según la vista: Escenario (frente a frente), Clásica (tarjetas) o Enfocada.
+func _apply_view(view: int) -> void:
+	_view = view
+	_reset_first_person()
+	if view == View.PRIMERA:
+		_layout_first_person()
+	elif view == View.CLASICA:
+		_stage.visible = false
+		enemy_row.reparent(_root_box, false)
+		_root_box.move_child(enemy_row, 1)
+		enemy_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		enemy_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		log_panel.reparent(_root_box, false)
+		_root_box.move_child(log_panel, 2)
+		log_panel.size_flags_horizontal = Control.SIZE_FILL
+		party_row.reparent(_bottom, false)
+		_bottom.move_child(party_row, 0)
+		_bottom.custom_minimum_size.y = CLASSIC_BOTTOM_H
+	else:
+		party_row.reparent(_stage, false)
+		enemy_row.reparent(_stage, false)
+		_stage.move_child(party_row, 0)
+		enemy_row.alignment = BoxContainer.ALIGNMENT_END
+		enemy_row.size_flags_vertical = Control.SIZE_FILL
+		_stage.visible = true
+		log_panel.reparent(_bottom, false)
+		_bottom.move_child(log_panel, 0)
+		log_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_bottom.custom_minimum_size.y = BOTTOM_H
+	_fp_ready = false
+	for f in _cards:
+		_style_card(_cards[f])
+	_focus = []
+	_apply_compact()
+	_refresh()
+
+## Vuelve a la disposición base (escenario + franja inferior) antes de aplicar otra vista.
+func _reset_first_person() -> void:
+	if _fp_main == null:
+		return
+	for f in _cards:
+		var r: Control = _cards[f].root
+		if f.side == 0 and r.get_parent() != party_row:
+			r.reparent(party_row, false)
+	if _bottom.get_parent() != _root_box:
+		_bottom.reparent(_root_box, false)
+		_root_box.move_child(_bottom, -1)
+	party_row.reparent(_stage, false)
+	enemy_row.reparent(_stage, false)
+	_stage.move_child(party_row, 0)
+	enemy_row.size_flags_stretch_ratio = 1.0
+	_bottom.size_flags_stretch_ratio = 1.0
+	_bottom.size_flags_vertical = Control.SIZE_FILL
+	party_row.size_flags_vertical = Control.SIZE_FILL
+	_fp_main.visible = false
+	_cmd_panel.custom_minimum_size.x = 340
+	hint_label.visible = true
+	party_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	party_row.alignment = BoxContainer.ALIGNMENT_BEGIN
+
+func _layout_first_person() -> void:
+	if _fp_main == null:
+		_fp_main = HBoxContainer.new()
+		_fp_main.add_theme_constant_override("separation", 10)
+		_fp_main.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_root_box.add_child(_fp_main)
+		_root_box.move_child(_fp_main, 1)
+		_fp_left = VBoxContainer.new()
+		_fp_left.add_theme_constant_override("separation", 6)
+		_fp_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_fp_left.size_flags_stretch_ratio = FP_LEFT_SHARE
+		_fp_main.add_child(_fp_left)
+		var right := VBoxContainer.new()
+		right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		right.size_flags_stretch_ratio = 1.0
+		_fp_main.add_child(right)
+		_fp_spot = HBoxContainer.new()
+		_fp_spot.alignment = BoxContainer.ALIGNMENT_CENTER
+		_fp_spot.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		right.add_child(_fp_spot)
+	_fp_main.visible = true
+	_stage.visible = false
+	enemy_row.reparent(_fp_left, false)
+	enemy_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	enemy_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	enemy_row.size_flags_stretch_ratio = FP_ENEMY_SHARE
+	_bottom.reparent(_fp_left, false)
+	_bottom.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_bottom.size_flags_stretch_ratio = 1.0
+	_bottom.custom_minimum_size.y = FP_BOTTOM_MIN
+	_cmd_panel.custom_minimum_size.x = FP_CMD_W
+	hint_label.visible = false   # la descripción sigue en la ayuda de cada botón
+	# Abajo: el resto de tu grupo en miniatura, la crónica y los comandos.
+	log_panel.reparent(_bottom, false)
+	_bottom.move_child(log_panel, 0)
+	log_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	party_row.reparent(_bottom, false)
+	_bottom.move_child(party_row, 0)
+	party_row.alignment = BoxContainer.ALIGNMENT_BEGIN
+	party_row.size_flags_horizontal = Control.SIZE_FILL
+	party_row.size_flags_vertical = Control.SIZE_SHRINK_END
+
+func _style_card(d: Dictionary) -> void:
+	var classic := _view == View.CLASICA
+	var enemy: bool = d.enemy
+	var panel: PanelContainer = d.root
+	var tex: TextureRect = d.portrait
+	d.style.bg_color = CLASSIC_BG if classic else Color(0, 0, 0, 0)
+	panel.size_flags_stretch_ratio = 1.0
+	tex.visible = true
+	if d.has("fp_big"):
+		_fp_zoom(d, false)
+	if classic:
+		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		panel.size_flags_horizontal = Control.SIZE_FILL
+		panel.custom_minimum_size = Vector2(ENEMY_CARD_W if enemy else PARTY_CARD_W, 0)
+		tex.texture = d.full_tex if enemy else d.bust_tex
+		tex.flip_h = false
+		tex.size_flags_vertical = Control.SIZE_FILL
+		tex.custom_minimum_size = Vector2(panel.custom_minimum_size.x - 10, CLASSIC_ENEMY_PORTRAIT_H if enemy else CLASSIC_PARTY_PORTRAIT_H)
+	else:
+		var min_w := FOCUS_MIN_W if _view == View.ENFOCADA else FIGURE_MIN_W
+		panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		panel.custom_minimum_size = Vector2(min_w, 0)
+		tex.texture = d.full_tex
+		tex.flip_h = not enemy   # los tuyos miran hacia los enemigos
+		tex.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		tex.custom_minimum_size = Vector2(min_w - 8, FIGURE_MIN_H if _view == View.ESCENARIO else 90)
+
+## Vista Enfocada: quien actúa y a quién apunta se ensanchan; el resto se queda pequeño.
+## Devuelve si el foco cambió.
+func _update_focus() -> bool:
+	if _view not in [View.ENFOCADA, View.PRIMERA] or mgr == null:
+		return false
+	var focus: Array = []
+	if mgr.current != null:
+		focus.append(mgr.current)
+	for t in _aim:
+		if not t in focus:
+			focus.append(t)
+	if not _targeting.is_empty():
+		var t = _targeting.targets[_targeting.idx]
+		if not t in focus:
+			focus.append(t)
+	if _view == View.PRIMERA:
+		# De tu grupo, solo en grande quien tiene el turno o es objetivo; los demás, nombre y barras.
+		var spot := focus.filter(func(x) -> bool: return x.side == 0)
+		if spot.is_empty():   # turno enemigo sin objetivo aún: sigue en pantalla el último
+			spot = _focus.filter(func(x) -> bool: return x.up()) if _fp_ready else []
+		if spot.is_empty():
+			spot = mgr.side_fighters(0).filter(func(x) -> bool: return x.active and x.up()).slice(0, 1)
+		if spot.size() > 2:   # algo que alcanza a todo tu grupo: en grande, quien actúa (o el primero)
+			spot = [mgr.current] if mgr.current in spot else spot.slice(0, 1)
+		if _fp_ready and spot == _focus:
+			return false
+		_fp_ready = true
+		_focus = spot
+		for f in _cards:
+			if f.side == 0:
+				_set_spotlight(_cards[f], f in spot)
+		return true
+	if focus.size() < 2 and _last_target != null and _last_target in _cards and not _last_target in focus:
+		focus.append(_last_target)
+	if focus.is_empty() or focus == _focus:
+		return false
+	_focus = focus
+	for f in _cards:
+		_cards[f].root.size_flags_stretch_ratio = FOCUS_RATIO if f in focus else 1.0
+	_apply_compact()
+	return true
+
+## Primera persona: un aliado en grande (con retrato) o en la franja (sin retrato, abajo).
+func _set_spotlight(d: Dictionary, on: bool) -> void:
+	var r: Control = d.root
+	var target: Node = _fp_spot if on else party_row
+	if r.get_parent() != target:
+		r.reparent(target, false)
+	d.portrait.visible = on
+	_fp_zoom(d, on)
+	r.size_flags_vertical = Control.SIZE_EXPAND_FILL if on else Control.SIZE_SHRINK_END
+	r.size_flags_stretch_ratio = 1.0
+	r.custom_minimum_size.x = FIGURE_MIN_W if on else FP_STRIP_W
+	d.hp_label.visible = on
+	if d.has("pt_label"):
+		d.pt_label.visible = on
+
+## Primera persona: el retrato del activo se dibuja mayor que su hueco y desplazado hacia abajo
+## (una copia hija del retrato; el original queda invisible pero conserva destellos y sacudidas).
+func _fp_zoom(d: Dictionary, on: bool) -> void:
+	var tex: TextureRect = d.portrait
+	if on and not d.has("fp_big"):
+		var big := TextureRect.new()
+		big.texture = tex.texture
+		big.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		big.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		big.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		big.show_behind_parent = false
+		tex.add_child(big)
+		tex.move_child(big, 0)   # bajo la etiqueta de objetivo
+		d.fp_big = big
+		tex.resized.connect(_fp_place.bind(d))
+	if d.has("fp_big"):
+		d.fp_big.visible = on
+		d.fp_big.flip_h = tex.flip_h
+		tex.clip_contents = not on
+		tex.self_modulate.a = 0.0 if on else 1.0
+		if on:
+			_fp_place(d)
+
+func _fp_place(d: Dictionary) -> void:
+	if not d.has("fp_big") or not d.fp_big.visible:
+		return
+	var tex: TextureRect = d.portrait
+	var sz := tex.size * FP_ZOOM
+	d.fp_big.size = sz
+	d.fp_big.position = Vector2((tex.size.x - sz.x) * 0.5, tex.size.y * FP_DROP)
+
+## En la vista Enfocada, las figuras pequeñas solo muestran nombre y barras (sin números ni iconos).
+func _apply_compact() -> void:
+	for f in _cards:
+		var d: Dictionary = _cards[f]
+		var compact: bool = _view == View.ENFOCADA and not _focus.is_empty() and not f in _focus
+		if d.has("intel"):
+			d.intel.visible = not compact
+		d.hp_label.visible = not compact
+		if d.has("pt_label"):
+			d.pt_label.visible = not compact
+		d.status.visible = not compact
+
 func _clear_aim_lines() -> void:
 	if _aim_layer == null:
 		return
@@ -1042,7 +1365,8 @@ func _clear_aim() -> void:
 # --- Sensación de golpe ---
 
 func _center(f) -> Vector2:
-	return (_cards[f].portrait as Control).get_global_rect().get_center()
+	var p: Control = _cards[f].portrait
+	return (p if p.is_visible_in_tree() else _cards[f].root as Control).get_global_rect().get_center()
 
 func _float(f, text: String, color: Color, size: int = 28) -> void:
 	if _cards[f].root.visible:
@@ -1099,7 +1423,7 @@ func _play_fx(info: Dictionary, before: Dictionary) -> void:
 	match str(info.type):
 		"defender":
 			Sfx.play("guard")
-			CombatFx.flash(_cards[actor].portrait, Color(0.7, 0.9, 1.6), 0.4)
+			_glow(actor, GLOW_BUFF, 0.45)
 			_float(actor, "En guardia", CombatFx.INFO_COLOR, 22)
 		"cambiar":
 			Sfx.play("whoosh", -4.0)
@@ -1116,12 +1440,114 @@ func _play_fx(info: Dictionary, before: Dictionary) -> void:
 func _float_diffs(before: Dictionary, covered: Dictionary) -> void:
 	for f in mgr.fighters:
 		var d: int = f.hp - int(before.get(f, f.hp))
+		if d > 0:
+			_glow(f, GLOW_HEAL)
+		elif d < 0 and not covered.has(f):
+			_glow(f, CombatFx.DAMAGE_FLASH)
 		if d == 0 or (d < 0 and covered.has(f)):
 			continue
 		_float(f, ("+%d" % d) if d > 0 else ("-%d" % -d), CombatFx.INFO_COLOR if d > 0 else CombatFx.DAMAGE_COLOR, 24)
+	_glow_statuses(before)
+
+## Estados nuevos desde la instantánea: azul si son a favor, morado si son en contra.
+func _glow_statuses(before: Dictionary) -> void:
+	var old: Dictionary = before.get("_st", {})
+	if old.is_empty():
+		return
+	for f in mgr.fighters:
+		if not f.up() or not old.has(f):
+			continue
+		var bad := false
+		var good := false
+		for k in f.statuses.keys():
+			if k in old[f]:
+				continue
+			if k in RpgBattleManager.NEGATIVE or k in DEBUFFS:
+				bad = true
+			else:
+				good = true
+		if bad:
+			_glow(f, GLOW_DEBUFF, 0.5)
+		elif good:
+			_glow(f, GLOW_BUFF, 0.5)
+
+## Destello de color sobre el retrato (y su copia ampliada en Primera persona).
+func _glow(f, color: Color, duration: float = 0.35) -> void:
+	if not _cards.has(f) or not _cards[f].root.visible:
+		return
+	CombatFx.flash(_cards[f].portrait, color, duration)
+
+## Al empezar su turno, un destello blanco de todo su cuerpo (menos de un segundo).
+func _update_act_glow() -> void:
+	var f = mgr.current if mgr != null and not mgr.ended else null
+	if f != null and (not f.up() or not _cards.has(f)):
+		f = null
+	if f == _glow_f:
+		return
+	if _glow_tw != null and _glow_tw.is_valid():
+		_glow_tw.kill()
+	if _glow_f != null and _cards.has(_glow_f):
+		(_cards[_glow_f].root.get_child(0) as CanvasItem).modulate = Color.WHITE
+	_glow_f = f
+	if f == null or CombatFx._reduced():
+		return
+	var body: CanvasItem = _cards[f].root.get_child(0)
+	_glow_tw = body.create_tween()
+	_glow_tw.tween_property(body, "modulate", GLOW_ACT, 0.2).set_trans(Tween.TRANS_SINE)
+	_glow_tw.tween_property(body, "modulate", Color.WHITE, 0.5).set_trans(Tween.TRANS_SINE)
 
 func _on_fighter_down(f) -> void:
 	_float(f, "Muere" if f.dead else "Cae", CombatFx.MISS_COLOR, 30)
+	_ko_anim(f)
+
+## Al caer: una X sobre su retrato, luego se va a negro y desaparece de la pantalla.
+func _ko_anim(f) -> void:
+	if not _cards.has(f) or _dying.has(f):
+		return
+	var d: Dictionary = _cards[f]
+	_dying[f] = true
+	if f == _glow_f:
+		_update_act_glow()
+	await get_tree().create_timer(_pace(KO_DELAY)).timeout   # que se vea el golpe
+	if not is_inside_tree() or not _dying.has(f):
+		return
+	var mark := Label.new()
+	mark.text = "✕"
+	mark.add_theme_font_size_override("font_size", 120)
+	mark.add_theme_color_override("font_color", Color(0.85, 0.12, 0.1))
+	mark.add_theme_color_override("font_outline_color", Color.BLACK)
+	mark.add_theme_constant_override("outline_size", 10)
+	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	d.root.add_child(mark)   # sobre toda la figura (PanelContainer: se centra en ella)
+	d.ko_mark = mark
+	mark.modulate.a = 0.0
+	var root: CanvasItem = d.root
+	var tw := create_tween()
+	tw.tween_property(mark, "modulate:a", 1.0, KO_IN_TIME)
+	tw.tween_interval(_pace(KO_MARK_TIME))
+	tw.tween_property(root, "modulate", Color(0, 0, 0, 1), _pace(KO_BLACK_TIME))
+	tw.tween_property(root, "modulate:a", 0.0, _pace(KO_FADE_TIME))
+	tw.tween_callback(func():
+		if not _dying.has(f):
+			return
+		_dying.erase(f)
+		_gone[f] = true
+		if is_instance_valid(mark):
+			mark.queue_free()
+		d.erase("ko_mark")
+		_refresh())
+
+## Reanimado: vuelve a verse normal.
+func _revive_card(f) -> void:
+	_dying.erase(f)
+	_gone.erase(f)
+	var d: Dictionary = _cards[f]
+	if d.has("ko_mark") and is_instance_valid(d.ko_mark):
+		d.ko_mark.queue_free()
+	d.erase("ko_mark")
+	d.root.modulate = Color.WHITE
 
 # --- Final ---
 

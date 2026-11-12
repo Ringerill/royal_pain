@@ -59,6 +59,11 @@ const TRAIL_COLOR := Color(0.85, 0.75, 0.55, 0.55)   # polvo de la carga de caba
 const PUFF_COLOR := Color(0.8, 0.8, 0.8, 0.5)        # humareda cuando un pelotón rompe filas
 const PUFF_TIME := 0.6
 const FLICKER_SPEED := 38.0
+# Marcha: el pelotón se desliza de casilla en casilla (los de la IA, uno tras otro).
+const MOVE_TIME_BASE := 0.16
+const MOVE_TIME_PER_CELL := 0.09
+const MOVE_TIME_MAX := 0.5
+const MOVE_BOB := 3.0   # vaivén del paso, en píxeles
 
 var battle: BattleManager
 var selected: BattleUnit
@@ -72,12 +77,29 @@ var _last_attack_start := 0.0
 var _fx := []   # {type, start, dur, ...}; el sonido suena al empezar
 var _shake := 0.0
 var _shake_offset := Vector2.ZERO
+# Escala del tablero: se dibuja a CELL_SIZE y se agranda entero (casillas, letras, caras) para llenar el
+# espacio libre de la pantalla (ver fit_to). El ratón y los toques se pasan a coordenadas sin escalar.
+var board_scale := 1.0
+const SCALE_MIN := 0.75
+const SCALE_MAX := 2.0
+
+## Agranda (o encoge) el tablero para que quepa en `avail` (píxeles), sin pasar de SCALE_MIN..SCALE_MAX.
+func fit_to(avail: Vector2) -> void:
+	var base := Vector2(BattleManager.GRID_W, BattleManager.GRID_H) * CELL_SIZE
+	var k := clampf(minf(avail.x / base.x, avail.y / base.y), SCALE_MIN, SCALE_MAX)
+	k = floorf(k * 20.0) / 20.0   # a saltos de 5%: sin temblores al redimensionar
+	if is_equal_approx(k, board_scale) and custom_minimum_size == base * k:
+		return
+	board_scale = k
+	custom_minimum_size = base * k
+	queue_redraw()
 
 func setup(b: BattleManager) -> void:
 	battle = b
 	set_process(false)
 	battle.unit_attacked.connect(play_attack)
 	battle.unit_routed.connect(play_rout)
+	battle.unit_moved.connect(play_move)
 	custom_minimum_size = Vector2(BattleManager.GRID_W * CELL_SIZE, BattleManager.GRID_H * CELL_SIZE)
 	queue_redraw()
 
@@ -131,6 +153,17 @@ func play_attack(attacker: BattleUnit, target: BattleUnit, casualties: int, coun
 		_add_impact(to, casualties, start + LUNGE_TIME * 0.5, "")
 		if counter > 0:
 			_add_impact(from, counter, start + LUNGE_TIME, "")
+
+## Encola la marcha de un pelotón: se ve en su casilla de partida hasta que le toca y luego se desliza.
+## Lo que haga después (atacar) espera a que llegue.
+func play_move(unit: BattleUnit, from: Vector2i, to: Vector2i) -> void:
+	if CombatFx._reduced() or not is_visible_in_tree():
+		return
+	var cells := absi(to.x - from.x) + absi(to.y - from.y)
+	var dur := minf(MOVE_TIME_MAX, MOVE_TIME_BASE + MOVE_TIME_PER_CELL * cells)
+	var start := maxf(_clock, _next_slot)
+	_next_slot = start + dur
+	_add_fx({"type": "move", "start": start, "dur": dur, "unit": unit, "from": from, "to": to})
 
 ## El pelotón deshecho se sigue viendo hasta que le llega su golpe y luego se desvanece.
 func play_rout(unit: BattleUnit, annihilated: bool) -> void:
@@ -194,6 +227,15 @@ func _progress(fx: Dictionary) -> float:
 	return clampf((_clock - fx.start) / fx.dur, 0.0, 1.0)
 
 func _unit_offset(u: BattleUnit) -> Vector2:
+	# Marcha en curso o pendiente: dibujado entre la casilla de partida y la de llegada (u.cell).
+	for fx in _fx:
+		if fx.type == "move" and fx.unit == u:
+			var back := (Vector2(fx.from) - Vector2(fx.to)) * CELL_SIZE
+			if _clock < fx.start:
+				return back
+			var p := _progress(fx)
+			var eased := p * p * (3.0 - 2.0 * p)   # suave al salir y al llegar
+			return back * (1.0 - eased) + Vector2(0, -absf(sin(p * PI * 3.0)) * MOVE_BOB)
 	for fx in _fx:
 		if fx.type == "lunge" and fx.unit == u and _clock >= fx.start:
 			var dir := (Vector2(fx.to) - Vector2(fx.from)).normalized()
@@ -309,7 +351,7 @@ func _draw_conditions() -> void:
 func _draw() -> void:
 	if battle == null or battle.terrain.is_empty():
 		return
-	draw_set_transform(_shake_offset)
+	draw_set_transform(_shake_offset, 0.0, Vector2(board_scale, board_scale))
 
 	for x in range(BattleManager.GRID_W):
 		for y in range(BattleManager.GRID_H):
@@ -441,13 +483,13 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 		return
 	if event is InputEventMouseMotion:
-		var hover := Vector2i(int(event.position.x / CELL_SIZE), int(event.position.y / CELL_SIZE))
+		var hover := Vector2i(int(event.position.x / (CELL_SIZE * board_scale)), int(event.position.y / (CELL_SIZE * board_scale)))
 		if hover != _hover_cell and battle.in_bounds(hover):
 			_hover_cell = hover
 			cell_hovered.emit(hover)
 			queue_redraw()
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var cell := Vector2i(int(event.position.x / CELL_SIZE), int(event.position.y / CELL_SIZE))
+		var cell := Vector2i(int(event.position.x / (CELL_SIZE * board_scale)), int(event.position.y / (CELL_SIZE * board_scale)))
 		if battle.in_bounds(cell):
 			cell_clicked.emit(cell)
 			accept_event()

@@ -221,7 +221,9 @@ func _run() -> void:
 	if not live.is_empty():
 		for t in b.active_units(b._other_side(b.player_side)):
 			if not b.is_over:
-				t.cell = live[0].cell + Vector2i(1, 0) if b.player_side == BattleEnums.Side.ATACANTE else live[0].cell + Vector2i(-1, 0)
+				var near: Vector2i = live[0].cell + (Vector2i(1, 0) if b.player_side == BattleEnums.Side.ATACANTE else Vector2i(-1, 0))
+				near.x = clampi(near.x, 0, b.GRID_W - 1)   # sin salirse del tablero
+				t.cell = near
 	var guard := 0
 	while not b.is_over and guard < 20:
 		scene._on_end_turn_pressed()
@@ -303,6 +305,15 @@ func _run() -> void:
 	# La IA reta a uno de tus jefes: la batalla espera tu respuesta. Rehúsas una vez; luego aceptas y pierdes.
 	for accept in [false, true]:
 		b.is_over = true
+		# La campal anterior pudo terminar (y el ejército quedar ante el castillo o retirarse): vuelve a marchar.
+		var AD_ = root.get_node("ArmyData")
+		if AD_.find_army(march.army_id) == null:
+			AD_.armies.append(march)
+		march.pending_battle = false
+		march.current_castle_id = foe_castle.castle_id
+		march.destination_castle_id = ally_castle.castle_id
+		march.turns_remaining = 2
+		march.size = maxi(march.size, 60)
 		change_scene_to_file(CS.begin_event_fight(fe.options[0].fight, fe.title))
 		await create_timer(0.6).timeout
 		scene = current_scene

@@ -381,11 +381,11 @@ func _command_factor(owner_name: String) -> float:
 		return 1.0
 	return 1.0 + AUTO_MASTERY_PER_LEVEL * (c.mastery(c.best_family()) - 1)
 
-func _auto_resolve_battle(army: Army) -> void:
+func _auto_resolve_battle(army: Army) -> String:
 	var castle: Castle = MapData.get_castle_by_id(army.current_castle_id)
 	if castle == null:
 		disband_army(army)
-		return
+		return ""
 	var defending := is_player_defended(castle)
 	# Las murallas del castillo (ver Castle.wall_bonus) refuerzan la defensa.
 	# El mando de cada general (su mejor familia de tropa) también pesa al resolverse sola.
@@ -401,6 +401,7 @@ func _auto_resolve_battle(army: Army) -> void:
 			defender_name if r.attacker_won else attacker_name)
 	var prefix := "Sin tu mando, la defensa se libra sola: " if defending else ""
 	_add_event(prefix + summary.replace("\n", " "), castle.castle_id)
+	return summary
 
 # --- Resolución de batallas (escena táctica o auto-resolución) ---
 # Devuelve un texto de resumen con las consecuencias en el mapa y para el jugador.
@@ -747,7 +748,7 @@ func volunteer_event(here: Castle) -> Dictionary:
 
 ## Resultado de una batalla campal en el mundo: el ejército y la guarnición que salió pierden sus bajas;
 ## si el ejército pierde, se repliega y no hay asedio; si gana, sigue su marcha. Devuelve el texto.
-func resolve_field_battle(a: Army, castle: Castle, army_won: bool, army_lost: int, sortie_lost: int) -> String:
+func resolve_field_battle(a: Army, castle: Castle, army_won: bool, army_lost: int, sortie_lost: int, assault_now: bool = true) -> String:
 	if a == null or castle == null:
 		return ""
 	var lines: Array[String] = []
@@ -755,9 +756,21 @@ func resolve_field_battle(a: Army, castle: Castle, army_won: bool, army_lost: in
 	a.size = maxi(0, a.size - army_lost)
 	var text: String
 	if army_won and a.size > 0:
-		text = "%s vence en campo abierto y sigue su marcha sobre %s con %d soldados; a la guarnición le quedan %d." % [
+		text = "%s vence en campo abierto y cae sobre %s con %d soldados; a la guarnición le quedan %d." % [
 			a.owner_name, castle.castle_name, a.size, castle.garrison_size]
 		lines.append(text)
+		# Sin esperar a otro turno (ni a otra llamada a filas): el ejército queda ante el castillo y el
+		# asalto viene enseguida; si nadie lo juega (assault_now), se decide ya solo.
+		_add_event("Batalla campal ante %s: %s" % [castle.castle_name, text], castle.castle_id)
+		a.current_castle_id = castle.castle_id
+		a.destination_castle_id = ""
+		a.turns_remaining = 0
+		a.pending_battle = true
+		if assault_now:
+			lines.append(_auto_resolve_battle(a).replace("\n", " "))
+		armies_changed.emit()
+		events_changed.emit()
+		return " ".join(lines)
 	else:
 		text = "La hueste de %s es derrotada ante %s: no habrá asedio." % [a.owner_name, castle.castle_name]
 		lines.append(text)
@@ -766,6 +779,12 @@ func resolve_field_battle(a: Army, castle: Castle, army_won: bool, army_lost: in
 	armies_changed.emit()
 	events_changed.emit()
 	return " ".join(lines)
+
+## El asalto que sigue a una campal ganada, si el jugador no lo juega: se decide solo, ya.
+func assault_now(a: Army) -> String:
+	if a == null or not a.pending_battle or is_player_army(a) or find_army(a.army_id) == null:
+		return ""
+	return _auto_resolve_battle(a)
 
 ## Acceso rápido «Unirte a una batalla»: la llamada a la batalla más cercana a la que puedes sumarte
 ## (un ejército que marcha sobre un castillo junto a ti, o un asedio en curso a tu alcance). {} si no hay.
@@ -822,7 +841,7 @@ func invitation_reward(inviter_name: String, lord_name: String, player_soldiers:
 	var inviter := RelationsData.get_relation(inviter_name)
 	if inviter != null and inviter != lord:
 		inviter.adjust_affection(INVITE_WIN_RELATION)
-	return "%s te recompensa: %d de oro para tu gente, fama +%d y su afecto (+%d)." % [lord_name, gold, INVITE_WIN_FAME, INVITE_WIN_RELATION]
+	return "%s te recompensa: %d de oro para tu gente, fama +%d y afinidad +%d." % [lord_name, gold, INVITE_WIN_FAME, INVITE_WIN_RELATION]
 
 ## Quienes lucharon a tu lado (compañeros, jefes aliados, tu anfitrión) te aprecian más. Devuelve el texto.
 func battle_bonds(allies: Array[Character], won: bool, for_liege: bool) -> String:

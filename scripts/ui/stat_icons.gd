@@ -36,6 +36,20 @@ const COLORS := {
 	"casados": Color("f0c75a"), "neutral": Color("a89a88"), "castillo": Color("e8d9a0"), "batalla": Color("e8826e"), "pt": Color("7fb8e8"),
 }
 const ROLE_COLOR := Color("e8d9a0")
+# Accesorios y monturas: la primera palabra clave del nombre que aparezca elige el icono.
+const ITEM_ICONS := [["Sello", "wax-seal"], ["Mapa", "treasure-map"], ["Capa", "cape"],
+	["Amuleto de la Suerte", "clover"], ["Amuleto", "tribal-pendant"], ["Estandarte", "knight-banner"],
+	["Oriflama", "knight-banner"], ["Anillo", "ring"], ["Cuerno", "hunting-horn"], ["Olifante", "hunting-horn"],
+	["Reliqu", "holy-grail"], ["Relicario", "holy-grail"], ["Libro", "open-book"], ["Manual", "open-book"],
+	["Epitoma", "open-book"], ["Hierbas", "herbs-bundle"], ["Yelmo", "visored-helm"], ["Bastón", "winged-scepter"],
+	["Broche", "gem-pendant"], ["Tablillas", "wax-tablet"], ["Muñequeras", "bracer"], ["Botas", "leather-boot"]]
+const ITEM_ICON_FALLBACK := {"Montura": "horse-head", "Accesorio": "gem-pendant"}
+const ITEM_COLOR := Color("d8c49a")
+# Consumibles (id de ConsumableCatalog) -> icono.
+const CONSUMABLE_ICONS := {"venda": "bandage-roll", "unguento": "medicines", "pan_vino": "bread",
+	"cerveza": "beer-stein", "aceite": "fire-bottle", "piedra": "stone-block", "agua_bendita": "holy-water",
+	"humo": "smoke-bomb", "red": "fishing-net", "tomo_olvido": "evil-book", "hierbas": "herbs-bundle"}
+const CONSUMABLE_COLOR := Color("c8d8a0")
 # Atributo del personaje (propiedad de Character) -> clave del icono.
 const ATTRS := {"combat": "combate", "defense": "defensa", "agility": "agilidad", "strategy": "estrategia",
 	"leadership": "liderazgo", "charisma": "carisma"}
@@ -165,6 +179,8 @@ static func item_badges(parent: Node, e: Equipment, size: int = 16, with_mods: b
 		type_icon.tooltip_text = "Armadura: " + RpgStats.ARMOR_NAMES[ac]
 	elif e.slot == "Escudo":
 		type_icon = SkillIcons.make(SkillIcons.texture(SkillIcons.SHIELD), size, SkillIcons.ARMOR_COLOR, "Escudo")
+	else:
+		type_icon = item_icon(e, size)
 	if type_icon != null:
 		type_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		type_icon.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -241,6 +257,26 @@ static func rich_twin(label: Label) -> RichTextLabel:
 static func set_rich(label: Label, text: String) -> void:
 	label.text = text
 	rich_twin(label).text = richify(text)
+
+## Icono de un accesorio o una montura (por su nombre); null si no lleva.
+static func item_icon(e: Equipment, size: int = 16) -> TextureRect:
+	var name := item_icon_name(e.equipment_name, e.slot)
+	if name.is_empty():
+		return null
+	return SkillIcons.make(SkillIcons.texture(name), size, ITEM_COLOR, e.slot)
+
+static func item_icon_name(item_name: String, slot: String) -> String:
+	for pair: Array in ITEM_ICONS:
+		if item_name.contains(pair[0]):
+			return pair[1]
+	return ITEM_ICON_FALLBACK.get(slot, "")
+
+## Icono de un consumible (por su id).
+static func consumable_texture(id: String) -> Texture2D:
+	return SkillIcons.texture(CONSUMABLE_ICONS.get(id, "help"))
+
+static func consumable_icon(id: String, size: int = 16) -> TextureRect:
+	return SkillIcons.make(consumable_texture(id), size, CONSUMABLE_COLOR, ConsumableCatalog.item_name(id))
 
 ## «[img]» de un icono para RichTextLabel (con su color).
 static func bb(key: String, size: int = 16) -> String:

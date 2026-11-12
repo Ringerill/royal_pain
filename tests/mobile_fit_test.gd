@@ -101,6 +101,20 @@ func _run() -> void:
 	for i in 3:
 		await process_frame
 	check(sc._menu == "main", "el gesto «atrás» vuelve a las órdenes (no cierra el juego: %s)" % (not ProjectSettings.get_setting("application/config/quit_on_go_back", true)))
+	print("[combate: desplazar la lista]")
+	sc._show_techniques()
+	await process_frame
+	var back: Button = sc.cmd_box.get_child(0)
+	var scroll: ScrollContainer = sc.cmd_box.get_parent()
+	check(back.mouse_filter == Control.MOUSE_FILTER_PASS and scroll.scroll_deadzone > 0, "arrastrar sobre los botones desplaza la lista")
+	sc._last_scroll_ms = Time.get_ticks_msec()   # el dedo acaba de desplazar la lista
+	back.pressed.emit()
+	await process_frame
+	check(sc._menu == "tech", "soltar justo tras desplazar no pulsa el botón")
+	await create_timer(0.3).timeout
+	back.pressed.emit()
+	await process_frame
+	check(sc._menu == "main", "un toque normal sí lo pulsa")
 	sc.queue_free()
 	print("FALLAS: %d" % fails if fails else "TODO OK")
 	quit(1 if fails else 0)

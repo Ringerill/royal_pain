@@ -154,6 +154,7 @@ func _ready() -> void:
 	_add_travel_button()
 
 	btn_event_close.pressed.connect(_on_event_close_pressed)
+	_campaign_months()   # de vuelta de una campaña (campal + asedio): pasan sus meses
 	_show_pending_event()
 	if not event_overlay.visible and TravelData.has_pending_encounter():
 		_show_encounter()
@@ -603,6 +604,18 @@ func _on_advance_turn_pressed() -> void:
 	_turn_juice()
 	# Autoguardado mensual (si la partida terminó, se conserva el último guardado previo).
 	if GameManager.is_game_active:
+		SaveSystem.save_game()
+
+## Tras una campaña (campal + asedio) pasan unos meses de golpe.
+func _campaign_months() -> void:
+	var months := GameManager.pending_campaign_months
+	GameManager.pending_campaign_months = 0
+	for i in months:
+		if not GameManager.is_game_active:
+			break
+		GameManager.advance_turn()
+	if months > 0 and GameManager.is_game_active:
+		_turn_juice()
 		SaveSystem.save_game()
 
 func _on_save_game_pressed() -> void:

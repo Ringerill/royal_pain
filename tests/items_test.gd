@@ -43,7 +43,7 @@ func _use(id: String, prep: Callable, verify: Callable, to_enemy := false) -> vo
 func _run() -> void:
 	seed(11)
 	print("[catálogo y tienda]")
-	check(ConsumableCatalog.ITEMS.size() == 10, "10 consumibles")
+	check(ConsumableCatalog.ITEMS.size() == 11, "11 consumibles (con el Tomo del olvido)")
 	check(not "humo" in ConsumableCatalog.shop_items(0) and "humo" in ConsumableCatalog.shop_items(2), "el Mercado desbloquea más objetos")
 	var GM = root.get_node("GameManager")
 	var CL = load("res://scripts/resources/character_loader.gd")

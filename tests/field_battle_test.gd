@@ -67,10 +67,31 @@ func _run() -> void:
 	check(GM.pending_event.is_empty(), "una sola llamada por ejército")
 	check(not AR.volunteer_event(x).is_empty(), "en %s puedes ofrecerte voluntario" % x.castle_name)
 	print("[el resultado cambia el mapa]")
-	x.garrison_size = 100
-	var txt: String = AR.resolve_field_battle(army, x, true, 30, 25)
-	check(AR.find_army(army.army_id) == army and army.size == 90 and army.is_marching() and x.garrison_size == 75,
-		"gana el ejército: sigue su marcha con 90 y la guarnición queda en 75")
+	x.garrison_size = 30
+	var x_kingdom: int = x.kingdom
+	var txt: String = AR.resolve_field_battle(army, x, true, 20, 25)
+	check(AR.find_army(army.army_id) == null and not army.is_marching(), "gana el ejército: no sigue en marcha, el asalto se decide ya")
+	check(x.kingdom == army.kingdom and x.kingdom != x_kingdom, "con la guarnición rota (5), el castillo cae en el acto")
+	# El asedio que sigue, jugado: el ejército espera ante el castillo y el asalto se decide luego.
+	x.kingdom = x_kingdom
+	x.garrison_size = 30
+	army = AR.create_army(e.owner_name, e.kingdom, 120, e.castle_id)
+	army.origin_castle_id = e.castle_id
+	army.destination_castle_id = x.castle_id
+	army.turns_remaining = 2
+	AR.resolve_field_battle(army, x, true, 20, 25, false)
+	check(AR.find_army(army.army_id) == army and army.pending_battle and army.current_castle_id == x.castle_id and not army.is_marching(),
+		"sin asalto inmediato: el ejército queda ante el castillo, listo para el asedio")
+	check(x.kingdom == x_kingdom, "el castillo aún no ha caído")
+	AR.assault_now(army)
+	check(AR.find_army(army.army_id) == null and x.kingdom == army.kingdom, "si no juegas el asedio, se decide al momento")
+	# Otro ejército, para probar la derrota.
+	x.kingdom = x_kingdom
+	x.garrison_size = 75
+	army = AR.create_army(e.owner_name, e.kingdom, 90, e.castle_id)
+	army.origin_castle_id = e.castle_id
+	army.destination_castle_id = x.castle_id
+	army.turns_remaining = 2
 	var e_garrison: int = e.garrison_size
 	var txt2: String = AR.resolve_field_battle(army, x, false, 50, 10)
 	check(AR.find_army(army.army_id) == null and e.garrison_size == e_garrison + 40 and x.garrison_size == 65,

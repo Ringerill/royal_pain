@@ -53,6 +53,7 @@ func _ready() -> void:
 	fs.text = "Pantalla completa"
 	fs.button_pressed = Settings.fullscreen
 	fs.toggled.connect(Settings.set_fullscreen)
+	fs.visible = not OS.has_feature("mobile")   # en el móvil siempre lo es
 	box.add_child(fs)
 
 	var shake_row := HBoxContainer.new()
@@ -96,6 +97,21 @@ func _ready() -> void:
 	diff.item_selected.connect(Settings.set_ai_difficulty)
 	diff_row.add_child(diff)
 	box.add_child(diff_row)
+
+	var view_row := HBoxContainer.new()
+	var view_label := Label.new()
+	view_label.text = "Vista de combate"
+	view_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	view_row.add_child(view_label)
+	var view := OptionButton.new()
+	for i in Settings.COMBAT_VIEW_NAMES.size():
+		view.add_item(Settings.COMBAT_VIEW_NAMES[i], i)
+		view.set_item_tooltip(i, Settings.COMBAT_VIEW_TIPS[i])
+	view.select(Settings.combat_view)
+	view.tooltip_text = "Cómo se colocan los combatientes en duelos y choques de grupo (se aplica al momento)."
+	view.item_selected.connect(Settings.set_combat_view)
+	view_row.add_child(view)
+	box.add_child(view_row)
 
 	var close := Button.new()
 	close.text = "Cerrar"

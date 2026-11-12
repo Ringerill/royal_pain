@@ -243,7 +243,7 @@ func _rebuild_consumables(player: Character) -> void:
 			reason = "Llevas el máximo."
 		elif player.gold < price:
 			reason = "No te llega el oro."
-		var btn := _item_row(_stock_list, ConsumableCatalog.item_name(id), str(ConsumableCatalog.item(id).desc), "Comprar (%d)" % price, reason)
+		var btn := _item_row(_stock_list, ConsumableCatalog.item_name(id), str(ConsumableCatalog.item(id).desc), "Comprar (%d)" % price, reason, id)
 		btn.pressed.connect(buy_consumable.bind(id))
 		if _first_button == null and not btn.disabled:
 			_first_button = btn
@@ -253,9 +253,15 @@ func _rebuild_consumables(player: Character) -> void:
 		empty.text = "La bolsa está vacía."
 		_owned_list.add_child(empty)
 	for id in player.consumables:
+		var line := HBoxContainer.new()
+		line.add_theme_constant_override("separation", 6)
+		var ic := StatIcons.consumable_icon(id, 18)
+		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		line.add_child(ic)
 		var lbl := Label.new()
 		lbl.text = "%s ×%d" % [ConsumableCatalog.item_name(id), ConsumableCatalog.count(player.consumables, id)]
-		_owned_list.add_child(lbl)
+		line.add_child(lbl)
+		_owned_list.add_child(line)
 
 ## Compra un consumible (también la usan las pruebas). Devuelve si se compró.
 func buy_consumable(id: String) -> bool:
@@ -269,7 +275,7 @@ func buy_consumable(id: String) -> bool:
 	_rebuild()
 	return true
 
-func _item_row(list: VBoxContainer, title: String, desc: String, action: String, disabled_reason: String) -> Button:
+func _item_row(list: VBoxContainer, title: String, desc: String, action: String, disabled_reason: String, consumable_id: String = "") -> Button:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardPanel"
 	list.add_child(card)
@@ -279,10 +285,17 @@ func _item_row(list: VBoxContainer, title: String, desc: String, action: String,
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(text)
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 6)
+	text.add_child(name_row)
+	if not consumable_id.is_empty():
+		var ic := StatIcons.consumable_icon(consumable_id, 18)
+		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		name_row.add_child(ic)
 	var name_label := Label.new()
 	name_label.theme_type_variation = &"BodyBoldLabel"
 	name_label.text = title
-	text.add_child(name_label)
+	name_row.add_child(name_label)
 	var detail := Label.new()
 	detail.theme_type_variation = &"MutedLabel"
 	detail.add_theme_font_size_override("font_size", 14)

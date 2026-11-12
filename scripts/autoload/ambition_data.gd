@@ -31,7 +31,8 @@ const REVENGE_GRUDGE := 40              # rencor desde el que alguien quiere ven
 const LOVE_PROPOSAL_AFFECTION := 45
 const RISE_MIN_AFFECTION := 30
 const RIVAL_ALLY_MIN := 30              # intimidad o afinidad para pedirte ayuda contra un rival
-const SHAME_HONOR_DROP := 8             # bajada de honor en un mes que deja un secreto
+const SHAME_HONOR_DROP := 8             # bajada de honor en un mes que deja un secreto…
+const SHAME_MAX_HONOR := 10             # …solo si con ello tu fama ya es mala (honor bajo): con buen nombre, nadie te cree capaz
 const SECRET_MONTHS := 24               # meses que un secreto sirve para chantajear
 const USURP_BASE_CHANCE := 0.35
 const USURP_STRATEGY_STEP := 0.02
@@ -259,7 +260,7 @@ func has_secret() -> bool:
 
 func _note_shame(now: int) -> void:
 	var player: Character = GameManager.player_character
-	if last_honor != -999 and last_honor - player.honor >= SHAME_HONOR_DROP:
+	if last_honor != -999 and last_honor - player.honor >= SHAME_HONOR_DROP and player.honor <= SHAME_MAX_HONOR:
 		secrets.append({"month": now, "text": "tus bajezas"})
 	last_honor = player.honor
 	secrets = secrets.filter(func(s: Dictionary) -> bool: return now - int(s.month) <= SECRET_MONTHS)
@@ -577,8 +578,8 @@ func _apply_act(r: Relationship, a: Dictionary, act: String) -> String:
 			if act == "donate":
 				_build_chapel(r)
 		"chantaje":
-			if act == "pay":
-				secrets.clear()
+			# Pagues, lo cuente o le hagas callar, ese secreto ya no sirve para otro chantaje.
+			secrets.clear()
 	if act == "denounce" or (act == "warn" and a.id != "rivalidad"):
 		return AmbitionCatalog.line("plot_denounced", r.character, player, {"player": player.full_name()})
 	return ""

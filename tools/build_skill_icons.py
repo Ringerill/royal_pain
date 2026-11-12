@@ -24,6 +24,11 @@ for const in ("SHIELD", "UNKNOWN", "DAMAGE_GENERIC"):
 stat = open(os.path.join(ROOT, "scripts", "ui", "stat_icons.gd"), encoding="utf-8").read()
 m = re.search(r"const ICONS := \{(.*?)\n\}", stat, re.S)
 needed.update(re.findall(r'": "([a-z0-9-]+)"', m.group(1)))
+# Accesorios, monturas y consumibles: los iconos (valores) de ITEM_ICONS, ITEM_ICON_FALLBACK y CONSUMABLE_ICONS.
+for const in ("ITEM_ICONS", "ITEM_ICON_FALLBACK", "CONSUMABLE_ICONS"):
+    m = re.search(r"const %s := (.*?)\nconst " % const, stat, re.S)
+    needed.update(re.findall(r'": "([a-z0-9-]+)"', m.group(1)))     # {"clave": "icono"}
+    needed.update(re.findall(r'", "([a-z0-9-]+)"\]', m.group(1)))   # [["Nombre", "icono"]]
 needed.add("help")
 needed = sorted(needed)
 

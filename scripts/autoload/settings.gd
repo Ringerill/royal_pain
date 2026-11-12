@@ -38,6 +38,13 @@ var reduced_effects := false
 var auto_resolve_others := true   # campales: los choques donde no estás tú ni tu grupo se resuelven solos
 const DIFFICULTY_NAMES := ["Fácil", "Normal", "Difícil"]
 var ai_difficulty := 1            # campales: lo bien que juega la IA enemiga
+# Pantalla de combate (duelos y choques de grupo): cómo se colocan los combatientes.
+const COMBAT_VIEW_NAMES := ["Escenario", "Clásica", "Enfocada", "Primera persona"]
+const COMBAT_VIEW_TIPS := ["Tu grupo a la izquierda y los enemigos a la derecha, de cuerpo entero.",
+	"Enemigos arriba en tarjetas y tu grupo abajo, junto al menú.",
+	"Quien actúa y su objetivo se ven en grande; el resto, pequeño.",
+	"Todos los enemigos en grande; de tu grupo solo se ve el retrato de quien tiene el turno o es objetivo."]
+var combat_view := 0
 
 func _ready() -> void:
 	_register_input_actions()
@@ -51,6 +58,7 @@ func _ready() -> void:
 		reduced_effects = bool(cfg.get_value("video", "reduced_effects", false))
 		auto_resolve_others = bool(cfg.get_value("game", "auto_resolve_others", true))
 		ai_difficulty = clampi(int(cfg.get_value("game", "ai_difficulty", 1)), 0, DIFFICULTY_NAMES.size() - 1)
+		combat_view = clampi(int(cfg.get_value("video", "combat_view", 0)), 0, COMBAT_VIEW_NAMES.size() - 1)
 	for bus in BUSES:
 		_apply_volume(bus)
 	_apply_fullscreen()
@@ -95,6 +103,10 @@ func set_ai_difficulty(level: int) -> void:
 	ai_difficulty = clampi(level, 0, DIFFICULTY_NAMES.size() - 1)
 	changed.emit()
 
+func set_combat_view(view: int) -> void:
+	combat_view = clampi(view, 0, COMBAT_VIEW_NAMES.size() - 1)
+	changed.emit()
+
 func set_reduced_effects(on: bool) -> void:
 	reduced_effects = on
 	changed.emit()
@@ -112,6 +124,7 @@ func save() -> void:
 	cfg.set_value("video", "reduced_effects", reduced_effects)
 	cfg.set_value("game", "auto_resolve_others", auto_resolve_others)
 	cfg.set_value("game", "ai_difficulty", ai_difficulty)
+	cfg.set_value("video", "combat_view", combat_view)
 	DirAccess.make_dir_recursive_absolute(settings_path.get_base_dir())
 	cfg.save(settings_path)
 
@@ -127,5 +140,8 @@ func _apply_volume(bus: String) -> void:
 
 func _apply_fullscreen() -> void:
 	if DisplayServer.get_name() == "headless":
+		return
+	if OS.has_feature("mobile"):   # en el móvil siempre a pantalla completa (sin barras del sistema)
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 		return
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)

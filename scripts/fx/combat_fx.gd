@@ -61,8 +61,10 @@ static func floating_text(host: Control, at: Vector2, text: String, color: Color
 	tw.parallel().tween_property(label, "modulate:a", 0.0, 0.45).set_delay(0.5)
 	tw.tween_callback(label.queue_free)
 
+const DAMAGE_FLASH := Color(1.8, 0.5, 0.5)
+
 ## Destello de color sobre un nodo (por ejemplo, rojo al recibir daño).
-static func flash(node: CanvasItem, color: Color = Color(1.8, 0.5, 0.5), duration: float = 0.3) -> void:
+static func flash(node: CanvasItem, color: Color = DAMAGE_FLASH, duration: float = 0.3) -> void:
 	if _reduced():
 		color = Color.WHITE.lerp(color, 0.35)
 	node.modulate = color
@@ -166,13 +168,13 @@ static func lunge(node: Control, direction: Vector2, distance: float = 22.0) -> 
 	tw.tween_property(node, "position", origin, LUNGE_TIME * 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_callback(func(): node.remove_meta("_lunge_origin"))
 
-## Aplastamiento al encajar un golpe (squash & stretch), sin mover el diseño.
+## Aplastamiento al encajar un golpe, sin mover el diseño: se encoge (nunca crece más que su marco).
 static func squash(node: Control, strength: float = 0.12) -> void:
 	if not is_instance_valid(node):
 		return
 	node.pivot_offset = Vector2(node.size.x / 2, node.size.y)
 	var tw := node.create_tween()
-	tw.tween_property(node, "scale", Vector2(1.0 + strength, 1.0 - strength), 0.06)
+	tw.tween_property(node, "scale", Vector2(1.0 - strength * 0.4, 1.0 - strength), 0.06)
 	tw.tween_property(node, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 ## Cartel grande en el centro de `host` que aparece con un golpe y se desvanece.

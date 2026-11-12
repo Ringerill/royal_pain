@@ -45,6 +45,7 @@ var player_defending := false   # true si el jugador defiende su castillo de un 
 
 var skirmish: Dictionary = {}   # escaramuza de un evento (sin ejército ni castillo de por medio)
 var invited: Dictionary = {}    # batalla ajena: alguien te llamó a filas (ver CombatSetup.invited)
+var _siege_next: Dictionary = {}   # tras ganar el ejército la campal: el asedio que viene (ver _offer_siege)
 var field_army: Army = null     # batalla campal: el ejército en marcha al que se sale al paso
 const CHALLENGE_KEY := KEY_D
 const COMBAT_SCENE := "res://scenes/rpg_battle/rpg_battle.tscn"
@@ -618,8 +619,9 @@ func _build_command_card() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	card.add_child(box)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	var row := HFlowContainer.new()   # en el panel lateral: las órdenes saltan de línea si no caben
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 6)
 	box.add_child(row)
 	for spec in [[BattleEnums.Order.MANTENER, "Mantener [H]", "Mantener posición: el pelotón no se mueve, pero recibe un 23% menos de bajas. Dura hasta que la quites."],
 			[BattleEnums.Order.CARGAR, "Cargar [C]", "Cargar: su primer golpe cuerpo a cuerpo hace +30%, pero se cansa un 50% más. No vale para arqueros."],
@@ -634,7 +636,7 @@ func _build_command_card() -> void:
 		b.pressed.connect(func(): _give_order(order))
 		row.add_child(b)
 		_order_buttons[order] = b
-	# Retar y traicionar van en la misma fila que las órdenes: la tarjeta cabe bajo el tablero.
+	# Retar y traicionar van con las órdenes.
 	var row2 := row
 	_challenge_btn = Button.new()
 	_challenge_btn.text = "Retar [D]"
@@ -649,19 +651,45 @@ func _build_command_card() -> void:
 	_compact(_betray_btn)
 	_betray_btn.pressed.connect(_on_betray_pressed)
 	row2.add_child(_betray_btn)
+	for b: Button in row.get_children():
+		b.clip_text = false   # en el flujo, una orden que no cabe pasa a la línea siguiente (no se recorta)
 	_command_box = box
 	_build_abilities(box)
-	# Va bajo el tablero (en el panel lateral no cabe): el marco del tablero pasa a una columna.
-	var board_frame := board.get_parent().get_parent() as Control
-	var main := board_frame.get_parent()
-	var column := VBoxContainer.new()
-	column.size_flags_horizontal = board_frame.size_flags_horizontal
-	column.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main.add_child(column)
-	main.move_child(column, board_frame.get_index())
-	board_frame.reparent(column)
-	board_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(card)
+	# Va en la tarjeta «Órdenes» del panel lateral: así el tablero usa toda la altura de la pantalla.
+	card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	unit_info_label.custom_minimum_size.y = 0
+	unit_info_label.get_parent().add_child(card)
+	get_viewport().size_changed.connect(_fit_board, CONNECT_DEFERRED)
+	_fit_board.call_deferred()
+
+## El tablero ocupa todo lo que deja libre el panel lateral (más grande en pantallas anchas, como el móvil).
+const SIDE_PANEL_MIN := 340.0
+const BOARD_FRAME_PAD := 6.0   # holgura
+
+func _fit_board() -> void:
+	var frame := board.get_parent().get_parent() as Control
+	var main := frame.get_parent() as Control
+	var sep := float(main.get_theme_constant("separation"))
+	# Se mide contra la pantalla (no contra los contenedores, que crecen con el propio tablero).
+	var margin := $ScreenMargin as MarginContainer
+	var view := get_viewport_rect().size
+	if view.x <= 0.0 or view.y <= 0.0:
+		return
+	var root_box := main.get_parent() as Control
+	var top_bar := root_box.get_child(0) as Control
+	var top_left := Vector2(float(margin.get_theme_constant("margin_left")), float(margin.get_theme_constant("margin_top"))
+		+ top_bar.get_combined_minimum_size().y + float(root_box.get_theme_constant("separation")))
+	var right := float(margin.get_theme_constant("margin_right"))
+	var bottom := float(margin.get_theme_constant("margin_bottom"))
+	# Lo que añade el marco alrededor del tablero (sus márgenes), medido.
+	var pad := frame.get_combined_minimum_size() - board.custom_minimum_size + Vector2(BOARD_FRAME_PAD, BOARD_FRAME_PAD)
+	var side_w := SIDE_PANEL_MIN
+	for ch: Control in main.get_children():
+		if ch != frame and ch.visible:
+			side_w = maxf(side_w, ch.get_combined_minimum_size().x)
+	var avail := Vector2(view.x - top_left.x - right - side_w - sep - pad.x,
+		view.y - top_left.y - bottom - pad.y)
+	board.fit_to(avail)
 
 func _rebuild_abilities() -> void:
 	if _command_box == null:
@@ -1062,7 +1090,7 @@ func _on_battle_ended(winner_side: int, report: Dictionary) -> void:
 
 	result_title.text = "¡Victoria!" if player_won else "Derrota"
 	result_title.add_theme_color_override("font_color", Color("f0d48a") if player_won else Color("c9584c"))
-	result_label.text = "%s\n\nAtacantes: %d → %d\nDefensores: %d → %d\nTurnos: %d\n\n%s" % [
+	result_label.text = "%s\n\nAtacantes: %d → %d soldados\nDefensores: %d → %d soldados\nTurnos: %d\n\n%s" % [
 		report.reason,
 		report.attacker_initial, report.attacker_survivors,
 		report.defender_initial, report.defender_survivors,
@@ -1081,6 +1109,7 @@ func _on_battle_ended(winner_side: int, report: Dictionary) -> void:
 	await get_tree().create_timer(board.fx_remaining() + 0.3).timeout
 	Music.stop(0.8)
 	Sfx.play("victory" if player_won else "defeat", 0.0, 0.0)
+	StatIcons.set_rich(result_label, result_label.text)   # oro, fama, soldados… con su icono
 	result_overlay.visible = true
 	btn_back_to_map.grab_focus.call_deferred()
 	UiAnim.fade_in(result_panel, 0.3)
@@ -1098,7 +1127,7 @@ func _end_skirmish(player_won: bool, report: Dictionary, winner_side: int) -> vo
 		outcome += "\n\n" + social
 	result_title.text = "¡Victoria!" if player_won else "Derrota"
 	result_title.add_theme_color_override("font_color", Color("f0d48a") if player_won else Color("c9584c"))
-	result_label.text = "%s\n\nTus hombres: %d → %d (bajas en tu guarnición: %d)\nEnemigos: %d → %d\nTurnos: %d\n\n%s" % [
+	result_label.text = "%s\n\nTus hombres: %d → %d soldados (bajas en tu guarnición: %d)\nEnemigos: %d → %d soldados\nTurnos: %d\n\n%s" % [
 		report.reason, report.attacker_initial, report.attacker_survivors, losses,
 		report.defender_initial, report.defender_survivors, report.turns, outcome]
 	var aftermath := _aftermath(player_won, true)
@@ -1114,6 +1143,7 @@ func _end_skirmish(player_won: bool, report: Dictionary, winner_side: int) -> vo
 	await get_tree().create_timer(board.fx_remaining() + 0.3).timeout
 	Music.stop(0.8)
 	Sfx.play("victory" if player_won else "defeat", 0.0, 0.0)
+	StatIcons.set_rich(result_label, result_label.text)   # oro, fama, soldados… con su icono
 	result_overlay.visible = true
 	btn_back_to_map.grab_focus.call_deferred()
 	UiAnim.fade_in(result_panel, 0.3)
@@ -1136,19 +1166,29 @@ func _end_invited(winner_side: int, report: Dictionary) -> void:
 		var ally_lost: int = maxi(0, int(invited.get("ally_soldiers", 0)) - int(report.attacker_ai_survivors))
 		var enemy_lost: int = maxi(0, int(invited.get("enemy_soldiers", 0)) - int(report.defender_ai_survivors))
 		var allies_won: bool = winner_side == BattleEnums.Side.ATACANTE   # tu bando ocupa el lugar del atacante
-		lines.append(ArmyData.resolve_field_battle(field_army, castle, allies_won == with_army,
-			ally_lost if with_army else enemy_lost, enemy_lost if with_army else ally_lost))
+		var army_won: bool = allies_won == with_army
+		lines.append(ArmyData.resolve_field_battle(field_army, castle, army_won,
+			ally_lost if with_army else enemy_lost, enemy_lost if with_army else ally_lost, betrayed))
+		if army_won and not betrayed and field_army != null and field_army.pending_battle:
+			_siege_next = {"type": "invited", "kind": "army", "army_id": field_army.army_id, "side": int(invited.get("side", BattleEnums.Side.DEFENSOR)),
+				"lord": invited.get("lord", ""), "inviter": invited.get("inviter", ""), "castle_id": castle.castle_id, "campaign": true}
+			lines.append("El asedio empieza ya: puedes seguir con %s o volver al mapa (entonces se decide sin ti)." % str(invited.get("lord", "")))
 	if not betrayed:
 		lines.append(ArmyData.invitation_reward(str(invited.get("inviter", "")), str(invited.get("lord", "")),
 			int(report.get("own_initial", 0)), player_won))
 	var lord_is_liege: bool = str(invited.get("lord", "")) == RelationsData.liege_name
 	lines.append(_social_aftermath(player_won, lord_is_liege and not betrayed))
+	if invited.get("campaign", false):   # campal + asedio: la campaña se lleva unos meses
+		GameManager.pending_campaign_months = GameManager.CAMPAIGN_MONTHS
+		lines.append("La campaña se ha llevado %d meses." % GameManager.CAMPAIGN_MONTHS)
 	CombatSetup.invited = {}
+	if not _siege_next.is_empty():
+		_offer_siege()
 	if not GameManager.is_game_active:
 		btn_back_to_map.text = "Volver al Menú"
 	result_title.text = "¡Victoria!" if player_won else "Derrota"
 	result_title.add_theme_color_override("font_color", Color("f0d48a") if player_won else Color("c9584c"))
-	result_label.text = "%s\n\nTu gente: %d → %d\nAtacantes: %d → %d · Defensores: %d → %d\nTurnos: %d\n\n%s" % [
+	result_label.text = "%s\n\nTu gente: %d → %d soldados\nAtacantes: %d → %d · Defensores: %d → %d soldados\nTurnos: %d\n\n%s" % [
 		report.reason, report.own_initial, report.own_survivors,
 		report.attacker_initial, report.attacker_survivors, report.defender_initial, report.defender_survivors,
 		report.turns, "\n".join(lines.filter(func(l: String) -> bool: return not l.is_empty()))]
@@ -1165,6 +1205,7 @@ func _end_invited(winner_side: int, report: Dictionary) -> void:
 	await get_tree().create_timer(board.fx_remaining() + 0.3).timeout
 	Music.stop(0.8)
 	Sfx.play("victory" if player_won else "defeat", 0.0, 0.0)
+	StatIcons.set_rich(result_label, result_label.text)   # oro, fama, soldados… con su icono
 	result_overlay.visible = true
 	btn_back_to_map.grab_focus.call_deferred()
 	UiAnim.fade_in(result_panel, 0.3)
@@ -1402,7 +1443,28 @@ func _xp_line(c: Character, amount: int, is_player: bool) -> String:
 	var who := "" if is_player else c.first_name + ": "
 	return "%sExperiencia +%d.%s" % [who, amount, " ¡Sube a nivel %d!" % c.level if levels > 0 else ""]
 
+## Botón «Continuar al asedio» junto a «Volver al mapa».
+func _offer_siege() -> void:
+	var b := Button.new()
+	b.text = "Continuar al asedio"
+	b.size_flags_horizontal = btn_back_to_map.size_flags_horizontal
+	b.custom_minimum_size = btn_back_to_map.custom_minimum_size
+	b.pressed.connect(_continue_to_siege)
+	btn_back_to_map.get_parent().add_child(b)
+	btn_back_to_map.get_parent().move_child(b, btn_back_to_map.get_index())
+	btn_back_to_map.focus_neighbor_top = b.get_path()
+	(func(): b.grab_focus()).call_deferred()
+
+func _continue_to_siege() -> void:
+	var fight := _siege_next
+	_siege_next = {}
+	var scene := CombatSetup.begin_invited_battle(fight, "Asedio")
+	get_tree().change_scene_to_file(scene)
+
 func _on_back_to_map_pressed() -> void:
+	if not _siege_next.is_empty():   # no sigues: el asalto se decide sin ti, ya
+		ArmyData.assault_now(ArmyData.find_army(str(_siege_next.army_id)))
+		_siege_next = {}
 	if not GameManager.is_game_active:
 		GameManager.change_state(GameStateEnums.State.MENU)
 		get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn")

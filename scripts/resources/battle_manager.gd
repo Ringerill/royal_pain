@@ -7,6 +7,7 @@ signal battle_ended(winner_side: int, report: Dictionary)
 # Eventos puntuales para animaciones y sonido (no cambian la simulación).
 signal unit_attacked(attacker: BattleUnit, target: BattleUnit, casualties: int, counter: int, ranged: bool)
 signal unit_routed(unit: BattleUnit, annihilated: bool)
+signal unit_moved(unit: BattleUnit, from: Vector2i, to: Vector2i)   # para animar la marcha en el tablero
 signal ability_used(user: Character, ability_id: String, side: int)
 # La IA reta a duelo singular al jefe de uno de tus pelotones: la batalla espera tu respuesta (answer_challenge).
 signal challenge_offered(challenger: BattleUnit, target: BattleUnit)
@@ -801,7 +802,9 @@ func move_unit(u: BattleUnit, cell: Vector2i) -> bool:
 		return false
 	u.last_move_distance = distance(u.cell, cell)
 	_face(u, cell)
+	var from := u.cell
 	u.cell = cell
+	unit_moved.emit(u, from, cell)
 	u.has_moved = true
 	u.fatigue = mini(100, u.fatigue + _fatigue_gain(u, 8 if BattleEnums.is_cavalry(u.type) else 5))
 	state_updated.emit()
@@ -925,7 +928,10 @@ func withdraw(u: BattleUnit) -> bool:
 		if score > best_score:
 			best_score = score
 			best = cell
+	var from := u.cell
 	u.cell = best
+	if best != from:
+		unit_moved.emit(u, from, best)
 	u.last_move_distance = 0
 	u.has_moved = true
 	u.has_acted = true

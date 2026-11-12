@@ -16,6 +16,7 @@ extends Control
 @onready var forces_bar: ProgressBar = %ForcesBar
 @onready var result_panel: PanelContainer = %ResultPanel
 @onready var companions_label: Label = %CompanionsLabel
+var _log_overlay: Control   # la crónica: oculta tras un botón (ver _setup_log_button)
 
 const MAX_LOG_LINES := LogView.MAX_LINES
 const LOG_HEIGHT := 150.0  # el registro de batalla tiene alto fijo y se desplaza
@@ -80,6 +81,7 @@ var _go_btn: Button
 
 func _ready() -> void:
 	LogView.wrap(log_label, LOG_HEIGHT)
+	_setup_log_button.call_deferred()
 	skirmish = CombatSetup.skirmish
 	invited = CombatSetup.invited
 	army = ArmyData.active_battle_army
@@ -1012,7 +1014,37 @@ func _refresh() -> void:
 	_refresh_commands()
 
 # Cara y nombre de quien dirige el pelotón elegido (al pulsar la cara se ve su retrato completo).
-var _leader_row: HBoxContainer
+var _leader_row: VBoxContainer
+
+## La crónica no ocupa el panel: un botón «Crónica» la abre encima y tocar fuera la cierra.
+func _setup_log_button() -> void:
+	var card := $ScreenMargin/RootVBox/MainHBox/SidePanel/LogCard as Control
+	_log_overlay = Control.new()
+	_log_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_log_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_log_overlay.z_index = 30
+	_log_overlay.visible = false
+	add_child(_log_overlay)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.45)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_log_overlay.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_log_overlay.add_child(center)
+	card.reparent(center, false)
+	card.custom_minimum_size = Vector2(620, 0)
+	_log_overlay.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and e.pressed:
+			_log_overlay.visible = false)
+	var btn := Button.new()
+	btn.text = "Crónica"
+	btn.tooltip_text = "Lo que ha pasado en la batalla."
+	btn.pressed.connect(func(): _log_overlay.visible = not _log_overlay.visible)
+	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	turn_label.get_parent().add_child(btn)   # en la barra superior, junto al turno (abajo no cabe)
 
 func _show_leader(unit: BattleUnit) -> void:
 	if _leader_row != null:
@@ -1021,11 +1053,14 @@ func _show_leader(unit: BattleUnit) -> void:
 	var leader: Character = unit.leader() if unit != null else null
 	if leader == null:
 		return
-	_leader_row = HBoxContainer.new()
-	_leader_row.add_theme_constant_override("separation", 10)
+	_leader_row = VBoxContainer.new()   # jefe (y su tropa) arriba; sus oficiales debajo
+	_leader_row.add_theme_constant_override("separation", 4)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 10)
+	_leader_row.add_child(head)
 	var mine := battle.is_player_unit(unit)
 	var frame := BattleBoard.COMPANION_BADGE_COLOR if unit.companion != null else board.unit_color(unit)
-	_leader_row.add_child(FaceIcon.make(leader, 52, frame))
+	head.add_child(FaceIcon.make(leader, 52, frame))
 	var who := Label.new()
 	who.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1033,7 +1068,31 @@ func _show_leader(unit: BattleUnit) -> void:
 	var post := "Compañero al mando" if unit.companion != null else "Tú" if leader == GameManager.player_character \
 		else "Comandante" if leader == battle.attacker_cmd or leader == battle.defender_cmd else "Capitán"
 	who.text = "%s\n%s · %s" % [leader.full_name(), post, "tu bando" if mine else "aliado" if battle.is_friendly(unit) else "enemigo"]
-	_leader_row.add_child(who)
+	head.add_child(who)
+	# Su tropa: el icono del tipo y, al lado, los oficiales con nombre que van con él.
+	var type_icon := SkillIcons.make(SkillIcons.texture(BattleEnums.unit_type_icon(unit.type)), 30, Color.WHITE,
+		"%s · %d soldados" % [BattleEnums.unit_type_name(unit.type), unit.soldiers])
+	type_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(type_icon)
+	head.move_child(type_icon, 0)
+	var officers: Array = unit.officers.filter(func(o): return o != null and o != leader)
+	if not officers.is_empty():
+		var off_box := HBoxContainer.new()
+		off_box.add_theme_constant_override("separation", 6)
+		var off_label := Label.new()
+		off_label.text = "Oficiales:"
+		off_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		off_label.theme_type_variation = &"MutedLabel"
+		off_label.add_theme_font_size_override("font_size", 12)
+		off_box.add_child(off_label)
+		var faces := HBoxContainer.new()
+		faces.add_theme_constant_override("separation", 4)
+		for o: Character in officers:
+			var fi := FaceIcon.make(o, 30, board.unit_color(unit))
+			fi.tooltip_text = o.full_name()
+			faces.add_child(fi)
+		off_box.add_child(faces)
+		_leader_row.add_child(off_box)
 	unit_info_label.get_parent().add_child(_leader_row)
 	unit_info_label.get_parent().move_child(_leader_row, unit_info_label.get_index())
 

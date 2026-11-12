@@ -100,6 +100,13 @@ static func unit_type_trait(t: int) -> String:
 	return ""
 
 ## Letra de la familia (los avanzados se distinguen en el tablero con una estrella).
+## Icono de cada familia de tropa (game-icons, en assets/icons/game-icons/).
+const FAMILY_ICONS := {Family.INFANTERIA: "broadsword", Family.ARQUERIA: "high-shot",
+	Family.CABALLERIA: "horse-head", Family.PIQUEROS: "barbed-spear"}
+
+static func unit_type_icon(t: int) -> String:
+	return FAMILY_ICONS.get(family_of(t), "broadsword")
+
 static func unit_type_letter(t: int) -> String:
 	match family_of(t):
 		Family.INFANTERIA: return "I"

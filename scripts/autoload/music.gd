@@ -11,18 +11,18 @@ const SILENT_DB := -60.0
 
 # Pista y ambiente de cada escena. Las escenas que no aparecen conservan lo que suena.
 const SCENE_MUSIC := {
-	"main_menu": ["menu", ""],
-	"new_game": ["menu", ""],
-	"character_creation": ["menu", ""],
-	"character_summary": ["menu", ""],
-	"save_slots": ["menu", ""],
-	"fighter_select": ["menu", ""],
-	"map": ["map", "amb_wind"],
-	"relations": ["map", "amb_wind"],
-	"castle_interior": ["castle", "amb_fire"],
-	"combat": ["duel", ""],
-	"rpg_battle": ["duel", ""],
-	"battle": ["battle", "amb_wind"],
+	"main_menu": ["mk_teller", ""],
+	"new_game": ["mk_teller", ""],
+	"character_creation": ["mk_teller", ""],
+	"character_summary": ["mk_teller", ""],
+	"save_slots": ["mk_teller", ""],
+	"fighter_select": ["mk_teller", ""],
+	"map": ["mk_achaidh", "amb_wind"],
+	"relations": ["mk_achaidh", "amb_wind"],
+	"castle_interior": ["mk_feast", "amb_fire"],
+	"combat": ["mk_clash", ""],
+	"rpg_battle": ["mk_clash", ""],
+	"battle": ["mk_five_armies", "amb_wind"],
 }
 
 var current_track := ""
@@ -36,6 +36,8 @@ var _intensity_tween: Tween
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	MusicCatalog.original = not Settings.recorded_audio()
+	Settings.audio_style_changed.connect(_on_audio_style_changed)
 	get_tree().scene_changed.connect(_on_scene_changed)
 	_on_scene_changed.call_deferred()
 
@@ -110,6 +112,14 @@ func play_context(context: String, culture: int = -1) -> void:
 	_last_by_context[context] = track
 	play(track, "")
 	_restart_rotation(context)
+
+## Cambió el estilo de sonido: otra pieza del mismo contexto, del otro juego de pistas.
+func _on_audio_style_changed() -> void:
+	MusicCatalog.original = not Settings.recorded_audio()
+	_context_key = ""
+	current_track = ""
+	_last_by_context.clear()
+	_on_scene_changed()
 
 ## Vuelve a decidir la música de la escena actual (al viajar, al caer preso, al quedar libre…).
 func refresh_context() -> void:

@@ -25,6 +25,10 @@ var _was_captive := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	Settings.audio_style_changed.connect(func():
+		var amb := current
+		current = "~"   # fuerza el cambio aunque sea el mismo ambiente
+		play(amb))
 	get_tree().scene_changed.connect(_on_scene_changed)
 	_on_scene_changed.call_deferred()
 	GameManager.turn_advanced.connect(_on_turn_advanced)
@@ -54,6 +58,9 @@ func play(amb: String) -> void:
 		tw.tween_callback(old.queue_free)
 		_player = null
 	var path := AMB_DIR + amb + ".ogg"
+	# Estilo grabado: rec_<ambiente> (OpenGameArt, CC0; ver assets/music/CREDITOS.txt), si lo hay.
+	if not amb.is_empty() and Settings.recorded_audio() and ResourceLoader.exists(AMB_DIR + "rec_" + amb + ".ogg"):
+		path = AMB_DIR + "rec_" + amb + ".ogg"
 	if amb.is_empty() or not ResourceLoader.exists(path):
 		return
 	var stream: AudioStream = load(path)

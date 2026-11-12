@@ -99,11 +99,11 @@ var log_panel: PanelContainer
 enum View { ESCENARIO, CLASICA, ENFOCADA, PRIMERA }
 # Primera persona: enemigos arriba (75% del alto), comandos abajo (25%) y, a la derecha, el retrato de
 # quien tiene el turno o es objetivo, con el resto de tu grupo en una franja bajo él.
-const FP_ENEMY_SHARE := 3.4     # enemigos : comandos en alto (algo más de 3 : 1)
+const FP_ENEMY_SHARE := 4.0     # enemigos : comandos en alto
 const FP_LEFT_SHARE := 2.0      # zona izquierda : columna del retrato = 2 : 1 en ancho
-const FP_ZOOM := 1.3            # el personaje activo, más grande que su hueco…
+const FP_ZOOM := 1.45           # el personaje activo, más grande que su hueco…
 const FP_DROP := 0.14           # …y algo más abajo (fracción de su alto): las piernas pueden salirse de la pantalla
-const FP_BOTTOM_MIN := 156
+const FP_BOTTOM_MIN := 140
 const FP_STRIP_W := 80          # aliados sin retrato: solo nombre y barras
 var _fp_main: HBoxContainer
 var _fp_left: VBoxContainer
@@ -127,11 +127,19 @@ const GLOW_DEBUFF := Color(1.5, 0.55, 1.8)     # morado: un efecto en contra
 # (rojo al recibir daño: CombatFx.flash por defecto, en _impact)
 const DEBUFFS := ["ardiendo"]                  # además de RpgBattleManager.NEGATIVE
 # Todo en un segundo como mucho: aparece la X, se ve, se va a negro y desaparece.
-const KO_DELAY := 0.1
-const KO_IN_TIME := 0.1
-const KO_MARK_TIME := 0.35
-const KO_BLACK_TIME := 0.25
-const KO_FADE_TIME := 0.2
+# Papel de cada combatiente (icono junto al nombre): el jefe de su bando, oficiales con nombre y soldados.
+const ROLE_ICONS := {"comandante": "rol_capitan", "oficial": "rol_caballero", "soldado": "rol_soldado"}
+const ROLE_NAMES := {"comandante": "Comandante", "oficial": "Oficial", "soldado": "Soldado"}
+const STRIP_FACE := 46          # rostro de los aliados en la franja (Primera persona)
+var _info_popup: Control
+# Caída (~1,5 s): golpe, X, se desploma (se inclina y se hunde mientras se oscurece), negro y fuera.
+const KO_DELAY := 0.15
+const KO_IN_TIME := 0.12
+const KO_FALL_TIME := 0.6
+const KO_FALL_ANGLE := 0.32      # radianes (unos 18°), hacia atrás
+const KO_FALL_DROP := 0.12       # cuánto se hunde (fracción de su alto)
+const KO_BLACK_TIME := 0.3
+const KO_FADE_TIME := 0.3
 var _glow_f = null
 var _glow_tw: Tween
 var _dying := {}    # combatiente → true mientras se ve su X y se apaga
@@ -230,6 +238,7 @@ func _begin() -> void:
 	if not embedded:
 		Music.play_context("battle" if a.size() + b.size() > 2 else "duel")
 	btn_back.disabled = true
+	btn_back.visible = false   # durante el combate no sirve: se muestra al terminar
 	btn_back.text = "Volver a la batalla" if embedded else _return_text()
 	btn_back.tooltip_text = "Termina el combate (o abandona) para volver."
 	_refresh()
@@ -316,6 +325,10 @@ func _build_ui() -> void:
 	round_label.custom_minimum_size.x = 64
 	round_label.add_theme_font_size_override("font_size", 13)
 	top.add_child(round_label)
+	var push_right := Control.new()   # el menú, a la esquina superior derecha
+	push_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	push_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(push_right)
 	var btn_options := Button.new()
 	btn_options.text = "Opciones"
 	btn_options.tooltip_text = "Sonido, efectos y vista de combate."
@@ -465,6 +478,12 @@ func _make_card(f, enemy: bool) -> Dictionary:
 		box.add_theme_constant_override("separation", 3)
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		panel.add_child(box)
+		if not enemy:   # rostro: se ve cuando el retrato no (franja de Primera persona)
+			var face := FaceIcon.make(f.c, STRIP_FACE, SIDE_COLORS[0], true, func(): _show_info(f))
+			face.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			face.visible = false
+			box.add_child(face)
+			d.face = face
 		var tex := TextureRect.new()
 		tex.texture = f.c.get_portrait()
 		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -481,7 +500,16 @@ func _make_card(f, enemy: bool) -> Dictionary:
 		d.enemy = enemy
 		d.full_tex = tex.texture
 		d.bust_tex = _upper_body(f.c).texture if not enemy else tex.texture
-		d.name = _small_label(box, 13)
+		var name_row := HBoxContainer.new()
+		name_row.add_theme_constant_override("separation", 3)
+		name_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(name_row)
+		d.name = _small_label(name_row, 13)
+		d.name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var role := _role_of(f)
+		var role_icon := StatIcons.icon(ROLE_ICONS[role], 16, ROLE_NAMES[role])
+		role_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		name_row.add_child(role_icon)
 		d.name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		d.name.add_theme_color_override("font_outline_color", Color.BLACK)
 		d.name.add_theme_constant_override("outline_size", 4)
@@ -988,6 +1016,8 @@ func _on_card_input(event: InputEvent, f) -> void:
 		if not _targeting.is_empty() and f in _targeting.targets:
 			_targeting.idx = _targeting.targets.find(f)
 			_confirm_target()
+		elif _targeting.is_empty():
+			_show_info(f)
 
 func _on_card_hover(f) -> void:
 	if not _targeting.is_empty() and f in _targeting.targets:
@@ -1229,6 +1259,8 @@ func _style_card(d: Dictionary) -> void:
 	d.style.bg_color = CLASSIC_BG if classic else Color(0, 0, 0, 0)
 	panel.size_flags_stretch_ratio = 1.0
 	tex.visible = true
+	if d.has("face"):
+		d.face.visible = false
 	if d.has("fp_big"):
 		_fp_zoom(d, false)
 	if classic:
@@ -1298,6 +1330,8 @@ func _set_spotlight(d: Dictionary, on: bool) -> void:
 	if r.get_parent() != target:
 		r.reparent(target, false)
 	d.portrait.visible = on
+	if d.has("face"):
+		d.face.visible = not on
 	_fp_zoom(d, on)
 	r.size_flags_vertical = Control.SIZE_EXPAND_FILL if on else Control.SIZE_SHRINK_END
 	r.size_flags_stretch_ratio = 1.0
@@ -1374,6 +1408,11 @@ func _float(f, text: String, color: Color, size: int = 28) -> void:
 
 func _impact(f, tier: int) -> void:
 	var p: Control = _cards[f].portrait
+	var at := _center(f)
+	CombatFx.slash(self, at, Color(1.0, 0.97, 0.9), 210.0 + tier * 40.0)
+	if tier >= CombatFx.Tier.BIG:   # crítico: destello y onda
+		CombatFx.burst(self, at, "star_06", Color(1.0, 0.85, 0.45), 260.0, 0.4, false)
+		CombatFx.burst(self, at, "circle_02", Color(1.0, 0.8, 0.5, 0.9), 220.0, 0.35, false)
 	CombatFx.flash(p)
 	CombatFx.squash(p, 0.05 + CombatFx.TIER_SHAKE[tier] * 0.005)
 	CombatFx.sparks(self, _center(f) - global_position, Color(1.0, 0.85, 0.4), 16 + tier * 16)
@@ -1442,6 +1481,8 @@ func _float_diffs(before: Dictionary, covered: Dictionary) -> void:
 		var d: int = f.hp - int(before.get(f, f.hp))
 		if d > 0:
 			_glow(f, GLOW_HEAL)
+			if _cards.has(f) and _cards[f].root.visible:
+				CombatFx.burst(self, _center(f), "circle_05", Color(0.45, 1.0, 0.5, 0.8), 200.0, 0.5, false)
 		elif d < 0 and not covered.has(f):
 			_glow(f, CombatFx.DAMAGE_FLASH)
 		if d == 0 or (d < 0 and covered.has(f)):
@@ -1468,14 +1509,95 @@ func _glow_statuses(before: Dictionary) -> void:
 				good = true
 		if bad:
 			_glow(f, GLOW_DEBUFF, 0.5)
+			if _cards[f].root.visible:
+				CombatFx.burst(self, _center(f), "twirl_01", Color(0.8, 0.4, 1.0, 0.9), 180.0, 0.5)
 		elif good:
 			_glow(f, GLOW_BUFF, 0.5)
+			if _cards[f].root.visible:
+				CombatFx.burst(self, _center(f), "magic_03", Color(0.5, 0.75, 1.0, 0.9), 180.0, 0.5, false)
 
 ## Destello de color sobre el retrato (y su copia ampliada en Primera persona).
 func _glow(f, color: Color, duration: float = 0.35) -> void:
 	if not _cards.has(f) or not _cards[f].root.visible:
 		return
 	CombatFx.flash(_cards[f].portrait, color, duration)
+
+## Comandante (el jefe de su bando, el primero), soldado (genérico) u oficial (con nombre).
+func _role_of(f) -> String:
+	var list: Array = mgr.side_fighters(f.side)
+	if not list.is_empty() and list[0] == f:
+		return "comandante"
+	if f.c.has_meta("enemy_type") or f.c.has_meta("captain"):
+		return "soldado"
+	return "oficial"
+
+## Ficha de un combatiente al tocarlo: papel, vida, estados y lo que se sabe de él.
+func _show_info(f) -> void:
+	_close_info()
+	if not _cards.has(f):
+		return
+	var catcher := Control.new()   # tocar fuera la cierra
+	catcher.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	catcher.mouse_filter = Control.MOUSE_FILTER_STOP
+	catcher.z_index = 40
+	catcher.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and e.pressed:
+			_close_info())
+	add_child(catcher)
+	_info_popup = catcher
+	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and e.pressed:
+			_close_info())
+	catcher.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	panel.add_child(box)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
+	box.add_child(head)
+	head.add_child(FaceIcon.make(f.c, 52, SIDE_COLORS[f.side], false))
+	var who := Label.new()
+	var role := _role_of(f)
+	who.text = "%s\n%s · Nv %d" % [f.c.full_name(), ROLE_NAMES[role], f.c.level]
+	who.theme_type_variation = &"BodyBoldLabel"
+	who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(who)
+	var lines: Array[String] = []
+	lines.append("Vida %d/%d" % [f.hp, f.max_hp] + ("" if f.side == 1 else " · PT %d/%d" % [f.pt, f.max_pt]))
+	var st := _status_short(f)
+	lines.append("Estados: " + (st if not st.is_empty() else "ninguno"))
+	var tip := _card_tip(f).split("\n")
+	for i in range(1, tip.size()):   # (la primera línea es el nombre: ya está arriba)
+		lines.append(tip[i])
+	var body := RichTextLabel.new()
+	body.bbcode_enabled = true
+	body.fit_content = true
+	body.scroll_active = false
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(300, 0)
+	body.add_theme_font_size_override("normal_font_size", 14)
+	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.text = StatIcons.richify("\n".join(lines), 14)
+	box.add_child(body)
+	# Junto a la figura, sin salirse de la pantalla.
+	await get_tree().process_frame
+	if not is_instance_valid(panel):
+		return
+	var r: Rect2 = (_cards[f].root as Control).get_global_rect()
+	var view := get_viewport_rect().size
+	var pos := Vector2(r.end.x + 8, r.position.y + 20)
+	if pos.x + panel.size.x > view.x - 8:
+		pos.x = r.position.x - panel.size.x - 8
+	pos.x = clampf(pos.x, 8, view.x - panel.size.x - 8)
+	pos.y = clampf(pos.y, 8, view.y - panel.size.y - 8)
+	panel.global_position = pos
+
+func _close_info() -> void:
+	if is_instance_valid(_info_popup):
+		_info_popup.queue_free()
+	_info_popup = null
 
 ## Al empezar su turno, un destello blanco de todo su cuerpo (menos de un segundo).
 func _update_act_glow() -> void:
@@ -1524,9 +1646,20 @@ func _ko_anim(f) -> void:
 	d.ko_mark = mark
 	mark.modulate.a = 0.0
 	var root: CanvasItem = d.root
+	var tex: TextureRect = d.portrait
+	tex.pivot_offset = Vector2(tex.size.x * 0.5, tex.size.y)   # cae desde los pies
+	var back := -1.0 if f.side == 0 else 1.0   # hacia atrás (los tuyos miran a la derecha)
 	var tw := create_tween()
 	tw.tween_property(mark, "modulate:a", 1.0, KO_IN_TIME)
-	tw.tween_interval(_pace(KO_MARK_TIME))
+	# Se desploma: se inclina y se hunde mientras se oscurece.
+	tw.tween_property(tex, "rotation", KO_FALL_ANGLE * back, _pace(KO_FALL_TIME)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(tex, "position:y", tex.position.y + tex.size.y * KO_FALL_DROP, _pace(KO_FALL_TIME)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(root, "modulate", Color(0.4, 0.4, 0.4, 1), _pace(KO_FALL_TIME))
+	tw.tween_callback(func():   # polvo al tocar el suelo
+		if is_instance_valid(tex):
+			var feet := tex.get_global_rect()
+			CombatFx.burst(self, Vector2(feet.get_center().x, feet.end.y - feet.size.y * 0.1), "smoke_04",
+				Color(0.75, 0.7, 0.62, 0.8), feet.size.x * 1.2, 0.6, true, false))
 	tw.tween_property(root, "modulate", Color(0, 0, 0, 1), _pace(KO_BLACK_TIME))
 	tw.tween_property(root, "modulate:a", 0.0, _pace(KO_FADE_TIME))
 	tw.tween_callback(func():
@@ -1534,6 +1667,7 @@ func _ko_anim(f) -> void:
 			return
 		_dying.erase(f)
 		_gone[f] = true
+		tex.rotation = 0.0
 		if is_instance_valid(mark):
 			mark.queue_free()
 		d.erase("ko_mark")
@@ -1548,6 +1682,8 @@ func _revive_card(f) -> void:
 		d.ko_mark.queue_free()
 	d.erase("ko_mark")
 	d.root.modulate = Color.WHITE
+	(d.portrait as Control).rotation = 0.0
+	(d.root as Container).queue_sort()   # vuelve a su sitio
 
 # --- Final ---
 
@@ -1585,6 +1721,7 @@ func _on_battle_ended(result: Dictionary) -> void:
 		hint_label.tooltip_text = text
 	_refresh()
 	btn_back.disabled = false
+	btn_back.visible = not embedded   # en una batalla campal se vuelve solo al tablero
 	btn_back.tooltip_text = ""
 	_play_end_sound(won, fled)
 	# Al terminar, el combate te saca de la pantalla: en batalla vuelve solo al tablero;

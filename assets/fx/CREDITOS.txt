@@ -1,0 +1,2 @@
+Texturas de efectos (tajos, chispas, humo…): «Particle Pack» de Kenney (www.kenney.nl), licencia CC0 1.0.
+Reducidas a 256 px.

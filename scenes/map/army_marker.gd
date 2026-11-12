@@ -8,7 +8,8 @@ const COLOR_MARCHING := Color(0.9, 0.75, 0.15)
 const COLOR_BATTLE := Color(0.85, 0.15, 0.15)
 const COLOR_ENEMY := Color(0.55, 0.2, 0.65)   # ejércitos de otros reinos (en marcha o estacionados)
 
-const FACE_SIZE := 34.0           # cara de quien manda el ejército, sobre el marcador
+const FACE_SIZE := 38.0           # cara de quien manda el ejército, sobre el marcador
+const TYPE_ICON := 20.0           # icono de su tropa principal (la familia que mejor manda), dentro del círculo
 const FACE_GAP := 6.0
 
 @onready var size_label: Label = $SizeLabel
@@ -16,6 +17,7 @@ const FACE_GAP := 6.0
 var army_data: Army
 var is_player_army: bool = true
 var leader: Character
+var _type_tex: Texture2D
 
 func setup(a: Army, world_position: Vector2, player_owned: bool = true) -> void:
 	army_data = a
@@ -24,6 +26,10 @@ func setup(a: Army, world_position: Vector2, player_owned: bool = true) -> void:
 	input_pickable = true
 	size_label.text = str(a.size)
 	leader = ArmyData.army_commander(a)
+	var fam: int = leader.best_family() if leader != null else BattleEnums.Family.INFANTERIA
+	_type_tex = SkillIcons.texture(BattleEnums.FAMILY_ICONS.get(fam, "broadsword"))
+	var fam_name: String = ["Infantería", "Arquería", "Caballería", "Piqueros"][fam]
+	size_label.tooltip_text = "%s · %d soldados · sobre todo %s" % [leader.full_name() if leader != null else "Ejército", a.size, fam_name.to_lower()]
 	queue_redraw()
 
 func _ready() -> void:
@@ -32,6 +38,8 @@ func _ready() -> void:
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, RADIUS, _get_color())
 	draw_arc(Vector2.ZERO, RADIUS, 0, TAU, 32, Color.BLACK, 2.0)
+	if _type_tex != null:
+		draw_texture_rect(_type_tex, Rect2(-TYPE_ICON / 2.0, -TYPE_ICON / 2.0, TYPE_ICON, TYPE_ICON), false)
 	var face := leader.get_face() if leader != null else null
 	if face != null:
 		var rect := Rect2(-FACE_SIZE / 2.0, -RADIUS - FACE_GAP - FACE_SIZE, FACE_SIZE, FACE_SIZE)

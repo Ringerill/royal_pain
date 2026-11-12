@@ -41,6 +41,7 @@ const GENERAL_COLOR := Color("e8c14a")          # estandarte del general sobre s
 const INTENT_COLOR := Color(1.0, 0.55, 0.2, 0.8) # lo que parece que hará un pelotón enemigo (Estrategia)
 const ADVANCED_STAR := "★"
 const LEADER_FACE_SIZE := 24.0
+const UNIT_ICON := 17.0   # icono del tipo de tropa, arriba a la izquierda del pelotón
 
 # --- Animaciones de combate ---
 const FX_SPACING := 0.45      # segundos entre ataques encadenados (el turno de la IA ocurre de golpe)
@@ -64,6 +65,69 @@ const MOVE_TIME_BASE := 0.16
 const MOVE_TIME_PER_CELL := 0.09
 const MOVE_TIME_MAX := 0.5
 const MOVE_BOB := 3.0   # vaivén del paso, en píxeles
+
+# Terreno con dibujos (Kenney, «RTS Pack: Medieval», CC0; ver assets/battle/terrain/CREDITOS.txt).
+# Cada casilla elige su variante por su posición (siempre la misma). Si falta un archivo, se pinta de color.
+const TERRAIN_DIR := "res://assets/battle/terrain/%s.png"
+const TILE_SETS := {
+	BattleEnums.Terrain.LLANO: ["grass_a", "grass_b"],
+	BattleEnums.Terrain.BOSQUE: ["forest_a", "forest_b", "forest_c", "forest_d"],
+	BattleEnums.Terrain.COLINA: ["grass_a", "grass_b"],
+	BattleEnums.Terrain.MURALLA: ["stone_a", "stone_b"],
+	BattleEnums.Terrain.RIO: ["water_a", "water_b"],
+	BattleEnums.Terrain.VADO: ["water_a", "water_b"],
+	BattleEnums.Terrain.PUENTE: ["water_a", "water_b"],
+	BattleEnums.Terrain.ALDEA: ["grass_a", "grass_b"],
+}
+const OVERLAYS := {   # lo que va encima del suelo: [variantes, tamaño relativo a la casilla]
+	BattleEnums.Terrain.COLINA: [["hill_a", "hill_b", "hill_c"], 1.35],
+	BattleEnums.Terrain.PUENTE: [["planks"], 1.0],
+	BattleEnums.Terrain.ALDEA: [["house_a", "house_b", "house_c"], 0.9],
+	BattleEnums.Terrain.MURALLA: [["wall"], 0.95],
+}
+const TILE_TINT := Color(0.86, 0.9, 0.82)    # algo más apagado, a juego con la paleta del juego
+const WATER_TINT := Color(0.55, 0.72, 0.95)   # el agua, más honda (el dibujo original es muy claro)
+const HILL_SHADE := Color(0.55, 0.42, 0.22, 0.38)   # la colina, sobre suelo pardo
+const LLANO_DECOR := ["grass_stump_a", "grass_stump_b", "bush_a", "bush_b"]
+const LLANO_DECOR_CHANCE := 18   # de cada 100 casillas de llano, con tocones o arbustos
+static var _tex_cache := {}
+
+static func _tex(name: String) -> Texture2D:
+	if not _tex_cache.has(name):
+		var path := TERRAIN_DIR % name
+		_tex_cache[name] = load(path) if ResourceLoader.exists(path) else null
+	return _tex_cache[name]
+
+static func _pick(list: Array, cell: Vector2i, salt: int = 0) -> String:
+	var h := absi((cell.x * 73856093) ^ (cell.y * 19349663) ^ (salt * 83492791))
+	return list[h % list.size()]
+
+## Suelo y elementos de una casilla con dibujos. false si no hay dibujos (se usa el color plano).
+func _draw_tile(t: int, cell: Vector2i, rect: Rect2) -> bool:
+	var base := _tex(_pick(TILE_SETS.get(t, ["grass_a"]), cell))
+	if base == null:
+		return false
+	var water := t in [BattleEnums.Terrain.RIO, BattleEnums.Terrain.VADO, BattleEnums.Terrain.PUENTE]
+	draw_texture_rect(base, rect, false, WATER_TINT if water else TILE_TINT)
+	if t == BattleEnums.Terrain.COLINA:
+		draw_rect(rect, HILL_SHADE)
+	if t == BattleEnums.Terrain.LLANO and absi(cell.x * 31 + cell.y * 17) % 100 < LLANO_DECOR_CHANCE:
+		var deco := _tex(_pick(LLANO_DECOR, cell, 2))
+		if deco != null:
+			draw_texture_rect(deco, rect, false, TILE_TINT)
+	if t == BattleEnums.Terrain.VADO:   # piedras para cruzar
+		var peb := _tex("pebble")
+		if peb != null:
+			for off: Vector2 in [Vector2(-0.22, -0.2), Vector2(0.18, 0.0), Vector2(-0.05, 0.24)]:
+				var r := Rect2(rect.get_center() + off * rect.size - rect.size * 0.18, rect.size * 0.36)
+				draw_texture_rect(peb, r, false, TILE_TINT)
+	if OVERLAYS.has(t):
+		var o: Array = OVERLAYS[t]
+		var tex := _tex(_pick(o[0], cell, 1))
+		if tex != null:
+			var sz: Vector2 = rect.size * float(o[1])
+			draw_texture_rect(tex, Rect2(rect.get_center() - sz * 0.5, sz), false, TILE_TINT)
+	return true
 
 var battle: BattleManager
 var selected: BattleUnit
@@ -150,7 +214,7 @@ func play_attack(attacker: BattleUnit, target: BattleUnit, casualties: int, coun
 	else:
 		_add_fx({"type": "lunge", "start": start, "dur": LUNGE_TIME, "unit": attacker, "from": from, "to": to, "sound": "melee",
 			"cavalry": BattleEnums.is_cavalry(attacker.type)})
-		_add_impact(to, casualties, start + LUNGE_TIME * 0.5, "")
+		_add_impact(to, casualties, start + LUNGE_TIME * 0.5, "", true)
 		if counter > 0:
 			_add_impact(from, counter, start + LUNGE_TIME, "")
 
@@ -182,9 +246,10 @@ func fx_remaining() -> float:
 		end = maxf(end, fx.start + fx.dur)
 	return end - _clock
 
-func _add_impact(cell: Vector2i, amount: int, start: float, sound: String) -> void:
+func _add_impact(cell: Vector2i, amount: int, start: float, sound: String, melee: bool = false) -> void:
 	_add_fx({"type": "impact", "start": start, "dur": IMPACT_TIME, "cell": cell, "sound": sound,
-		"text": "-%d" % amount, "color": CASUALTY_COLOR, "amount": amount})
+		"text": "-%d" % amount, "color": CASUALTY_COLOR, "amount": amount,
+		"slash": CombatFx.SLASHES[randi() % CombatFx.SLASHES.size()] if melee else ""})
 
 ## Sacude el tablero (sin mover el diseño): `pixels` antes de aplicar la opción de sacudida.
 func shake(pixels: float) -> void:
@@ -271,7 +336,18 @@ func _draw_fx(font: Font) -> void:
 				draw_circle(pos, 2.5, Color.WHITE)
 			"impact":
 				var rect := _cell_rect(fx.cell)
-				draw_rect(rect, Color(1, 0.85, 0.7, 0.65 * (1.0 - p)))
+				draw_rect(rect, Color(1, 0.85, 0.7, 0.45 * (1.0 - p)))
+				if not CombatFx._reduced():
+					# Polvo y tierra que saltan, y un tajo si es cuerpo a cuerpo (Kenney, Particle Pack).
+					var dust := CombatFx.fx_texture("smoke_04")
+					if dust != null:
+						draw_texture_rect(dust, rect.grow(CELL_SIZE * (0.1 + 0.35 * p)), false, Color(0.8, 0.72, 0.6, 0.7 * (1.0 - p)))
+					var dirt := CombatFx.fx_texture("dirt_01")
+					if dirt != null and p < 0.6:
+						draw_texture_rect(dirt, rect.grow(CELL_SIZE * 0.25 * p), false, Color(0.45, 0.35, 0.25, 0.8 * (1.0 - p / 0.6)))
+					var cut := CombatFx.fx_texture(str(fx.get("slash", "")))
+					if cut != null and p < 0.5:
+						draw_texture_rect(cut, rect.grow(4), false, Color(1, 0.95, 0.85, 1.0 - p * 2.0))
 				draw_arc(rect.get_center(), CELL_SIZE * (0.2 + 0.5 * p), 0, TAU, 24, Color(1, 1, 1, 1.0 - p), 3.0)
 				_draw_rising_text(font, fx, p, 22)
 			"ghost":
@@ -356,9 +432,10 @@ func _draw() -> void:
 	for x in range(BattleManager.GRID_W):
 		for y in range(BattleManager.GRID_H):
 			var rect := _cell_rect(Vector2i(x, y))
-			draw_rect(rect, TERRAIN_COLORS.get(battle.terrain[x][y], Color.GRAY))
-			_draw_terrain_detail(battle.terrain[x][y], rect)
-			draw_rect(rect, Color(0, 0, 0, 0.25), false, 1.0)
+			if not _draw_tile(battle.terrain[x][y], Vector2i(x, y), rect):
+				draw_rect(rect, TERRAIN_COLORS.get(battle.terrain[x][y], Color.GRAY))
+				_draw_terrain_detail(battle.terrain[x][y], rect)
+			draw_rect(rect, Color(0, 0, 0, 0.18), false, 1.0)
 	_draw_conditions()
 
 	for cell in move_cells:
@@ -387,11 +464,17 @@ func _draw() -> void:
 		var bar := Rect2(inner.position.x, inner.end.y - 5, inner.size.x * (u.morale / 100.0), 4)
 		draw_rect(bar, MORALE_BAR_COLOR)
 
-		var letter := BattleEnums.unit_type_letter(u.type) + (ADVANCED_STAR if BattleEnums.is_advanced(u.type) else "")
-		draw_string(font, inner.position + Vector2(4, 17), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+		# Tipo de tropa: su icono (★ si es la versión avanzada).
+		var type_tex := SkillIcons.texture(BattleEnums.unit_type_icon(u.type))
+		if type_tex != null:
+			draw_texture_rect(type_tex, Rect2(inner.position + Vector2(3, 3), Vector2(UNIT_ICON, UNIT_ICON)), false)
+		else:
+			draw_string(font, inner.position + Vector2(4, 17), BattleEnums.unit_type_letter(u.type), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+		if BattleEnums.is_advanced(u.type):
+			draw_string(font, inner.position + Vector2(UNIT_ICON + 4, 15), ADVANCED_STAR, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
 		# Estandarte del general: si cae este pelotón, su bando pierde.
 		if u.general:
-			var pole := Vector2(inner.position.x + 3, inner.position.y + 20)
+			var pole := Vector2(inner.position.x + 3, inner.position.y + 22)
 			draw_line(pole, pole + Vector2(0, 14), GENERAL_COLOR, 2.0)
 			draw_colored_polygon(PackedVector2Array([pole, pole + Vector2(10, 3), pole + Vector2(0, 7)]), GENERAL_COLOR)
 		draw_string(font, inner.position + Vector2(4, inner.size.y - 9), str(u.soldiers),

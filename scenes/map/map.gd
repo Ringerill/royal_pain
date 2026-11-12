@@ -381,10 +381,22 @@ func _show_next_notification() -> void:
 	var remaining: int = WorldEvents.notifications.size()
 	btn_event_close.text = "Entendido" if remaining == 0 else "Siguiente noticia (%d más)" % remaining
 
+## Rostros de los personajes nombrados en un suceso, sobre su texto (todo suceso que implica a alguien lo muestra).
+var _event_faces: Control
+
+func _set_event_faces(text: String, exclude: Array = []) -> void:
+	if is_instance_valid(_event_faces):
+		_event_faces.queue_free()
+	_event_faces = MentionedFaces.row(text, 56, exclude)
+	if _event_faces != null:
+		event_text.get_parent().add_child(_event_faces)
+		event_text.get_parent().move_child(_event_faces, event_text.get_index())
+
 func _show_message(title: String, text: String) -> void:
 	event_title.text = title
 	event_text.text = StatIcons.richify(text)
 	event_speaker.visible = false
+	_set_event_faces(title + " " + text)
 	event_result.visible = false
 	for child in event_options.get_children():
 		child.queue_free()
@@ -888,6 +900,7 @@ func _show_pending_event() -> void:
 		event_speaker_portrait.texture = speaker.character.get_face()
 		event_speaker_name.text = "%s · %s" % [speaker.person_name, DialogueCatalog.personality_name(speaker.character.personality)]
 		event_speaker_line.text = "«%s»" % e.get("quote", "") if not str(e.get("quote", "")).is_empty() else ""
+	_set_event_faces(str(e.text), [speaker.character] if event_speaker.visible else [])
 
 	for child in event_options.get_children():
 		child.queue_free()
@@ -1074,6 +1087,7 @@ func _show_site(uid: String, prefix: String = "") -> void:
 			"mes" if int(site.months_left) == 1 else "meses", GameManager.actions_remaining]
 	event_text.text = StatIcons.richify(body)
 	event_speaker.visible = false
+	_set_event_faces(body)
 	event_result.visible = false
 	btn_event_close.visible = false
 	for child in event_options.get_children():
@@ -1211,6 +1225,7 @@ func _show_encounter() -> void:
 	event_title.text = "En el camino: %s" % event.title
 	event_text.text = StatIcons.richify(event.text)
 	event_speaker.visible = false
+	_set_event_faces(event.text)
 	event_result.visible = false
 	btn_event_close.visible = false
 	for child in event_options.get_children():
@@ -1337,12 +1352,20 @@ func _show_toast(text: String) -> void:
 	panel.offset_top = -120
 	panel.offset_bottom = -70
 	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	panel.add_child(row)
+	for c: Character in MentionedFaces.find(text, [], 1):
+		var face := FaceIcon.make(c, 48, Color("d4af5a"), false)
+		face.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(face)
 	var label := Label.new()
 	label.text = text
 	label.custom_minimum_size.x = 420
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	panel.add_child(label)
+	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(label)
 	$UILayer.add_child(panel)
 	panel.modulate.a = 0.0
 	var tw := panel.create_tween()

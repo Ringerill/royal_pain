@@ -1,0 +1,16 @@
+Efectos .ogg: Kenney (www.kenney.nl), paquetes «RPG Audio», «Impact Sounds» e «Interface Sounds»,
+licencia Creative Commons Zero (CC0 1.0): http://creativecommons.org/publicdomain/zero/1.0/
+
+click*  ........ Interface Sounds (click_001-005)
+clash*  ........ Impact Sounds (impactMetal_heavy)
+hit*    ........ RPG Audio (knifeSlice) + Impact Sounds (impactPunch_heavy)
+crit*   ........ Impact Sounds (impactPlate_heavy)
+guard*  ........ Impact Sounds (impactPlate_medium)
+melee*  ........ Impact Sounds (impactMetal_medium)
+push*   ........ Impact Sounds (impactSoft_heavy)
+letter* ........ RPG Audio (bookFlip)
+month_turn ..... RPG Audio (bookOpen)
+travel_hop* .... Impact Sounds (footstep_grass)
+coins*  ........ RPG Audio (handleCoins)
+
+Los .wav se generan con tools/generate_sfx.py y tools/generate_sfx_extra.py.

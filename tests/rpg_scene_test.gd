@@ -69,7 +69,8 @@ func _run() -> void:
 	root.add_child(sc)
 	await create_timer(0.3).timeout
 	var shown_e: int = sc.enemy_row.get_children().filter(func(c): return c.visible).size()
-	var shown_p: int = sc.party_row.get_children().filter(func(c): return c.visible).size()
+	# (en Primera persona el aliado activo está en su columna, fuera de la fila)
+	var shown_p: int = sc._cards.keys().filter(func(f): return f.side == 0 and sc._cards[f].root.visible).size()
 	check(shown_e == 5 and shown_p == 4, "5 retratos enemigos y 4 del grupo (%d, %d)" % [shown_e, shown_p])
 	check(sc.timeline_box.get_child_count() == 8, "línea de turnos con 8 caras")
 	var guard := 0

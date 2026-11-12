@@ -1,13 +1,15 @@
 extends Node
 # Autoload — registrar como "Sfx"
-# Reproduce los efectos de sonido de assets/sfx/ (generados con tools/generate_sfx.py).
-# Para cambiar un sonido basta con reemplazar el .wav del mismo nombre.
+# Reproduce los efectos de sonido de assets/sfx/: grabados de Kenney (.ogg, CC0; ver assets/sfx/CREDITOS.txt)
+# o generados con tools/generate_sfx.py (.wav). Para cambiar un sonido basta con poner un .ogg o .wav del
+# mismo nombre (si hay los dos, manda el .ogg).
 
 const SFX_DIR := "res://assets/sfx/"
 const SOUND_NAMES := [
 	"clash", "hit", "crit", "whoosh", "guard", "disarm", "push", "click",
 	"victory", "defeat", "horn", "arrows", "melee", "rout",
 	"shout", "month_turn", "travel_hop", "letter", "achievement", "level_up", "chains", "execution", "story", "plot",
+	"coins",
 ]
 const POOL_SIZE := 10
 # Variantes <sonido>_v1… (tools/generate_sfx_extra.py): se elige una al azar sin repetir la anterior.
@@ -26,19 +28,8 @@ var _next := 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	for sound_name in SOUND_NAMES:
-		var path: String = SFX_DIR + sound_name + ".wav"
-		if ResourceLoader.exists(path):
-			_streams[sound_name] = load(path)
-		var list: Array[AudioStream] = []
-		if _streams.has(sound_name):
-			list.append(_streams[sound_name])
-		for v in range(1, MAX_VARIANTS + 1):
-			var vpath: String = SFX_DIR + "%s_v%d.wav" % [sound_name, v]
-			if ResourceLoader.exists(vpath):
-				list.append(load(vpath))
-		if list.size() > 1:
-			_variants[sound_name] = list
+	_load_sounds()
+	Settings.audio_style_changed.connect(_load_sounds)
 	for i in range(POOL_SIZE):
 		var p := AudioStreamPlayer.new()
 		p.bus = "SFX"   # el volumen lo controla Settings por bus
@@ -46,6 +37,34 @@ func _ready() -> void:
 		_pool.append(p)
 	# Todos los botones del juego suenan al pulsarse, sin tener que conectarlos uno a uno.
 	get_tree().node_added.connect(_on_node_added)
+
+## Carga los sonidos del estilo elegido (grabados .ogg u originales .wav).
+func _load_sounds() -> void:
+	_streams.clear()
+	_variants.clear()
+	_last_variant.clear()
+	for sound_name in SOUND_NAMES:
+		var path := _file(sound_name)
+		if not path.is_empty():
+			_streams[sound_name] = load(path)
+		var list: Array[AudioStream] = []
+		if _streams.has(sound_name):
+			list.append(_streams[sound_name])
+		for v in range(1, MAX_VARIANTS + 1):
+			var vpath := _file("%s_v%d" % [sound_name, v])
+			if not vpath.is_empty():
+				list.append(load(vpath))
+		if list.size() > 1:
+			_variants[sound_name] = list
+
+## Ruta del sonido según el estilo (grabado: .ogg antes que .wav; original: .wav antes que .ogg); "" si no está.
+func _file(base: String) -> String:
+	var settings := get_node_or_null("/root/Settings")
+	var recorded: bool = settings == null or settings.recorded_audio()
+	for ext in ([".ogg", ".wav"] if recorded else [".wav", ".ogg"]):
+		if ResourceLoader.exists(SFX_DIR + base + ext):
+			return SFX_DIR + base + ext
+	return ""
 
 ## Reproduce un sonido. pitch_jitter varía levemente el tono para que los golpes repetidos no suenen idénticos.
 func play(sound_name: String, volume_db: float = 0.0, pitch_jitter: float = 0.06) -> void:

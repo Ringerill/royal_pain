@@ -41,7 +41,8 @@ func _run() -> void:
 	check(missing.is_empty(), "todas las pistas existen %s" % [missing])
 	for ctx in ["duel", "battle"]:
 		for t in MC.POOLS[ctx]:
-			check(_exists(t + "_tension"), "%s tiene capa de tensión" % t)
+			if not t.begins_with("mk_"):
+				check(_exists(t + "_tension"), "%s tiene capa de tensión" % t)
 	var loaded_ok := true
 	for ctx in MC.POOLS:
 		for t in MC.POOLS[ctx]:

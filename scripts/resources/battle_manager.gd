@@ -90,6 +90,11 @@ const ABILITIES := {
 	"coordinado": {"name": "Ataque coordinado", "desc": "Este turno todos tus pelotones causan un 25% más de bajas.",
 		"skills": ["Ataque Coordinado", "Maestro de Asedio"]},
 }
+# Cada jefe con nombre (comandante, compañero u oficial) tiene además una orden propia de su carácter.
+const P_ := Character.Personality
+const PERSONALITY_ABILITY := {P_.VALIENTE: "carga", P_.ARROGANTE: "carga", P_.HONORABLE: "grito", P_.ROMANTICO: "grito",
+	P_.LEAL: "muro", P_.PRUDENTE: "muro", P_.PIADOSO: "reagrupar", P_.GENEROSO: "reagrupar",
+	P_.ASTUTO: "emboscada", P_.COBARDE: "flechas", P_.CRUEL: "coordinado", P_.AMBICIOSO: "coordinado"}
 const GRITO_MORALE := 15
 const VOLLEY_FACTOR := 0.7
 const VOLLEY_EXTRA_RANGE := 1
@@ -674,6 +679,8 @@ func in_bounds(cell: Vector2i) -> bool:
 	return cell.x >= 0 and cell.y >= 0 and cell.x < GRID_W and cell.y < GRID_H
 
 func terrain_at(cell: Vector2i) -> int:
+	if not in_bounds(cell):   # (un pelotón fuera del tablero: llano)
+		return BattleEnums.Terrain.LLANO
 	return terrain[cell.x][cell.y]
 
 func unit_at(cell: Vector2i) -> BattleUnit:
@@ -953,6 +960,11 @@ func abilities_of(c: Character) -> Array[String]:
 		for sk: Skill in c.battle_skills:
 			if sk != null and sk.skill_name in ABILITIES[id].skills and not id in result:
 				result.append(id)
+	# La orden de su carácter (los capitanes y soldados genéricos no tienen).
+	if not c.has_meta("captain") and not c.has_meta("enemy_type"):
+		var own: String = PERSONALITY_ABILITY.get(c.personality, "")
+		if not own.is_empty() and not own in result:
+			result.append(own)
 	return result
 
 ## Quienes pueden usar una habilidad en este bando: el comandante y los compañeros aún al mando.
@@ -968,10 +980,12 @@ func ability_users(side: int, group: int = ABILITY_ANY) -> Array[Character]:
 		var c: Character = u.companion
 		if c == null and allied_battle and not u.ally and u.captain == player_leader:
 			c = player_leader
-		if c == null or c in result or abilities_of(c).is_empty():
-			continue
-		if _group_ok(group, ABILITY_ALLY if u.ally else ABILITY_PLAYER, side):
-			result.append(c)
+		# El jefe del pelotón y sus oficiales con nombre.
+		for who: Character in [c] + u.officers:
+			if who == null or who in result or abilities_of(who).is_empty():
+				continue
+			if _group_ok(group, ABILITY_ALLY if u.ally else ABILITY_PLAYER, side):
+				result.append(who)
 	return result
 
 func _group_ok(group: int, member_group: int, side: int) -> bool:

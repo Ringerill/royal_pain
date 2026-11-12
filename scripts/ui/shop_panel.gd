@@ -270,6 +270,7 @@ func buy_consumable(id: String) -> bool:
 	if player.gold < price or ConsumableCatalog.add(player.consumables, id) == 0:
 		return false
 	player.gold -= price
+	Sfx.play("coins", -4.0)
 	_feedback.text = "Compras %s por %d de oro." % [ConsumableCatalog.item_name(id), price]
 	purchased.emit()
 	_rebuild()
@@ -374,7 +375,7 @@ func _buy(item: Equipment, fixed_price: int = -1) -> void:
 		player.gold += sell_price(replaced)
 		text += " Entregas %s a cuenta (+%d)." % [replaced.equipment_name, sell_price(replaced)]
 	_feedback.text = text
-	Sfx.play("clash", -10.0)
+	Sfx.play("coins", -4.0)
 	purchased.emit()
 	_rebuild()
 
@@ -383,6 +384,7 @@ func _sell(item: Equipment) -> void:
 	player.unequip(item)
 	player.gold += sell_price(item)
 	_feedback.text = "Vendes %s por %d de oro." % [item.equipment_name, sell_price(item)]
+	Sfx.play("coins", -4.0)
 	purchased.emit()
 	_rebuild()
 

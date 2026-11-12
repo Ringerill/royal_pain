@@ -45,6 +45,11 @@ const COMBAT_VIEW_TIPS := ["Tu grupo a la izquierda y los enemigos a la derecha,
 	"Quien actúa y su objetivo se ven en grande; el resto, pequeño.",
 	"Todos los enemigos en grande; de tu grupo solo se ve el retrato de quien tiene el turno o es objetivo."]
 var combat_view := 0
+# Estilo de sonido: 0 = grabado (música de Kevin MacLeod, efectos de Kenney, ambientes de OpenGameArt),
+# 1 = original (todo generado por el juego). Cambia música, efectos y ambiente a la vez.
+const AUDIO_STYLE_NAMES := ["Grabado", "Original"]
+var audio_style := 0
+signal audio_style_changed
 
 func _ready() -> void:
 	_register_input_actions()
@@ -59,6 +64,7 @@ func _ready() -> void:
 		auto_resolve_others = bool(cfg.get_value("game", "auto_resolve_others", true))
 		ai_difficulty = clampi(int(cfg.get_value("game", "ai_difficulty", 1)), 0, DIFFICULTY_NAMES.size() - 1)
 		combat_view = clampi(int(cfg.get_value("video", "combat_view", 0)), 0, COMBAT_VIEW_NAMES.size() - 1)
+		audio_style = clampi(int(cfg.get_value("audio", "style", 0)), 0, AUDIO_STYLE_NAMES.size() - 1)
 	for bus in BUSES:
 		_apply_volume(bus)
 	_apply_fullscreen()
@@ -103,6 +109,17 @@ func set_ai_difficulty(level: int) -> void:
 	ai_difficulty = clampi(level, 0, DIFFICULTY_NAMES.size() - 1)
 	changed.emit()
 
+func set_audio_style(style: int) -> void:
+	style = clampi(style, 0, AUDIO_STYLE_NAMES.size() - 1)
+	if style == audio_style:
+		return
+	audio_style = style
+	audio_style_changed.emit()
+	changed.emit()
+
+func recorded_audio() -> bool:
+	return audio_style == 0
+
 func set_combat_view(view: int) -> void:
 	combat_view = clampi(view, 0, COMBAT_VIEW_NAMES.size() - 1)
 	changed.emit()
@@ -125,6 +142,7 @@ func save() -> void:
 	cfg.set_value("game", "auto_resolve_others", auto_resolve_others)
 	cfg.set_value("game", "ai_difficulty", ai_difficulty)
 	cfg.set_value("video", "combat_view", combat_view)
+	cfg.set_value("audio", "style", audio_style)
 	DirAccess.make_dir_recursive_absolute(settings_path.get_base_dir())
 	cfg.save(settings_path)
 

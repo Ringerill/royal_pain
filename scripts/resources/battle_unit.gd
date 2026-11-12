@@ -56,7 +56,7 @@ func describe() -> String:
 	if not trait_text.is_empty():
 		text += "\n" + trait_text
 	if general and leader() != null:
-		text += "\nGeneral del bando: %s (si cae, su bando pierde)" % leader().full_name()
+		text += "\nGeneral del bando: %s" % leader().full_name()
 	if companion != null:
 		text += "\nAl mando: %s%s" % [companion.full_name(), " (de facción)" if companion.has_meta("faction_companion") else ""]
 	if ally:

@@ -1,13 +1,26 @@
 extends RefCounted
 # Qué música suena en cada contexto. Uso: const MusicCatalog = preload("res://scripts/resources/music_catalog.gd")
-# Las pistas están en assets/music/ (tools/generate_music.py y tools/generate_music_extra.py).
+# Las pistas están en assets/music/. Las «mk_» son de Kevin MacLeod (incompetech.com, CC BY 4.0; créditos en
+# assets/music/CREDITOS.txt); las demás, generadas (tools/generate_music.py y tools/generate_music_extra.py).
 # En el mapa y el castillo se suma la variación de la cultura del lugar: map_<cultura>, castle_<cultura>.
 
 # Orden = NameCatalog.Culture.
 const CULTURE_KEYS := ["franca", "inglesa", "castellana", "imperial", "romana", "prusiana", "italiana", "borgonona", "aragonesa"]
-const CULTURE_WEIGHT := 2   # la pieza de la cultura del lugar sale el doble que las genéricas
+const CULTURE_WEIGHT := 1   # la pieza de la cultura del lugar, una más entre las demás
 
 const POOLS := {
+	"menu": ["mk_teller"],
+	"map": ["mk_achaidh", "mk_angevin"],
+	"travel": ["mk_folk_round", "mk_lord_land"],
+	"castle": ["mk_feast", "mk_thatched"],
+	"court": ["mk_pippin", "mk_minstrel"],
+	"duel": ["mk_clash", "mk_celtic"],
+	"battle": ["mk_five_armies", "mk_heroic_age", "mk_prelude"],
+	"mourning": ["mk_dark_times", "mourning_a", "mourning_b"],
+	"captivity": ["mk_dark_times", "captivity_a", "captivity_b"],
+}
+# Estilo «Original» (Settings.audio_style = 1): las pistas generadas por el juego.
+const ORIGINAL_POOLS := {
 	"menu": ["menu"],
 	"map": ["map", "map_b"],
 	"travel": ["travel_a", "travel_b", "travel_c"],
@@ -18,6 +31,8 @@ const POOLS := {
 	"mourning": ["mourning_a", "mourning_b"],
 	"captivity": ["captivity_a", "captivity_b"],
 }
+static var original := false   # lo pone Music según Settings.audio_style
+
 # Contextos que suman la pieza de la cultura: contexto -> prefijo del archivo.
 const CULTURE_PREFIX := {"map": "map_", "travel": "map_", "castle": "castle_"}
 # Contextos de combate: la pista no cambia a mitad de pelea (su capa de tensión va a tempo).
@@ -43,7 +58,7 @@ static func pool(context: String, culture: int, exists: Callable = Callable()) -
 		var name: String = CULTURE_PREFIX[context] + ck
 		for i in CULTURE_WEIGHT:
 			out.append(name)
-	for t: String in POOLS.get(context, []):
+	for t: String in (ORIGINAL_POOLS if original else POOLS).get(context, []):
 		out.append(t)
 	if exists.is_valid():
 		out = out.filter(func(t: String) -> bool: return exists.call(t))

@@ -63,6 +63,54 @@ static func floating_text(host: Control, at: Vector2, text: String, color: Color
 
 const DAMAGE_FLASH := Color(1.8, 0.5, 0.5)
 
+# Texturas de efectos (Kenney, «Particle Pack», CC0; assets/fx/).
+const FX_DIR := "res://assets/fx/%s.png"
+const SLASHES := ["slash_01", "slash_02", "slash_03", "slash_04"]
+static var _fx_cache := {}
+
+static func fx_texture(name: String) -> Texture2D:
+	if not _fx_cache.has(name):
+		var path := FX_DIR % name
+		_fx_cache[name] = load(path) if ResourceLoader.exists(path) else null
+	return _fx_cache[name]
+
+## Efecto de impacto: la textura aparece en «at» (coordenadas globales), crece y se desvanece.
+## spin: gira al azar; additive: brilla sobre lo que hay debajo.
+static func burst(host: Control, at: Vector2, tex_name: String, color: Color = Color.WHITE, size: float = 160.0,
+		duration: float = 0.35, spin: bool = true, additive: bool = true) -> void:
+	if not is_instance_valid(host) or _reduced():
+		return
+	var tex := fx_texture(tex_name)
+	if tex == null:
+		return
+	var r := TextureRect.new()
+	r.texture = tex
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_SCALE
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.size = Vector2(size, size)
+	r.pivot_offset = r.size * 0.5
+	r.z_index = 60
+	r.modulate = color
+	if additive:
+		var mat := CanvasItemMaterial.new()
+		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		r.material = mat
+	host.add_child(r)
+	r.global_position = at - r.size * 0.5
+	r.rotation = randf_range(-PI, PI) if spin else 0.0
+	r.scale = Vector2(0.6, 0.6)
+	var tw := r.create_tween().set_parallel()
+	tw.tween_property(r, "scale", Vector2(1.15, 1.15), duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(r, "modulate:a", 0.0, duration).set_delay(duration * 0.35)
+	tw.chain().tween_callback(r.queue_free)
+
+## Tajo al azar (un golpe con arma).
+static func slash(host: Control, at: Vector2, color: Color = Color(1.0, 0.97, 0.9), size: float = 230.0) -> void:
+	var name: String = SLASHES[randi() % SLASHES.size()]
+	burst(host, at, name, color, size, 0.3, true, false)   # opaco: se ve también sobre figuras claras
+	burst(host, at, name, Color(1.0, 0.8, 0.45, 0.8), size * 1.1, 0.3, true, true)   # y un brillo cálido
+
 ## Destello de color sobre un nodo (por ejemplo, rojo al recibir daño).
 static func flash(node: CanvasItem, color: Color = DAMAGE_FLASH, duration: float = 0.3) -> void:
 	if _reduced():

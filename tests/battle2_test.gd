@@ -320,7 +320,7 @@ func _run() -> void:
 		b = scene.battle
 		var mu = b.units.filter(func(u): return b.is_player_unit(u) and u.captain == player)[0]
 		var au = b.active_units(b._other_side(b.player_side))[0]
-		var spot: Vector2i = mu.cell + Vector2i(1, 0)
+		var spot: Vector2i = mu.cell + Vector2i(1 if mu.cell.x < b.GRID_W - 1 else -1, 0)   # sin salirse del tablero
 		var blocker_unit = b.unit_at(spot)
 		if blocker_unit != null and blocker_unit != au:
 			blocker_unit.cell = Vector2i(b.GRID_W - 1, 0)

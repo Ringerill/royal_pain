@@ -1,0 +1,36 @@
+Música de Kevin MacLeod (incompetech.com), licencia Creative Commons: By Attribution 4.0
+http://creativecommons.org/licenses/by/4.0/
+Recomprimidas a OGG Vorbis para el juego.
+
+mk_teller.ogg ........ "Teller of the Tales"
+mk_achaidh.ogg ....... "Achaidh Cheide"
+mk_angevin.ogg ....... "Angevin B"
+mk_folk_round.ogg .... "Folk Round"
+mk_lord_land.ogg ..... "Lord of the Land"
+mk_feast.ogg ......... "Master of the Feast"
+mk_thatched.ogg ...... "Thatched Villagers"
+mk_pippin.ogg ........ "Pippin the Hunchback"
+mk_minstrel.ogg ...... "Minstrel Guild"
+mk_clash.ogg ......... "Clash Defiant"
+mk_celtic.ogg ........ "Celtic Impulse"
+mk_five_armies.ogg ... "Five Armies"
+mk_heroic_age.ogg .... "Heroic Age"
+mk_prelude.ogg ....... "Prelude and Action"
+mk_dark_times.ogg .... "Dark Times"
+
+Cada pieza: «<título>» Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+
+El resto de pistas (map_<cultura>, castle_<cultura>, mourning_*, captivity_*, sting_*, amb_*)
+se generan con tools/generate_music.py y tools/generate_music_extra.py.
+
+Ambientes grabados (rec_amb_*.ogg), de OpenGameArt.org, licencia CC0 (dominio público):
+rec_amb_wind.ogg ..... "Amb Outside 1" de Kresiek The Furry
+rec_amb_road.ogg ..... "Amb Morning Sounds (perfect loop)" de Kresiek The Furry
+rec_amb_rain.ogg ..... "Amb Rain Loop 1" de Kresiek The Furry
+rec_amb_dungeon.ogg .. "Loopable Dungeon Ambience" de JaggedStone
+rec_amb_sea.ogg ...... "Beach Ocean Waves" de qubodup
+rec_amb_crowd.ogg .... "Crowd Shouting/Speaking Ambience" de StarNinjas
+rec_amb_castle.ogg ... "Fireplace Sound Loop" de PagDev
+rec_amb_snow.ogg ..... "Wind Whoosh Loop" de SketchMan3
+Con «Estilo de sonido: Original» (Opciones) suenan los amb_*.ogg generados.

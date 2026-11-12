@@ -48,6 +48,20 @@ func _ready() -> void:
 	for bus in Settings.BUSES:
 		box.add_child(_volume_row(bus))
 
+	var style_row := HBoxContainer.new()
+	var style_label := Label.new()
+	style_label.text = "Estilo de sonido"
+	style_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	style_row.add_child(style_label)
+	var style := OptionButton.new()
+	for i in Settings.AUDIO_STYLE_NAMES.size():
+		style.add_item(Settings.AUDIO_STYLE_NAMES[i], i)
+	style.select(Settings.audio_style)
+	style.tooltip_text = "Grabado: música, efectos y ambientes grabados. Original: los sonidos propios del juego."
+	style.item_selected.connect(Settings.set_audio_style)
+	style_row.add_child(style)
+	box.add_child(style_row)
+
 	box.add_child(HSeparator.new())
 	var fs := CheckBox.new()
 	fs.text = "Pantalla completa"

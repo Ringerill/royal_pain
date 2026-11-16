@@ -5,6 +5,7 @@ extends Control
 # Los sucesos del mes (GameManager) y las noticias (WorldEvents) se muestran aquí.
 
 const PartyPanel = preload("res://scripts/ui/party_panel.gd")
+const PLACE_SCENE := "res://scenes/place/place.tscn"
 const NODE_ICON := 58.0
 const CAPITAL_ICON := 82.0
 const PLAYER_FACE := 40
@@ -349,8 +350,8 @@ func _show_place(i: int) -> void:
 		if n.type in KingdomMaps.SETTLEMENT_TYPES:
 			var enter := Button.new()
 			enter.text = "Entrar"
-			enter.disabled = true
-			enter.tooltip_text = "Las ciudades y sus edificios llegan en la fase 5 del rediseño."
+			enter.tooltip_text = "Tiendas, herrería, taberna (encargos), iglesia, posada…"
+			enter.pressed.connect(func(): get_tree().change_scene_to_file(PLACE_SCENE))
 			row.add_child(enter)
 		if n.type in KingdomMaps.EXPEDITION_TYPES:
 			var exp := Button.new()
@@ -393,6 +394,21 @@ func _on_arrived(i: int) -> void:
 	Sfx.play("travel_hop", -6.0)
 	if not Journey.is_traveling():
 		_select(i)
+		_contract_arrival(i)
+
+## Fase 5: al llegar al destino de un encargo, se resuelve (o hay pelea).
+func _contract_arrival(i: int) -> void:
+	var r: Dictionary = ContractData.on_arrived(Journey.kingdom, i)
+	if r.is_empty():
+		return
+	if r.has("fight"):
+		var fight: Dictionary = r.fight
+		_message(str(r.title), "Al llegar, te cortan el paso. ¡Hay que pelear!", func():
+			var scene := CombatSetup.begin_event_fight(fight, str(r.title))
+			if not scene.is_empty():
+				get_tree().change_scene_to_file(scene))
+	else:
+		_message(str(r.title), str(r.text))
 
 func _after_month() -> void:
 	_check_events()
@@ -404,6 +420,11 @@ func _check_events() -> void:
 		return
 	if not GameManager.game_over_reason.is_empty() or not GameManager.is_game_active:
 		_message("Fin de la partida", GameManager.game_over_reason, func(): get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn"))
+		return
+	var lapsed: Array = ContractData.check_deadlines()
+	if not lapsed.is_empty():
+		_message("Encargos", "
+".join(lapsed))
 		return
 	if GameManager.has_pending_event():
 		_show_event(GameManager.pending_event)
@@ -562,6 +583,10 @@ func _open_relations() -> void:
 
 func _open_journal() -> void:
 	var lines: Array[String] = []
+	for c: Dictionary in ContractData.active:
+		lines.append("Encargo: %s · quedan %d días" % [ContractData.title(c), int(c.deadline) - Journey.day_index()])
+	if not lines.is_empty():
+		lines.append("")
 	for e: Dictionary in WorldEvents.chronicle.slice(maxi(0, WorldEvents.chronicle.size() - 30)):
 		lines.push_front("• " + str(e.get("text", "")))
 	_message("Diario", "\n".join(lines) if not lines.is_empty() else "Nada que contar todavía.")

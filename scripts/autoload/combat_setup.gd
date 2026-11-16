@@ -181,7 +181,7 @@ func begin_event_fight(fight: Dictionary, event_title: String) -> String:
 	if fight.get("type", "duel") == "battle" and not battle_blocker(player).is_empty():
 		return ""   # quien llama ya debió impedirlo (EventCatalog.can_choose, MissionData.action_blocker)
 	pending_outcome = {"title": event_title, "win": fight.get("win", {}), "lose": fight.get("lose", {}),
-		"no_rival": fight.get("no_rival", false)}
+		"no_rival": fight.get("no_rival", false), "contract_uid": str(fight.get("contract_uid", ""))}
 	var foe := make_event_foe(fight.get("foe", {}), player)
 	if fight.get("type", "duel") == "battle":
 		var castle: Castle = MapData.get_castle_by_id(GameManager.home_castle_id)
@@ -221,9 +221,12 @@ func apply_outcome(won: bool) -> String:
 	var o: Dictionary = pending_outcome.get("win" if won else "lose", {})
 	var title: String = pending_outcome.get("title", "")
 	var mission_uid: String = pending_outcome.get("mission_uid", "")
+	var contract_uid: String = str(pending_outcome.get("contract_uid", ""))
 	pending_outcome = {}
 	if not mission_uid.is_empty():
 		return MissionData.resolve_fight(mission_uid, won)
+	if not contract_uid.is_empty():   # encargo del tablón (ContractData)
+		return ContractData.resolve_fight(contract_uid, won)
 	var player: Character = GameManager.player_character
 	var castle: Castle = MapData.get_castle_by_id(GameManager.home_castle_id)
 	var text: String = o.get("result", "")

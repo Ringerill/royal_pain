@@ -39,6 +39,10 @@ var leg_progress := 0.0               # 0..1 del tramo actual
 var path: Array[int] = []             # lugares que faltan tras el tramo actual
 var speed_index := 1                  # índice en SPEEDS (0 = pausa)
 var names := {}                       # "reino:índice" -> nombre del lugar en esta partida
+# Fase 5: casas compradas ("reino:índice"), semana de la última donación y día del último estudio por lugar.
+var houses: Array = []
+var donations := {}
+var studies := {}
 var _months_applied := 0
 var _energy_debt := 0.0
 var _blocked := 0                     # ventanas abiertas que detienen el reloj
@@ -50,6 +54,9 @@ func _ready() -> void:
 ## Partida nueva: en la capital del reino de origen, a las 8 de la mañana del día 1.
 func reset() -> void:
 	hours = START_HOUR
+	houses = []
+	donations = {}
+	studies = {}
 	kingdom = GameManager.player_kingdom if GameManager.player_kingdom >= 0 else KingdomEnums.Kingdom.HIELO
 	at = 0
 	leg_to = -1
@@ -395,13 +402,16 @@ func _generate_names() -> void:
 
 func save_state() -> Dictionary:
 	return {"hours": hours, "kingdom": kingdom, "at": at, "names": names, "months": _months_applied,
-		"speed": speed_index}
+		"speed": speed_index, "houses": houses, "donations": donations, "studies": studies}
 
 func load_state(d: Dictionary) -> void:
 	hours = float(d.get("hours", START_HOUR))
 	kingdom = int(d.get("kingdom", GameManager.player_kingdom))
 	at = int(d.get("at", 0))
 	names = d.get("names", {})
+	houses = Array(d.get("houses", []))
+	donations = d.get("donations", {})
+	studies = d.get("studies", {})
 	_months_applied = int(d.get("months", day_index() / DAYS_PER_MONTH))
 	speed_index = int(d.get("speed", 1))
 	leg_to = -1

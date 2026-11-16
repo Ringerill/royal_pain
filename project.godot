@@ -50,6 +50,7 @@ WorldGrowth="*res://scripts/autoload/world_growth.gd"
 RoyalCourt="*res://scripts/autoload/royal_court.gd"
 TouchSupport="*res://scripts/autoload/touch_support.gd"
 Journey="*res://scripts/autoload/journey.gd"
+ContractData="*res://scripts/autoload/contract_data.gd"
 
 [display]
 

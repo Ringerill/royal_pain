@@ -1,7 +1,7 @@
 # Royal Pain — cómo continuar el trabajo en otro PC
 
 Este documento resume dónde quedó el trabajo y cómo retomarlo, tanto para ti como para Claude.
-**Al empezar en el PC nuevo, pídele a Claude: «Lee docs/CONTINUAR.md y docs/plan_revision.md y retomemos el plan».**
+**Al empezar en el PC nuevo, pídele a Claude: «Lee docs/CONTINUAR.md, docs/RESUMEN_SESION.md y docs/PENDIENTE.md y retomemos».**
 
 ## 1. Preparar el PC nuevo
 

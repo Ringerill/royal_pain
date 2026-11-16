@@ -9,6 +9,55 @@ Resumen de las fases que faltan del plan de revisión. El detalle completo, con 
 | 3. Gestor de grupo y combate RPG | ✅ Hecha |
 | 4. Batallas campales con profundidad | ✅ Hecha (4A: oficiales, choques RPG, traición, botín · 4B: IA, dificultad, flancos y formaciones) |
 | 5. Sesión de noviembre de 2026 (v9–v10) | ✅ Hecha — detalle en «Royal Pain — Estado del Proyecto.md» |
+| 6. Sesión del 11–16 de noviembre (0.10.4–0.10.21) | ✅ Hecha — resumen en `docs/RESUMEN_SESION.md` |
+
+## Lo que viene (16 de noviembre de 2026)
+
+Orden recomendado: 1 → 2 → 3, y después arrancar Ages of Warfare.
+
+1. **Subir la 0.10.20 y la 0.10.21** (están en el equipo, sin commit): arreglo de batallas y
+   duelos que no se lanzaban, combate sin historial, menú de técnicas en dos columnas y ventana de
+   habilidades de mando.
+2. **Adaptar el juego a la nueva organización de `assets/`** (actualización `a64a33c`). Hay cosas
+   rotas:
+   - `scenes/map/castle_marker.tscn` apunta a `assets/castle.png`, que ahora está en
+     `assets/icons/map_tiles/castle.png`;
+   - `scripts/resources/face_rects.gd` tiene ~160 retratos que ya no existen y le faltan los
+     nuevos: regenerar con `python tools/build_face_rects.py`;
+   - `scripts/resources/enemy_catalog.gd` busca `portraits/enemies/<tipo>/`, pero ahora están en
+     `portraits/Enemies/E-Male` y `E-Female` (los genéricos caen al retrato del rol);
+   - abrir el proyecto para que importe los ~1.100 archivos nuevos y pasar las pruebas.
+3. **Aprovechar los recursos nuevos:**
+   - fondos de combate según la estación (`_autumn`, `_winter`) y los nuevos lugares (aldea,
+     muralla de asedio, barco);
+   - escenas de lugar (`assets/dialogue/`) en eventos y diálogos, y expresiones de los retratos;
+   - fondos de interfaz (`assets/ui/backgrounds/`) e iconos de mapa (`assets/icons/`);
+   - **hojas de sprites animadas** en el combate (reposo, ataque, golpe, defensa, derrota…).
+4. **Pendientes menores:**
+   - efectos que siguen generados (flechas, cuerno, victoria…);
+   - ambiente del mapa del mundo (banderas, humo, olas);
+   - destello sobre el objetivo elegido en combate;
+   - probar en el teléfono la pantalla completa y el borde de la cámara (`screen/edge_to_edge`).
+5. **Recursos evaluados y no aplicados:** Kenney «UI Pack RPG Expansion» (desentona con la
+   interfaz propia) y «Tiny Swords» de Pixel Frog (soldados animados; su licencia no permite
+   redistribuir los dibujos sueltos).
+
+### Ages of Warfare (juego nuevo)
+Diseño completo en `docs/ages_of_warfare/DISENO.md` (copia del de `Repositorios/ages_of_warfare/`).
+Proyecto aparte, solo PC por ahora. **Hito 1: batalla de puntos suelta**, jugable desde un menú de
+prueba:
+1. crear el proyecto y recortar las dependencias del combate RPG (`rpg_battle.gd` arrastra
+   RelationsData, PartyData, GameManager, CaptureData…);
+2. datos del mapa de puntos y 2–3 plantillas;
+3. pantalla con niebla, movimiento por turnos, captura, regeneración, moral, refuerzos y retirada;
+4. combates RPG embebidos (escolta 1 genérico / 10 soldados, máx. 5) y resolución automática;
+5. IA por personalidad;
+6. victoria y derrota (campamento, comandante, moral 0, límite de turnos);
+7. pruebas automáticas para medir duración y tamaño de grupo.
+
+Después: mapa estratégico, oficiales, diplomacia, roles y consejo, relaciones, batallas navales y
+construcciones, y pulido. Los fondos que pedía el hito 1 ya llegaron con la actualización de
+recursos (aldea, muralla, barco, campamento y puente como escenas, sala del consejo, iconos de nodo).
 
 **Hecho en la sesión de noviembre de 2026** (resumen; el detalle está en el documento del proyecto):
 - **Combate y personajes:**

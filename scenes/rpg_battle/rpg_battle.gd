@@ -31,7 +31,7 @@ const FIGURE_MIN_W := 96
 const FIGURE_MIN_H := 150
 const FIGURE_GAP := 6
 const STAGE_GAP := 40
-const BOTTOM_H := 206   # cabe el menú principal (3 filas) sin desplazar
+const BOTTOM_H := 156   # sin historial: el menú en 3 columnas y 2 filas
 const FIGURE_FRAME := Color(0, 0, 0, 0)   # sin marco salvo al actuar o ser objetivo
 const KO_SLOW_MO := 0.5
 const SIDE_COLORS := [Color("5b8fd0"), Color("c9584c")]
@@ -802,6 +802,28 @@ func _player_do(action: Dictionary) -> void:
 
 # --- Menú de órdenes ---
 
+# Listas largas (técnicas, objetos, cambios): la franja de comandos crece y la lista va en dos columnas.
+const MENU_BIG_SHARE := 0.46     # alto de la franja con una lista abierta (fracción de la pantalla)
+var _menu_big := false
+
+func _set_menu_big(on: bool) -> void:
+	if _bottom == null or _menu_big == on:
+		return
+	_menu_big = on
+	var normal := CLASSIC_BOTTOM_H if _view == View.CLASICA else (FP_BOTTOM_MIN if _view == View.PRIMERA else BOTTOM_H)
+	var big := maxf(normal, get_viewport_rect().size.y * MENU_BIG_SHARE)
+	_bottom.custom_minimum_size.y = big if on else normal
+
+## Contenedor de una lista de opciones: dos columnas si hay sitio (en la vista Clásica el panel es estrecho).
+func _list_box() -> Container:
+	var grid := GridContainer.new()
+	grid.columns = 1 if _view in [View.CLASICA, View.PRIMERA] else 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 3)
+	cmd_box.add_child(grid)
+	return grid
+
 func _clear_menu() -> void:
 	_keys.clear()
 	for ch in cmd_box.get_children():
@@ -830,11 +852,12 @@ func _cmd(parent: Node, text: String, key: Key, tip: String, cb: Callable, disab
 func _show_main_menu() -> void:
 	_menu = "main"
 	_clear_menu()
+	_set_menu_big(false)
 	var f = _acting
 	actor_label.text = "Turno de %s" % f.c.full_name()
 	hint_label.text = "Elige una orden."
 	var grid := GridContainer.new()
-	grid.columns = 3 if _view == View.PRIMERA else 2   # Primera persona: franja baja y ancha
+	grid.columns = 2 if _view == View.CLASICA else 3   # sin historial, el menú tiene toda la franja baja
 	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 4)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -881,6 +904,8 @@ func _ref_target(f):
 func _show_techniques() -> void:
 	_menu = "tech"
 	_clear_menu()
+	_set_menu_big(true)
+	var list := _list_box()
 	var f = _acting
 	actor_label.text = "Técnicas · %d PT" % f.pt
 	var first: Button = null
@@ -909,7 +934,7 @@ func _show_techniques() -> void:
 				_choose_target({"type": "tecnica", "node": id}, mgr.valid_targets(f, n), dt, fx)
 			else:
 				_player_do({"type": "tecnica", "node": id})
-		var b := _cmd(cmd_box, text, KEY_NONE, tip, cb, not ok)
+		var b := _cmd(list, text, KEY_NONE, tip, cb, not ok)
 		SkillIcons.set_node_button_icon(b, id, f.c, MENU_ICON)
 		if ok and first == null:
 			first = b
@@ -922,11 +947,13 @@ func _show_techniques() -> void:
 func _show_swap() -> void:
 	_menu = "swap"
 	_clear_menu()
+	_set_menu_big(true)
+	var swap_list := _list_box()
 	var f = _acting
 	actor_label.text = "Cambiar a %s por…" % f.c.first_name
 	var first: Button = null
 	for r in mgr.reserve_of(0):
-		var b := _cmd(cmd_box, "%s · PV %d/%d" % [r.c.full_name(), r.hp, r.max_hp], KEY_NONE, "Entra al combate y %s pasa a la reserva." % f.c.first_name,
+		var b := _cmd(swap_list, "%s · PV %d/%d" % [r.c.full_name(), r.hp, r.max_hp], KEY_NONE, "Entra al combate y %s pasa a la reserva." % f.c.first_name,
 			func(): _player_do({"type": "cambiar", "out": f, "reserve": r}))
 		if first == null:
 			first = b
@@ -937,6 +964,8 @@ func _show_swap() -> void:
 func _show_items() -> void:
 	_menu = "items"
 	_clear_menu()
+	_set_menu_big(true)
+	var item_list := _list_box()
 	var f = _acting
 	actor_label.text = "Objetos"
 	var first: Button = null
@@ -952,7 +981,7 @@ func _show_items() -> void:
 				_player_do({"type": "objeto", "item": item_id, "target": f})
 			else:
 				_choose_target({"type": "objeto", "item": item_id}, ConsumableCatalog.targets(mgr, f, item_id), -1, {})
-		var b := _cmd(cmd_box, text, KEY_NONE, str(it.desc), cb)
+		var b := _cmd(item_list, text, KEY_NONE, str(it.desc), cb)
 		SkillIcons.set_button_icon(b, StatIcons.consumable_texture(item_id), StatIcons.CONSUMABLE_COLOR, MENU_ICON)
 		if first == null:
 			first = b
@@ -966,6 +995,7 @@ func _choose_target(action: Dictionary, targets: Array, dt: int, fx: Dictionary)
 	if targets.is_empty() or _acting == null:
 		return
 	_menu = "target"
+	_set_menu_big(false)   # se ven bien las figuras para elegir
 	var idx := targets.find(_last_target)
 	_targeting = {"action": action, "targets": targets, "idx": maxi(0, idx), "dt": dt, "fx": fx}
 	_clear_menu()
@@ -1152,6 +1182,7 @@ func _on_settings_changed() -> void:
 ## Coloca filas y figuras según la vista: Escenario (frente a frente), Clásica (tarjetas) o Enfocada.
 func _apply_view(view: int) -> void:
 	_view = view
+	_menu_big = false   # cada vista pone su alto normal
 	_reset_first_person()
 	if view == View.PRIMERA:
 		_layout_first_person()
@@ -1179,6 +1210,9 @@ func _apply_view(view: int) -> void:
 		log_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_bottom.custom_minimum_size.y = BOTTOM_H
 	_fp_ready = false
+	# Sin historial de la pelea: ocupa sitio y lo importante ya se ve en las figuras (números, destellos).
+	log_panel.visible = false
+	_cmd_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if view != View.CLASICA else Control.SIZE_FILL
 	for f in _cards:
 		_style_card(_cards[f])
 	_focus = []
@@ -1689,6 +1723,7 @@ func _revive_card(f) -> void:
 
 func _on_battle_ended(result: Dictionary) -> void:
 	_ended = true
+	_set_menu_big(false)
 	last_result = result
 	_acting = null
 	_targeting = {}

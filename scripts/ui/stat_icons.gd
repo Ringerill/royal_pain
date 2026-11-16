@@ -22,7 +22,7 @@ const ICONS := {
 }
 const NAMES := {
 	"oro": "Oro", "soldados": "Soldados", "honor": "Honor", "fama": "Fama", "comida": "Comida",
-	"vida": "Vida", "nivel": "Nivel", "acciones": "Acciones", "combate": "Combate", "defensa": "Defensa",
+	"vida": "Vida", "nivel": "Nivel", "acciones": "Acciones", "combate": "Ataque", "defensa": "Defensa",
 	"agilidad": "Agilidad", "estrategia": "Estrategia", "liderazgo": "Liderazgo", "carisma": "Carisma",
 	"odio": "Odio", "rivalidad": "Rivalidad", "amistad": "Amistad", "amor": "Amor", "casados": "Matrimonio", "castillo": "Castillo", "batalla": "Batalla", "pt": "Puntos de técnica",
 	"neutral": "Sin lazos",

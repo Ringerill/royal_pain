@@ -94,6 +94,15 @@ const FAME_MAX := 100
 @export var unspent_points: int = 0              # puntos de atributo por repartir al subir de nivel
 @export var pending_skill_choices: int = 0       # LEGADO: las habilidades ahora se aprenden en los árboles (SkillTreeCatalog)
 @export var age: int = 20                        # años; cada enero se cumple uno más (ver DynastyData)
+
+# --- Rediseño v2 (docs/REDISENO.md) ---
+# Conviven con los campos antiguos hasta que cada sistema migre; -1 = se deduce del campo antiguo.
+@export var status_rank: int = -1   # RankCatalog.Rank (estatus: inafiliado … rey)
+@export var via: int = -1           # ViaCatalog.Via (motivación; cambia por los actos)
+@export var persona: int = -1       # PersonaCatalog.Persona (9 personalidades nuevas)
+@export var max_energy: int = 100
+@export var energy: int = 100       # se gasta al viajar, combatir y entrenar; se recupera durmiendo
+@export var origin_kingdom: int = -1  # reino de origen (pasiva de origen)
 @export_range(-100, 100) var fame: int = 0   # reconocimiento: duelos, torneos y hazañas; atrae eventos y seguidores
 @export var wound_months: int = 0   # meses que faltan para curar una herida grave (no puede batirse)
 
@@ -128,6 +137,25 @@ const FAME_MAX := 100
 @export var consumables: Dictionary = {}       # bolsa del grupo para el combate RPG: id (ConsumableCatalog) -> cantidad
 
 # --- Nombre completo ---
+
+## Rango v2 (RankCatalog.Rank); si no se ha fijado, el equivalente del rol antiguo.
+func rank_v2() -> int:
+	return status_rank if status_rank >= 0 else RankCatalog.from_role(role)
+
+## Personalidad v2 (PersonaCatalog.Persona); si no se ha fijado, la equivalente de la antigua.
+func persona_v2() -> int:
+	return persona if persona >= 0 else int(PersonaCatalog.FROM_OLD.get(int(personality), 0))
+
+## Energía por debajo del umbral: el grupo pierde mucha fuerza (agotamiento).
+const LOW_ENERGY := 20
+func is_exhausted() -> bool:
+	return energy < LOW_ENERGY
+
+func spend_energy(amount: int) -> void:
+	energy = clampi(energy - amount, 0, max_energy)
+
+func restore_energy(amount: int) -> void:
+	energy = clampi(energy + amount, 0, max_energy)
 
 func full_name() -> String:
 	if last_name.is_empty():

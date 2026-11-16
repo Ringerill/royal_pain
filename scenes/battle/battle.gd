@@ -69,6 +69,7 @@ var _start_fn: Callable              # arranca la batalla con los compañeros el
 var _enemy_list: Array[Character] = []
 var _command_box: VBoxContainer
 var _ability_node: Control
+var _ability_overlay: Control   # ventana «Habilidades de mando»: quién tiene cada orden
 # Reparto de hombres antes de la batalla (ver CombatSetup.PLATOON_MIN / platoon_max / soldada_cost).
 var _allocation := {}                # nombre del jefe (tú o un compañero) -> hombres
 var _alloc_hired := false            # true: hombres contratados para esta batalla (se paga soldada)
@@ -91,9 +92,12 @@ func _ready() -> void:
 		castle = MapData.get_castle_by_id(str(invited.get("castle_id", "")))
 		if invited.kind == "field":
 			field_army = ArmyData.find_army(str(invited.get("army_id", "")))
+		_adapt_invitation()
 		if (invited.kind == "army" and (army == null or not army.pending_battle)) or castle == null \
 				or (invited.kind == "field" and ArmyData.field_target(field_army) != castle):
 			# El asedio ya se resolvió, el ejército ya no marcha sobre ese castillo (o no existe): no hay batalla.
+			WorldEvents.notify(str(invited.get("title", "Llamada a filas")),
+				"Cuando llegaste, ya no había batalla: el ejército se retiró o la lucha se decidió sin ti.")
 			CombatSetup.invited = {}
 			invited = {}
 	if invited.is_empty():
@@ -698,6 +702,8 @@ func _rebuild_abilities() -> void:
 		return
 	if _ability_node != null:
 		_ability_node.queue_free()
+	if is_instance_valid(_ability_overlay):
+		_ability_overlay.queue_free()
 	_ability_buttons.clear()
 	_build_abilities(_command_box)
 
@@ -713,30 +719,127 @@ func _build_abilities(box: VBoxContainer) -> void:
 		box.add_child(none)
 		_ability_node = none
 	else:
-		# Una sola fila que se desplaza en horizontal: con más compañeros hay más órdenes, no más alto.
-		var scroll := ScrollContainer.new()
-		scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-		box.add_child(scroll)
-		var flow := HBoxContainer.new()
-		flow.add_theme_constant_override("separation", 6)
-		scroll.add_child(flow)
-		_ability_node = scroll
-		for c: Character in users:
-			for id: String in battle.abilities_of(c):
-				var b := Button.new()
-				var n := _ability_buttons.size() + 1
-				b.text = "%s%s · %s" % ["[%d] " % n if n <= 9 else "", BattleManager.ABILITIES[id].name, c.first_name]
-				b.tooltip_text = "%s (%s, una vez por batalla): %s" % [BattleManager.ABILITIES[id].name, c.full_name(), BattleManager.ABILITIES[id].desc]
-				b.icon = c.get_face()
-				b.expand_icon = true
-				b.add_theme_constant_override("icon_max_width", 20)
-				_compact(b)
-				b.clip_text = false
-				b.size_flags_horizontal = Control.SIZE_FILL
-				b.pressed.connect(func(): _use_ability(c, id))
-				flow.add_child(b)
-				_ability_buttons.append([b, c, id])
+		# Un botón abre la ventana con las órdenes de cada jefe (en el panel no caben bien).
+		var open := Button.new()
+		_compact(open)
+		open.clip_text = false
+		box.add_child(open)
+		_ability_node = open
+		_build_ability_window(users)
+		open.pressed.connect(func(): _ability_overlay.visible = true)
+		open.set_meta("users", users.size())
+		_update_ability_button()
+
+## Ventana de las habilidades de mando: por cada jefe, su rostro, su cargo y sus órdenes (con qué hacen).
+func _build_ability_window(users: Array[Character]) -> void:
+	_ability_overlay = Control.new()
+	_ability_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_ability_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_ability_overlay.z_index = 40
+	_ability_overlay.visible = false
+	add_child(_ability_overlay)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.55)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ability_overlay.add_child(dim)
+	_ability_overlay.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and e.pressed:
+			_ability_overlay.visible = false)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ability_overlay.add_child(center)
+	var panel := PanelContainer.new()
+	center.add_child(panel)
+	var outer := VBoxContainer.new()
+	outer.add_theme_constant_override("separation", 8)
+	panel.add_child(outer)
+	var title := Label.new()
+	title.text = "Habilidades de mando"
+	title.theme_type_variation = &"HeaderLabel"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	outer.add_child(title)
+	var note := Label.new()
+	note.text = "Cada jefe da su orden una vez por batalla."
+	note.theme_type_variation = &"MutedLabel"
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	outer.add_child(note)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(640, mini(420, 90 + users.size() * 96))
+	outer.add_child(scroll)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 10)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	for c: Character in users:
+		var card := PanelContainer.new()
+		card.theme_type_variation = &"CardPanel"
+		list.add_child(card)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		card.add_child(row)
+		row.add_child(FaceIcon.make(c, 64, BattleBoard.PLAYER_COLOR))
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 4)
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(col)
+		var who := Label.new()
+		who.text = "%s · %s" % [c.full_name(), _ability_post(c)]
+		who.theme_type_variation = &"BodyBoldLabel"
+		col.add_child(who)
+		for id: String in battle.abilities_of(c):
+			var a: Dictionary = BattleManager.ABILITIES[id]
+			var line := HBoxContainer.new()
+			line.add_theme_constant_override("separation", 8)
+			col.add_child(line)
+			var b := Button.new()
+			var n := _ability_buttons.size() + 1
+			b.text = "%s%s" % ["[%d] " % n if n <= 9 else "", a.name]
+			b.custom_minimum_size.x = 210
+			b.tooltip_text = a.desc
+			b.pressed.connect(func():
+				_use_ability(c, id)
+				_ability_overlay.visible = false)
+			line.add_child(b)
+			var desc := Label.new()
+			desc.text = a.desc
+			desc.theme_type_variation = &"MutedLabel"
+			desc.add_theme_font_size_override("font_size", 13)
+			desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			desc.custom_minimum_size.x = 300
+			line.add_child(desc)
+			_ability_buttons.append([b, c, id])
+	var close := Button.new()
+	close.text = "Cerrar"
+	close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	close.custom_minimum_size.x = 160
+	close.pressed.connect(func(): _ability_overlay.visible = false)
+	outer.add_child(close)
+
+## Cargo de quien da la orden: tú, el comandante del bando, un compañero o un oficial.
+func _ability_post(c: Character) -> String:
+	if c == GameManager.player_character or c == battle.player_leader:
+		return "Tú"
+	if c == battle._commander(battle.player_side):
+		return "Comandante"
+	for u: BattleUnit in battle.active_units(battle.player_side):
+		if u.companion == c:
+			return "Compañero al mando"
+	return "Oficial"
+
+## Texto del botón: cuántas órdenes quedan por dar.
+func _update_ability_button() -> void:
+	if not is_instance_valid(_ability_node) or not _ability_node is Button:
+		return
+	var left := 0
+	for entry in _ability_buttons:
+		if battle.can_use_ability(entry[1], entry[2], battle.player_side):
+			left += 1
+	(_ability_node as Button).text = "Habilidades de mando (%d disponibles)" % left
+	(_ability_node as Button).disabled = left == 0
 
 # Botones pequeños: el panel lateral va justo de espacio.
 func _compact(b: Button) -> void:
@@ -839,6 +942,7 @@ func _refresh_commands() -> void:
 		b.disabled = not battle.can_use_ability(entry[1], entry[2], battle.player_side)
 		if battle.ability_used_by(entry[1]):
 			b.tooltip_text = "%s ya dio su orden en esta batalla." % entry[1].full_name()
+	_update_ability_button()
 
 # --- Compañeros ---
 
@@ -1015,6 +1119,25 @@ func _refresh() -> void:
 
 # Cara y nombre de quien dirige el pelotón elegido (al pulsar la cara se ve su retrato completo).
 var _leader_row: VBoxContainer
+
+## La llamada a filas cambió de forma entre que te llamaron y llegas: si el ejército ya está ante el castillo,
+## la campal pasa a ser su asedio; si el asedio aún no empezó y el ejército marcha sobre él, es campal.
+func _adapt_invitation() -> void:
+	var a: Army = ArmyData.find_army(str(invited.get("army_id", "")))
+	if a == null or castle == null:
+		return
+	if invited.kind == "field" and a.pending_battle and a.current_castle_id == castle.castle_id:
+		invited["kind"] = "army"
+		invited["title"] = "Asedio"
+		CombatSetup.invited = invited
+		army = a
+		field_army = null
+	elif invited.kind == "army" and not a.pending_battle and ArmyData.field_target(a) == castle:
+		invited["kind"] = "field"
+		invited["title"] = "Batalla campal"
+		CombatSetup.invited = invited
+		field_army = a
+		army = null
 
 ## La crónica no ocupa el panel: un botón «Crónica» la abre encima y tocar fuera la cierra.
 func _setup_log_button() -> void:

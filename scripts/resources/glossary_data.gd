@@ -106,7 +106,7 @@ Desesperada: gran daño, defensa por los suelos; solo Atacar y Empujar."],
 		["Liderazgo", "Mejora la moral y la fuerza de tus tropas, y es necesario para la Nobleza Alta."],
 		["Carisma", "Ayuda en el trato con la gente: regalos, conversaciones, eventos que se resuelven hablando."],
 		["Estrategia", "Mejora a tus tropas en batalla y algunas tiradas de eventos."],
-		["Combate", "Tu fuerza ofensiva en el duelo y tu probabilidad de esquivar, parar y desarmar."],
+		["Ataque", "Tu fuerza ofensiva en el duelo y tu probabilidad de esquivar, parar y desarmar."],
 		["Defensa", "Reduce el daño que recibes en el duelo y dificulta que te desarmen."],
 		["Vida, aliento y moral", "Vida: si llega a 0 caes. Aliento: lo gastan las acciones del duelo. Moral: afecta al daño en el duelo y a la huida de las tropas."],
 	],
@@ -345,7 +345,7 @@ static func _dynamic(category: String) -> Array:
 
 static func _with_mods(text: String, item: Object) -> String:
 	var parts: Array[String] = []
-	for pair in [["combat_mod", "Combate"], ["defense_mod", "Defensa"], ["leadership_mod", "Liderazgo"],
+	for pair in [["combat_mod", "Ataque"], ["defense_mod", "Defensa"], ["leadership_mod", "Liderazgo"],
 			["charisma_mod", "Carisma"], ["strategy_mod", "Estrategia"], ["agility_mod", "Agilidad"]]:
 		var v = item.get(pair[0])
 		if v != null and int(v) != 0:

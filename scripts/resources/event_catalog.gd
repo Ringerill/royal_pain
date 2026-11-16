@@ -572,7 +572,7 @@ const SCALED_PENALTIES := ["gold", "honor", "health", "garrison", "castle_gold",
 
 static func _stat_label(key: String) -> String:
 	match key:
-		"combat": return "Combate"
+		"combat": return "Ataque"
 		"leadership": return "Liderazgo"
 		"charisma": return "Carisma"
 		"strategy": return "Estrategia"

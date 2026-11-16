@@ -45,7 +45,7 @@ const STAT_LABELS := {
 	"leadership": "Liderazgo",
 	"charisma": "Carisma",
 	"strategy": "Estrategia",
-	"combat": "Combate",
+	"combat": "Ataque",
 	"defense": "Defensa",
 	"agility": "Agilidad",
 }

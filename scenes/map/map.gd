@@ -886,6 +886,7 @@ func _show_pending_event() -> void:
 	if not GameManager.is_game_active or not GameManager.has_pending_event():
 		event_overlay.visible = false
 		return
+	_showing_notification = false
 	var e: Dictionary = GameManager.pending_event
 	var player: Character = GameManager.player_character
 	var castle := MapData.get_castle_by_id(GameManager.home_castle_id)
@@ -949,6 +950,9 @@ func _on_event_option_pressed(index: int) -> void:
 func _on_event_close_pressed() -> void:
 	event_overlay.visible = false
 	btn_event_close.text = "Continuar"
+	# Un combate o duelo aceptado va primero (aunque antes se viera una noticia en este mismo panel).
+	if not _pending_fight.is_empty() or _pending_duel_rival != null:
+		_showing_notification = false
 	if _showing_notification:
 		_showing_notification = false
 		_show_next_notification()
@@ -1072,6 +1076,7 @@ func _show_site(uid: String, prefix: String = "") -> void:
 	if site.is_empty() or (event_overlay.visible and prefix.is_empty()):
 		return
 	_site_uid = uid
+	_showing_notification = false
 	var started := bool(site.get("started", false))
 	var event := SiteCatalog.as_event(site.type, str(site.get("step", "start")))
 	var player: Character = GameManager.player_character
@@ -1222,6 +1227,7 @@ func _show_encounter() -> void:
 	var player: Character = GameManager.player_character
 	var home := MapData.get_castle_by_id(GameManager.home_castle_id)
 	_showing_encounter = true
+	_showing_notification = false
 	event_title.text = "En el camino: %s" % event.title
 	event_text.text = StatIcons.richify(event.text)
 	event_speaker.visible = false

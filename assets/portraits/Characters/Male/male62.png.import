@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dllewordlbe6d"
-path="res://.godot/imported/male62.png-1a22db42bd1e7b79729346991f388191.ctex"
+path="res://.godot/imported/male62.png-98c08b72b086cd3443ee5042ced0bee5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/portraits/Characters/Male/male62.png"
-dest_files=["res://.godot/imported/male62.png-1a22db42bd1e7b79729346991f388191.ctex"]
+source_file="res://assets/portraits/characters/male/male62.png"
+dest_files=["res://.godot/imported/male62.png-98c08b72b086cd3443ee5042ced0bee5.ctex"]
 
 [params]
 

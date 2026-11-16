@@ -130,7 +130,7 @@ func effect_summary(entry_name: String) -> String:
 				return ", ".join(parts)
 	return ""
 
-const STAT_LABELS := {"leadership": "Liderazgo", "charisma": "Carisma", "strategy": "Estrategia", "combat": "Combate", "defense": "Defensa", "agility": "Agilidad"}
+const STAT_LABELS := {"leadership": "Liderazgo", "charisma": "Carisma", "strategy": "Estrategia", "combat": "Ataque", "defense": "Defensa", "agility": "Agilidad"}
 
 func _ready() -> void:
 	general_skills = _skills_from(ContentCatalog.GENERAL_SKILLS, CharacterEnums.SkillCategory.GENERAL)

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgn2ahtg3i663"
-path="res://.godot/imported/woman59.png-4c1473f1d9ba50ba0425451db83cffb0.ctex"
+path="res://.godot/imported/woman59.png-f89552a434dcff06317fa3eab1a0032f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/portraits/Characters/Female/woman59.png"
-dest_files=["res://.godot/imported/woman59.png-4c1473f1d9ba50ba0425451db83cffb0.ctex"]
+source_file="res://assets/portraits/characters/female/woman59.png"
+dest_files=["res://.godot/imported/woman59.png-f89552a434dcff06317fa3eab1a0032f.ctex"]
 
 [params]
 

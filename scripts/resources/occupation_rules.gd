@@ -76,7 +76,7 @@ static func apply(c: Character, id: String) -> Dictionary:
 			var gold := admin_gold(c)
 			return {"text": "%s administra: +%d de oro" % [name, gold], "gold": gold}
 		ENTRENAR:
-			return {"text": _learn(c, XpRules.SOURCE_TRAINING, "combat", "Combate"), "gold": 0}
+			return {"text": _learn(c, XpRules.SOURCE_TRAINING, "combat", "Ataque"), "gold": 0}
 		ESTUDIAR:
 			return {"text": _learn(c, XpRules.SOURCE_STUDY, "strategy", "Estrategia"), "gold": 0}
 	return {"text": "", "gold": 0}

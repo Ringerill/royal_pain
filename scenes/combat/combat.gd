@@ -494,17 +494,17 @@ func _compact(b: Button) -> void:
 
 # Fondo según dónde se libra el duelo: torneos en el patio de armas; en campaña, según el reino del castillo.
 func _pick_background() -> void:
-	var path := "res://assets/TurnFight-Trining_Ground.png"
+	var path := "res://assets/battle/backgrounds/training_ground.png"
 	if CombatSetup.is_campaign and not CombatSetup.is_tournament() and GameManager.current_castle != null:
 		match GameManager.current_castle.kingdom:
 			KingdomEnums.Kingdom.HIELO, KingdomEnums.Kingdom.CUMBRES, KingdomEnums.Kingdom.GRIS:
-				path = "res://assets/TurnFight-Snow.png"
+				path = "res://assets/battle/backgrounds/meadow_winter.png"
 			KingdomEnums.Kingdom.DESIERTO, KingdomEnums.Kingdom.AMBAR, KingdomEnums.Kingdom.DORADO:
-				path = "res://assets/TurnFight-Desert.png"
+				path = "res://assets/battle/backgrounds/desert.png"
 			KingdomEnums.Kingdom.AZUL, KingdomEnums.Kingdom.NEUTRAL:
-				path = "res://assets/TurnFight-Seaside.png"
+				path = "res://assets/battle/backgrounds/seaside.png"
 			_:
-				path = "res://assets/TurnFight-Meadow.png"
+				path = "res://assets/battle/backgrounds/meadow.png"
 	background.texture = load(path)
 
 func _unhandled_key_input(event: InputEvent) -> void:

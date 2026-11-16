@@ -65,7 +65,7 @@ Resumen de las fases que faltan del plan de revisión. El detalle completo, con 
   - ritmo de subida del mundo (`MONTHLY_XP` en `world_growth.gd`).
 - **Guerra civil:** el rey solo ataca castillos tuyos vecinos de los suyos.
 - **Probar a mano:** "Luchar / Resolver", el encuentro con viajeros y exportar/importar en "Mis personajes".
-- **Arte:** más retratos para los enemigos con 1–2 imágenes y fondos propios de montaña y bosque (`assets/backgrounds/`).
+- **Arte:** más retratos para los enemigos con 1–2 imágenes y fondos propios de montaña y bosque (`assets/battle/backgrounds/biomes/`).
 - **Cierre inesperado de Godot al salir:** conocido, sin efecto en las partidas.
 
 El resto de este documento es el detalle original de las fases (ya hechas), útil como referencia.

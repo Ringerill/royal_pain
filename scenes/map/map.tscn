@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://q8ruwmgk1o5j"]
 
 [ext_resource type="Script" uid="uid://b83lmkgpm21n7" path="res://scenes/map/map.gd" id="1_a2pkv"]
-[ext_resource type="Texture2D" uid="uid://bdaxqqpp14il" path="res://assets/Map.png" id="1_sxf4j"]
+[ext_resource type="Texture2D" uid="uid://bdaxqqpp14il" path="res://assets/maps/world_map.png" id="1_sxf4j"]
 [ext_resource type="Script" uid="uid://6i1fb2un4atk" path="res://scripts/map/map_camera.gd" id="2_tqkkf"]
 
 [node name="GeopoliticalMap" type="Node2D" unique_id=1188924373]

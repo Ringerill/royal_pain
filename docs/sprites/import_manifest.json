@@ -1,0 +1,732 @@
+[
+  {
+    "source": "Characters/Female/Woman0.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman0.png",
+    "sha256": "ad33bffa6b4aa6dbb9d863c0a1a07fe7a667480e4c7aec569bd9739c154722a9"
+  },
+  {
+    "source": "Characters/Female/woman1.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman1.png",
+    "sha256": "112f959bf2bb8b19a2ac124d1db513bf39e86507d4ed4a40a877acc2dcd433cd"
+  },
+  {
+    "source": "Characters/Female/woman103.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman103.png",
+    "sha256": "29e80c76092bf5fb798bb33dd854ada078cc72304dddfb6d642dc1f15ead5be4"
+  },
+  {
+    "source": "Characters/Female/woman108.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman108.png",
+    "sha256": "d3754f0de7febbaeef12a3b7139b03a2617717e75c911a72d7450f9bbca70a16"
+  },
+  {
+    "source": "Characters/Female/woman112.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman112.png",
+    "sha256": "ed3fc28c02d8cf8492ffb67c15f0d2697e611ae22c1abcf5cbaa9367f4df663b"
+  },
+  {
+    "source": "Characters/Female/woman115.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman115.png",
+    "sha256": "84099e5ecf1ad3f3659b5d964971ddd942c0f7ae66bd64fbc593735274ce678c"
+  },
+  {
+    "source": "Characters/Female/woman119.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman119.png",
+    "sha256": "094183f490ea48e8289acbc2009887fbbb1a6e5690f2f0672b678d45243b2abf"
+  },
+  {
+    "source": "Characters/Female/woman123.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman123.png",
+    "sha256": "8870b8352739dd02c93024b325dbcfc45621580d132186ded077458bb15bc697"
+  },
+  {
+    "source": "Characters/Female/woman124.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman124.png",
+    "sha256": "4738ac493fba4f1838ed75897bba31fc03c30e286c39ea869e009ee7770234dd"
+  },
+  {
+    "source": "Characters/Female/woman13.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman13.png",
+    "sha256": "d78b1ad9256f14ca37d728eaba7ebc1f3a0aebbe0c9f9ceb38a119475698a83b"
+  },
+  {
+    "source": "Characters/Female/woman134.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman134.png",
+    "sha256": "e9818e5c7b525dec92a9ba90e37bd14175bbbd9a2136f75c7f6a3eb958e6d07c"
+  },
+  {
+    "source": "Characters/Female/woman136.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman136.png",
+    "sha256": "4e6494a1d883f7b3ecad5458b54e595b448f958835cf6b276c4f751e7b37815a"
+  },
+  {
+    "source": "Characters/Female/woman14.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman14.png",
+    "sha256": "aa0efba3aade75188d7209d42bd889aacf8eb11973cdb90d5ec22287bce00199"
+  },
+  {
+    "source": "Characters/Female/woman143.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman143.png",
+    "sha256": "6efe4b8e06982a9c6e3803a2cb81d9440f4aa7c497d82c277ce4d23890644f94"
+  },
+  {
+    "source": "Characters/Female/woman146.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman146.png",
+    "sha256": "7ef1244c791aea52abbb4da3b1d48452c13292612a17559417f0df7c1e43c724"
+  },
+  {
+    "source": "Characters/Female/woman150.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman150.png",
+    "sha256": "ee5162d13d25d5097c59e769b4e6de88baac510c23e2ad31470f07f1675762e7"
+  },
+  {
+    "source": "Characters/Female/woman154.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman154.png",
+    "sha256": "506fafdfd2ed0f4ad1b2f2b4f66dabf16c85464d174b711390ca2587c4d6f695"
+  },
+  {
+    "source": "Characters/Female/woman156.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman156.png",
+    "sha256": "3d9dc3b00b87ad6a43fe49d8716f418e9ed3049306e5860f064403554ea2306a"
+  },
+  {
+    "source": "Characters/Female/woman161.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman161.png",
+    "sha256": "c548a559c22651389ddce70059ace04868a0836f22dd74ac8c21af8bd6d2e801"
+  },
+  {
+    "source": "Characters/Female/woman166.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman166.png",
+    "sha256": "f922a50f6f8afee50077b7b96b3b260d0c9e3c315e42f37faa60ffb70c91917c"
+  },
+  {
+    "source": "Characters/Female/woman168.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman168.png",
+    "sha256": "ec8dd2df8fecb6879e52ff3bf069ff3bbf6a801a765c7d03f69da72445805313"
+  },
+  {
+    "source": "Characters/Female/woman169.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman169.png",
+    "sha256": "bdbca2e5f523e3a8e7059f4c61ce38b3dc807feb1fe6946c1349622b4d6b7195"
+  },
+  {
+    "source": "Characters/Female/woman170.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman170.png",
+    "sha256": "944ca03d0b8f9e9340807b2d1b7cd9cde2cc5afab682c2ea7c92b4a12a9449e1"
+  },
+  {
+    "source": "Characters/Female/woman173.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman173.png",
+    "sha256": "4dbf7474258092fdad2b5efc4b139a4625d9bb8408f7f6caa7795817272afeab"
+  },
+  {
+    "source": "Characters/Female/woman174.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman174.png",
+    "sha256": "62d029e0dfef717b466c5dc1c084c041036ceba01c8b38de7f7a7dcf982fd681"
+  },
+  {
+    "source": "Characters/Female/woman175.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman175.png",
+    "sha256": "c1735ae4330d6b3570b0dc748281e6775a28d2a024063ac623ac207d782847e8"
+  },
+  {
+    "source": "Characters/Female/woman176.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman176.png",
+    "sha256": "6dcbed4ce7b6a1d2026783112f833ed222abab76006358935ef6af3bdc602425"
+  },
+  {
+    "source": "Characters/Female/woman177.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman177.png",
+    "sha256": "27da357f0046524f9967b44da9c21d8b90d612e391fa667751585b1f93e71b96"
+  },
+  {
+    "source": "Characters/Female/woman2.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman2.png",
+    "sha256": "3dcae7a3892966b679118aa5e2bf69046dad7b52e0db67c1d3fbcff9df1c65f8"
+  },
+  {
+    "source": "Characters/Female/woman20.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman20.png",
+    "sha256": "463c100e893d8871b2d8ab41eaa37005a79fcf2403a94db64fee24cba1a89b34"
+  },
+  {
+    "source": "Characters/Female/woman21.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman21.png",
+    "sha256": "a3dfb8aca9cd36aa9e6d1ae8ea7df7d7f083336335e0d0130e858d025748c417"
+  },
+  {
+    "source": "Characters/Female/woman27.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman27.png",
+    "sha256": "f6728ca78c3991b4c30469b1bcdf7d174de8482cc0b739581f552ad7c4e89049"
+  },
+  {
+    "source": "Characters/Female/woman29.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman29.png",
+    "sha256": "7d26db34897b6a260dbb57f00a005570caeb125de3968c162f58f37ab677f297"
+  },
+  {
+    "source": "Characters/Female/woman3.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman3.png",
+    "sha256": "5ce9998be1373aa399c3b4e536e85e2166cfdb0938f293f53921418c9677f80a"
+  },
+  {
+    "source": "Characters/Female/woman32.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman32.png",
+    "sha256": "a5002c50e15e6066055d159a97a9a6c0e68a950b144e1ad645d838eeb4649cfe"
+  },
+  {
+    "source": "Characters/Female/woman34.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman34.png",
+    "sha256": "d6ee93d65e5668be927e43cc7ca5ba39ebe9a50fa34a72f12a4f2fedc18ab704"
+  },
+  {
+    "source": "Characters/Female/woman35.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman35.png",
+    "sha256": "20758206c2fae137eddd304001f94bc352467d3aaecc45857a099b6fc141becd"
+  },
+  {
+    "source": "Characters/Female/woman36.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman36.png",
+    "sha256": "f3e04a929b85359a9a113804480684c908046f4f34a7a881367cad6e4f6d5403"
+  },
+  {
+    "source": "Characters/Female/woman37.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman37.png",
+    "sha256": "8825a94137b529d0edc60f34eaa66b95d4b3223c3c9cf28fe53cfa4fae962f93"
+  },
+  {
+    "source": "Characters/Female/woman39.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman39.png",
+    "sha256": "6e4384313fa8a1c60dd4d148550dd348c7b18202ca7063489c68bb10075b2220"
+  },
+  {
+    "source": "Characters/Female/woman46.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman46.png",
+    "sha256": "44a88dc118c5779c57183de48aa9b9710b2c3e47c98dd26652a07a8372a2d1d1"
+  },
+  {
+    "source": "Characters/Female/woman47.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman47.png",
+    "sha256": "ba1f4a225a5f4ea78f43ce043f2542313716a125b687dec80721a3645dc88e86"
+  },
+  {
+    "source": "Characters/Female/woman5.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman5.png",
+    "sha256": "093304609babe1ea75879985bc1316aaadf5bb7c861c7a570011a006a5f33cfb"
+  },
+  {
+    "source": "Characters/Female/woman50.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman50.png",
+    "sha256": "d5cfd6156baf4abb9637beb00320b734f26eaab472502efa762cffbcc2713045"
+  },
+  {
+    "source": "Characters/Female/woman57.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman57.png",
+    "sha256": "4b345c9732dd805323789ea44f47dd1904124e458978c7eaf3a479016f34239b"
+  },
+  {
+    "source": "Characters/Female/woman59.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman59.png",
+    "sha256": "a5311beeb56077127da8fa565c45a015248eeeadbee02a111ff42f8059bafa1d"
+  },
+  {
+    "source": "Characters/Female/woman65.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman65.png",
+    "sha256": "1f6e9679c5c956978a153dd7aa92de4fd189f120ab9d4abb32ad97126e164287"
+  },
+  {
+    "source": "Characters/Female/woman71.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman71.png",
+    "sha256": "af2640775138cef8332815e08289f280d4aa4cdfae6d45b06326752aa5160286"
+  },
+  {
+    "source": "Characters/Female/woman72.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman72.png",
+    "sha256": "8f6dd71b41f16cba006649f08989a48bdfa04d22c80d7bc08c412ca5aee50d5e"
+  },
+  {
+    "source": "Characters/Female/woman74.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman74.png",
+    "sha256": "bdeedd946898669f435cb61077cc8b936a545c59c9687e6ed646b0a31a1b2986"
+  },
+  {
+    "source": "Characters/Female/woman75.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman75.png",
+    "sha256": "53ca7a63c7949494a9c2b7fa4ffea74dc2dfffc9303307f5a521245060a52909"
+  },
+  {
+    "source": "Characters/Female/woman78.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman78.png",
+    "sha256": "8e02c709c687a81d6db60bec3799310d27929470cf95458157baa6b18fa75b3d"
+  },
+  {
+    "source": "Characters/Female/woman79.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman79.png",
+    "sha256": "0581fd4f8c708a04b3c2a089d517bb6a1deb4a0f73995afe32c57731f4ed7226"
+  },
+  {
+    "source": "Characters/Female/woman81.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman81.png",
+    "sha256": "efc68806fa14a1f6f6becb36c8835a518f2b45a132abfbf32a8e9090eff88bda"
+  },
+  {
+    "source": "Characters/Female/woman82.png",
+    "destination": "assets/battle/sprite_sheets/characters/female/woman82.png",
+    "sha256": "b6e88078eb62b718332cec42cd3be4e60d4a40fc5a3330d9bb2aa2cacffc4f52"
+  },
+  {
+    "source": "Characters/Male/male1.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male1.png",
+    "sha256": "a59244605b88a47d568c9ad00f8a08234662ee3f6a7e104e0147ea8c80ba4b05"
+  },
+  {
+    "source": "Characters/Male/male10.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male10.png",
+    "sha256": "d83c5108715ef889ae926d4a28fce9e30bc4d2138fa652225b88a8fe27e21549"
+  },
+  {
+    "source": "Characters/Male/male14.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male14.png",
+    "sha256": "c877d208e60380f1bde0c550fc712ed6dd9cb360a1fdf57ea99ad01d4a5ae863"
+  },
+  {
+    "source": "Characters/Male/male16.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male16.png",
+    "sha256": "01aa9bdf64f7e018b89c77d29651ccfdf1413614aa1bd6e58d3f62feaae9f4cc"
+  },
+  {
+    "source": "Characters/Male/male18.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male18.png",
+    "sha256": "8ed9ce8018f9e2588b651a5eab0f1c9b430bff5beeee42d9be95d274d6ba44ed"
+  },
+  {
+    "source": "Characters/Male/male2.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male2.png",
+    "sha256": "c63c4031db471ab9df3189431d258278884a520bfbc326a6662b03418e9eec5b"
+  },
+  {
+    "source": "Characters/Male/male29.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male29.png",
+    "sha256": "74dccbd2b0290f63fe6ba1aa833ab1472cfd434658127aa17316cef994893401"
+  },
+  {
+    "source": "Characters/Male/male31.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male31.png",
+    "sha256": "56a9572d6532356e7e6f99b09a4c22b16a6af702623f91ea6774b3e7eda3cd13"
+  },
+  {
+    "source": "Characters/Male/male35.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male35.png",
+    "sha256": "c98eccafa4ddbd752534e7352e9f2b2dd15cca14c6884bdfd0ae9f7361b0c985"
+  },
+  {
+    "source": "Characters/Male/male36.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male36.png",
+    "sha256": "66000ffd734b518688bf5afed7838feeffb1a3c2234f1298d9ce402da9ea4abb"
+  },
+  {
+    "source": "Characters/Male/male37.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male37.png",
+    "sha256": "f34659d6272c0045eb91ed1cf0056c39089565dbf4dc2e686c86d8b23affdb51"
+  },
+  {
+    "source": "Characters/Male/male4.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male4.png",
+    "sha256": "3176332e3afc3b50c7127f8c393819c296cadac20dfd6d9c74342b3cbb02cff6"
+  },
+  {
+    "source": "Characters/Male/male40.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male40.png",
+    "sha256": "2c71f3208507c35323e0cbb9b829964e91a31bdd796230db9db7e5daf50937bb"
+  },
+  {
+    "source": "Characters/Male/male45.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male45.png",
+    "sha256": "5652c28494f511404b574ab6285b3ef539d03b4bb11bbcbbb058312328122f9d"
+  },
+  {
+    "source": "Characters/Male/male48.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male48.png",
+    "sha256": "5471fedde8bb64ff584018512dfcca40d4f2cc2df052899cd1317794cba6ba67"
+  },
+  {
+    "source": "Characters/Male/male5.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male5.png",
+    "sha256": "81005648a5f15da48e18aa8aea8114a7a1095e1b16076bfbb19f34607e01b291"
+  },
+  {
+    "source": "Characters/Male/male53.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male53.png",
+    "sha256": "2a30a5c9ff7780cb57856280613cf1dfd7861788f50829368fc579026202c277"
+  },
+  {
+    "source": "Characters/Male/male55.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male55.png",
+    "sha256": "488113466e9b83e05347aa8db150ab13f62f6246bca6dd769416b426a2890ad6"
+  },
+  {
+    "source": "Characters/Male/male59.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male59.png",
+    "sha256": "1211625ffae35e545495f098a2f1872f66dd70cf24707ed4c9bf9f32ab46b6a8"
+  },
+  {
+    "source": "Characters/Male/male62.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male62.png",
+    "sha256": "65bf5a2075c1ec4cce433d10ea86544571eb2c188ee9e9f48cf07f2fa29ad937"
+  },
+  {
+    "source": "Characters/Male/male63.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male63.png",
+    "sha256": "e2076ecea4338cb9e0db3d1e00831bc672a0da5aced21c36d2f74df58b8601b2"
+  },
+  {
+    "source": "Characters/Male/male67.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male67.png",
+    "sha256": "3ac2b8f64de1a9b487e314439acaf092c15c347207bd7b432dceabfbb66d6c1b"
+  },
+  {
+    "source": "Characters/Male/male69.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male69.png",
+    "sha256": "2e47d7334c935e1d5072efdd1fd3708abdf48e51d9d6b7b70edfab04e682a8a2"
+  },
+  {
+    "source": "Characters/Male/male7.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male7.png",
+    "sha256": "bc9f9ff4660626ba933ed2ac0fe6ec8ddc4b11bcaa8067ec80502beb65593972"
+  },
+  {
+    "source": "Characters/Male/male70.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male70.png",
+    "sha256": "f5ddec12fbdbbcfeb42c439cd2992868651f6b4aa13327a97e0844223edae097"
+  },
+  {
+    "source": "Characters/Male/male71.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male71.png",
+    "sha256": "5214625b37016fe1fc60223e7c92266ff0ff51dc55cdc5ff4da432e6219a3d56"
+  },
+  {
+    "source": "Characters/Male/male72.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male72.png",
+    "sha256": "214a1d377c514fa689597950326bcbdd60efc0db7ac251d086d82ae37ca40b8b"
+  },
+  {
+    "source": "Characters/Male/male73.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male73.png",
+    "sha256": "72c465d0ede439f660aa05bb9129d289c958665c709398ded418567dfdca1090"
+  },
+  {
+    "source": "Characters/Male/male74.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male74.png",
+    "sha256": "89cf7a04ba1ec90b72d2df48049bb1020f48d5727a44ddbbbccc0af8ea7969b0"
+  },
+  {
+    "source": "Characters/Male/male75.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male75.png",
+    "sha256": "dd09a262400e032efb298b0cfd74a91d3e3ee18219149c3f968e01db146e355f"
+  },
+  {
+    "source": "Characters/Male/male76.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male76.png",
+    "sha256": "575f55ac6e43f9561ed200755e48643c055ad678e9261b91334c114497ce4d97"
+  },
+  {
+    "source": "Characters/Male/male77.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male77.png",
+    "sha256": "f97d1e10d49ca53ebb2a6974a399370d95767eae3cea6be43fa67743b16a1f08"
+  },
+  {
+    "source": "Characters/Male/male78.png",
+    "destination": "assets/battle/sprite_sheets/characters/male/male78.png",
+    "sha256": "7f20d4f460fbc06ea8a05b375451b9f24100725c01e945e18ee25f736eb13352"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Assassin-boss01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_assassin_boss01.png",
+    "sha256": "5525ee87d1f27ecc1f954026a76113740f78c9a5749fde1f34fa1f7dbf21daf6"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Assassin-Leader-01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_assassin_leader_01.png",
+    "sha256": "542e6aa3cd5ce2b770c718460970f3dfd117d8574ca5c4d2ae30ccdebf1a8521"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Assassin02.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_assassin02.png",
+    "sha256": "358831fb3306ed6fd5bc19aba26aa979b9758a8a9a7feccfb4c13c691245b016"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Bandit-Leader01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_bandit_leader01.png",
+    "sha256": "966d1eaf73d007e996716c5633103b7a98444a8ccbd5a34659ab998969a65e5b"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Bandit01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_bandit01.png",
+    "sha256": "4adb21d9a1fca6825688c7d0b9ac50ef7ca9d1d279eb6a1a0384d5364013696c"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Bandit02.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_bandit02.png",
+    "sha256": "3e6cb8e55fa8b2113ab7d9100294d9af95f51d4ef4215641e7eea5305c84d096"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Beggar01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_beggar01.png",
+    "sha256": "d39245af80d861dadafef92682c8f4a0d65829089a243f476d112025eea7c69b"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Berserker.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_berserker.png",
+    "sha256": "cac03a4101b64d6ca275982808d6628221c2e222560e7f8fcbfbf3c1e31a37f2"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Blacksmith.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_blacksmith.png",
+    "sha256": "837fa5835e95a611e3cfedfc408b7673199525b54f8dcc12728bbfe8043bf199"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Boss01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_boss01.png",
+    "sha256": "f8fab9e807eb7544530646504b9b6c8f3801ca917673fd755f47226cb2a631a1"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-commoner.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_commoner.png",
+    "sha256": "2f8d4c75b6feb835f50bbd561637cb86e27d1c162378c76d017afa31ed24f237"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-commoner2.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_commoner2.png",
+    "sha256": "3ded3ff52d69d786a326a1f9eead6d021586b53f31e48d94592375cd19432330"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Explorer01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_explorer01.png",
+    "sha256": "822f2b9e01923b8851fd75cef180e2de27bf5c50c12d63b48591eef69f535aae"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Farmer01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_farmer01.png",
+    "sha256": "70aef0b5ef759716a80bcd15ce8776e5db65524b3df1fcbd43d6eb65526d5d1a"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Farmer02.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_farmer02.png",
+    "sha256": "4a9f45193e16d251bc150960fbcb7846c386d16fdb83620999d4b3f8fed2667e"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Mage-Damage01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_mage_damage01.png",
+    "sha256": "12ca629e96d02e16f148c9915d5dda0cd2799940be4a91de0f35beb7940d1208"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Mage-Healer01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_mage_healer01.png",
+    "sha256": "a0c002f3c65369c08acef887c89cbda41eb131307a3b20b3c6130f9009dcbf7d"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Noblewoman1.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_noblewoman1.png",
+    "sha256": "5eeeb4bba1517f18325984b0c4a33e3967404b53de92143ea2148bb71d6a9b6e"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Noblewoman2.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_noblewoman2.png",
+    "sha256": "002c78ab8ee7a101b546baee85636a7e17348d113fb9d6aa72e35ad36ea28548"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Old-Hero.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_old_hero.png",
+    "sha256": "0f2b2cde2fb5f29905bc16a17bc022ebbb315d3500bab0653b118162e1954fde"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Pirate-1.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_pirate_1.png",
+    "sha256": "c1949ced9f2805a7f5479af6ed70260facf76f9e780430e36a1b7a8c41bbebcb"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Pirate-leader.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_pirate_leader.png",
+    "sha256": "ff537f2bc08c39fd6ac761771798779a2babbca5431468f13eee88009d80ed56"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Shopkeeper.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_shopkeeper.png",
+    "sha256": "d285004378251c256afbce30395e1d6e53bdeee46637522b51fcf903649027ed"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Soldier-Boss01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_soldier_boss01.png",
+    "sha256": "dd8d9e32edaca867c7a48c37f042f2eafb86b490e5de485cb3873b8d929e59c1"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Soldier-Heavy01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_soldier_heavy01.png",
+    "sha256": "5172f16eac406f595edc9f61c4f29df19219979f8f36658b8b3e22a3abcbe2fb"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Soldier-Mid01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_soldier_mid01.png",
+    "sha256": "d90cd0a8ef2b9aa03295ebbcec7d82829b8b2c1faf6a5015dcc4d252c25d79d7"
+  },
+  {
+    "source": "Enemies/E-Female/E-W-Soldier-Mid02.png",
+    "destination": "assets/battle/sprite_sheets/enemies/female/e_w_soldier_mid02.png",
+    "sha256": "dadbe0b884667c3ac25124c186e88462eed557efb3e1408898dcb12accdb39ef"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Assassin-boss01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_assassin_boss01.png",
+    "sha256": "255859023113a6f8ed8ebd3aad3bcb9a4ebc3a7ebf190661f573a997286ccf5c"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Assassin-Leader-01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_assassin_leader_01.png",
+    "sha256": "9d5756ec96af991c678c4bc3afd7c0eb5ed4ea642e2933d7fa89c4cda22bf6ba"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Assassin02.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_assassin02.png",
+    "sha256": "5ef941d0924186e1da666a54ab3b44963d2b6171fa0bac9645ffb86224f5ac98"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Bandit-Leader01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_bandit_leader01.png",
+    "sha256": "383403730a81f4a5dbb59a447e63939a2041f9d30727b8b5ec5c25a2c8289c5e"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Bandit01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_bandit01.png",
+    "sha256": "16f8596f70cf7e101065bc6a4e2f483babde3cfde8b219c0954607409a3e1716"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Bandit02.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_bandit02.png",
+    "sha256": "c3d8d1f0bfc118fa8aa22c1b0c4ec0092a2fbce50195e5f3579bb205ac1bc21e"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Beggar01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_beggar01.png",
+    "sha256": "9a69d703392d25ebe4bd4d831f1c22e3dab622c2d93be9b93a0ae4fa902fc1a1"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Berserker.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_berserker.png",
+    "sha256": "7e0b7fb00b0fb7f1112c6f3971220ecf0016ecf21d9e4c916e77d4868f64ba8e"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Blacksmith.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_blacksmith.png",
+    "sha256": "f0af95328a7f9c0bdd313791b45252b31a9a2876591e01f0335be4b90ed8c799"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Boss01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_boss01.png",
+    "sha256": "e7fab4430debc5a35f69921b16153b980752f3656938ff512fc5a1bc706f3743"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-commoner.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_commoner.png",
+    "sha256": "9b9325f4b53e90e7d02b36dbb6d2dd90160c59d88b9e29d199a4a0c8ca407e08"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-commoner2.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_commoner2.png",
+    "sha256": "a6a2c91700a5e724ed0fc494c5bb9a6c4ad6be6ad318ff95fcb801565d7164a0"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Executoner.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_executoner.png",
+    "sha256": "6507efe0c0ce3345c8abb361b7a3f1ab9f72428dc12b7bdd5991d944c69edba3"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Explorer01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_explorer01.png",
+    "sha256": "1c5d062b91cc57224a0cb926ac1bf232f9ea060580721f1d364bbffee73499b8"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Farmer01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_farmer01.png",
+    "sha256": "6429c8b359d2fe0749050a53c74b2d7b66eda9563bf4ee834fb7d6c3f77e36bb"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Farmer02.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_farmer02.png",
+    "sha256": "079a75addd2ca6e6bb2a67f19931f75637f845b8cf037bb380947f73eb5e47ba"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Mage-Damage01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_mage_damage01.png",
+    "sha256": "ad86bc41394f0149e7cec4ceb906af1d31228ff4e324053c3897a521e0de0636"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Mage-Healer01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_mage_healer01.png",
+    "sha256": "142faf21c01cef968ff501b1b2f7850d51c17b1dd6587cb5ff699ce10d92f01c"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Noblewoman1.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_noblewoman1.png",
+    "sha256": "9b11c656e6fd5e79536f7aa835f38e04f90c1f6c3d01133997b912e2f02ece52"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Noblewoman2.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_noblewoman2.png",
+    "sha256": "afd2f501b9e09fa80fb76581177e9c6baa031f1eac01e066a9980c307b082924"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Old-Hero.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_old_hero.png",
+    "sha256": "a010d312b479fd3870cf74c887ca5b163b80acd92358f83cc40f6ed8a6e818f2"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Pirate-1.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_pirate_1.png",
+    "sha256": "a4f4f4287e0fb0259af7213135bfc3663cfdb29fbd6e9f195f582504369b7b98"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Pirate-leader.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_pirate_leader.png",
+    "sha256": "0851043361db8536701556e6329a080bd933637cf8a0d25dfc34c9ff883452f4"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Shopkeeper.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_shopkeeper.png",
+    "sha256": "7b80713e0f41804c5485a46f8fabeb8f3184280635ac3fc168ba191fdda83265"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Soldier-Boss01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_soldier_boss01.png",
+    "sha256": "450c824466f3899fa0222a902063bd19d02261c821ebf6317af6999ecffebd0e"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Soldier-Heavy01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_soldier_heavy01.png",
+    "sha256": "95afd1c6cffd9fa9338dec12a8960f26d3107bde29c68c0f6bdb93caa12fee7d"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Soldier-Leader01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_soldier_leader01.png",
+    "sha256": "e585acacaca8888fd16af5fcf012b03b53422254c0411e730198ac9749c375dc"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Soldier-Mid01.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_soldier_mid01.png",
+    "sha256": "7d63856c9f3dccda7b277307af0d2e94b762e32526e33cc80673254e4e21da17"
+  },
+  {
+    "source": "Enemies/E-Male/E-M-Soldier-Mid02.png",
+    "destination": "assets/battle/sprite_sheets/enemies/male/e_m_soldier_mid02.png",
+    "sha256": "f1b29e175ae69d8ae10c31defda9e59d96557f14804e4def93a3caf84967f0f2"
+  },
+  {
+    "source": "plantilla-original-dash.png",
+    "destination": "assets/battle/sprite_sheets/templates/template_original_dash.png",
+    "sha256": "6be9b3104532b8d16a9a8f85020b80a982210f93e073279e37d930b878330e61"
+  },
+  {
+    "source": "plantilla-vigente.png",
+    "destination": "assets/battle/sprite_sheets/templates/template_woman0.png",
+    "sha256": "4f0dd7962fb5feb8af84fccc1193ceb7cccebcddd5df327e960ad5ff86a76d5b"
+  }
+]

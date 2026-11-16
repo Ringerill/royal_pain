@@ -473,7 +473,7 @@ Plan completo en `docs/plan_revision.md`; lo que queda, en `docs/PENDIENTE.md`.
 | Versión móvil | Pendiente | Android viable; requiere adaptar la interfaz al tacto (ayudas sin ratón, botones grandes, gestos en mapa y batalla). |
 | Condiciones de victoria/derrota — ampliación | v1 hecha | Victoria por rol inicial y dos derrotas implementadas; falta la victoria del Regente (requiere sucesión) y ajustar metas con el documento de diseño original. |
 | Cierre inesperado al salir | Investigado | Godot se cierra con error a veces al salir (también en el commit anterior y con el proyecto vacío de escenas); depende de los scripts cargados por GameData, sin causa única. No afecta a las partidas: se guardan antes. |
-| Arte y sonido final | SFX y música v2 | Retratos de personajes y enemigos integrados; fondos de combate por bioma (`assets/backgrounds/<bioma>/`, se pueden añadir más). Falta: más retratos para enemigos con 1–2 imágenes, fondos propios de montaña y bosque, arte de unidades. |
+| Arte y sonido final | SFX y música v2 | Retratos de personajes y enemigos integrados; fondos de combate por bioma (`assets/battle/backgrounds/biomes/<bioma>/`, se pueden añadir más). Falta: más retratos para enemigos con 1–2 imágenes, fondos propios de montaña y bosque, arte de unidades. |
 
 ## Roadmap sugerido
 

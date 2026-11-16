@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scenes/castle_interior/castle_interior.gd" id="castle_interior_script"]
-[ext_resource type="Texture2D" path="res://assets/Council-Castle.png" id="2_hall"]
+[ext_resource type="Texture2D" path="res://assets/ui/backgrounds/council_hall.png" id="2_hall"]
 
 [node name="CastleInterior" type="Control"]
 layout_mode = 3

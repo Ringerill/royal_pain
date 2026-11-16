@@ -1,0 +1,23 @@
+De izquierda a derecha:
+
+Primera fila
+1. Curación — tier 1.
+2. Curación — tier 2.
+3. Curación — tier 3.
+4. Recuperación de TP — tier 1.
+5. Recuperación de TP — tier 2.
+6. Recuperación de TP — tier 3.
+Segunda fila
+1. Resurrección — tier 1.
+2. Resurrección — tier 2.
+3. Resurrección — tier 3.
+4. Bomba.
+5. Cuchillo arrojadizo.
+6. Cuchillo arrojadizo envenenado.
+Tercera fila
+1. Kunai.
+2. Shuriken.
+3. Antídoto para veneno.
+4. Remedio para parálisis.
+5. Remedio para miedo.
+6. Remedio para agotamiento.

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/battle/battle.gd" id="1_battl"]
 [ext_resource type="Script" path="res://scenes/battle/battle_board.gd" id="2_board"]
-[ext_resource type="Texture2D" path="res://assets/TurnFight-Meadow.png" id="3_bg"]
+[ext_resource type="Texture2D" path="res://assets/battle/backgrounds/meadow.png" id="3_bg"]
 
 [node name="Battle" type="Control"]
 layout_mode = 3

@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scenes/save_slots/save_slots.gd" id="1_slots"]
-[ext_resource type="Texture2D" uid="uid://b8i0hob6iwv4" path="res://assets/Main-Menu.png" id="2_bgimg"]
+[ext_resource type="Texture2D" uid="uid://b8i0hob6iwv4" path="res://assets/ui/backgrounds/main_menu.png" id="2_bgimg"]
 
 [node name="SaveSlots" type="Control"]
 layout_mode = 3

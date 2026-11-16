@@ -79,6 +79,6 @@ Si algún día la versión móvil necesita algo exclusivo, va en una rama `movil
   - textos en español con género correcto.
 - **Exportar:** `--export-release "Windows Desktop" builds/windows/RoyalPain.exe` (la configuración está en `export_presets.cfg`; `builds/` no se sube a git).
 - **Fondos de combate:** se eligen por el bioma del lugar donde está el jugador (`scripts/resources/biome_backgrounds.gd`).
-  - **Para añadir más:** deja imágenes en `assets/backgrounds/<bioma>/` (biomas: hielo, montana, bosque, llanura, desierto, costa y torneo). Se elige una al azar.
+  - **Para añadir más:** deja imágenes en `assets/battle/backgrounds/biomes/<bioma>/` (biomas: hielo, montana, bosque, llanura, desierto, costa y torneo). Se elige una al azar.
   - **Sin imágenes en la carpeta:** se usa el fondo de serie.
 - **Retratos nuevos:** importarlos con compresión VRAM de alta calidad (`compress/mode=2`, `high_quality=true` en su `.import`) y ejecutar `python tools/build_face_rects.py`. Si no, el juego calcula la cara solo (`face_detector.gd`).

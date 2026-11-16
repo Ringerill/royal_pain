@@ -1,0 +1,2336 @@
+[
+  {
+    "file": "Characters/Female/Woman0.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.562225,
+    "partial_fraction": 0.43674,
+    "blank_alpha_max": 244,
+    "blank_nonzero_fraction": 0.011366,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000904,
+    "blank_fraction_alpha_over_64": 0.000755,
+    "blank_fraction_alpha_over_128": 0.000446
+  },
+  {
+    "file": "Characters/Female/woman1.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.008996,
+    "partial_fraction": 0.990992,
+    "blank_alpha_max": 5,
+    "blank_nonzero_fraction": 0.838397,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman103.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.534201,
+    "partial_fraction": 0.46509,
+    "blank_alpha_max": 8,
+    "blank_nonzero_fraction": 0.010634,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman108.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.436011,
+    "partial_fraction": 0.56359,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.082404,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman112.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.371195,
+    "partial_fraction": 0.628466,
+    "blank_alpha_max": 249,
+    "blank_nonzero_fraction": 0.217303,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000916,
+    "blank_fraction_alpha_over_64": 0.000664,
+    "blank_fraction_alpha_over_128": 0.000572
+  },
+  {
+    "file": "Characters/Female/woman115.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.0,
+    "partial_fraction": 0.999998,
+    "blank_alpha_max": 244,
+    "blank_nonzero_fraction": 1.0,
+    "flags": [
+      "sin_pixeles_totalmente_transparentes",
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 1.0,
+    "blank_fraction_alpha_over_64": 0.00277,
+    "blank_fraction_alpha_over_128": 0.00198
+  },
+  {
+    "file": "Characters/Female/woman119.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.537511,
+    "partial_fraction": 0.461954,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.016987,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman123.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.282784,
+    "partial_fraction": 0.716958,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.151988,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman124.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.428382,
+    "partial_fraction": 0.571304,
+    "blank_alpha_max": 251,
+    "blank_nonzero_fraction": 0.070191,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.001362,
+    "blank_fraction_alpha_over_64": 0.001133,
+    "blank_fraction_alpha_over_128": 0.000893
+  },
+  {
+    "file": "Characters/Female/woman13.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.469869,
+    "partial_fraction": 0.529701,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.090451,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman134.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.342435,
+    "partial_fraction": 0.657153,
+    "blank_alpha_max": 5,
+    "blank_nonzero_fraction": 0.155846,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman136.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.0,
+    "partial_fraction": 1.0,
+    "blank_alpha_max": 46,
+    "blank_nonzero_fraction": 1.0,
+    "flags": [
+      "sin_pixeles_totalmente_transparentes",
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.073751,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman14.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.413125,
+    "partial_fraction": 0.586088,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.246389,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman143.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.501617,
+    "partial_fraction": 0.497766,
+    "blank_alpha_max": 245,
+    "blank_nonzero_fraction": 0.10753,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.001179,
+    "blank_fraction_alpha_over_64": 0.000881,
+    "blank_fraction_alpha_over_128": 0.000618
+  },
+  {
+    "file": "Characters/Female/woman146.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.0,
+    "partial_fraction": 0.999998,
+    "blank_alpha_max": 35,
+    "blank_nonzero_fraction": 1.0,
+    "flags": [
+      "sin_pixeles_totalmente_transparentes",
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.036274,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman150.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.427615,
+    "partial_fraction": 0.572091,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.069687,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman154.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.456094,
+    "partial_fraction": 0.543528,
+    "blank_alpha_max": 35,
+    "blank_nonzero_fraction": 0.054509,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000183,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman156.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.396141,
+    "partial_fraction": 0.603592,
+    "blank_alpha_max": 8,
+    "blank_nonzero_fraction": 0.183867,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman161.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.011768,
+    "partial_fraction": 0.988226,
+    "blank_alpha_max": 5,
+    "blank_nonzero_fraction": 0.800359,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman166.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.323924,
+    "partial_fraction": 0.675718,
+    "blank_alpha_max": 255,
+    "blank_nonzero_fraction": 0.280866,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.006696,
+    "blank_fraction_alpha_over_64": 0.006341,
+    "blank_fraction_alpha_over_128": 0.005975
+  },
+  {
+    "file": "Characters/Female/woman168.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.044114,
+    "partial_fraction": 0.955747,
+    "blank_alpha_max": 71,
+    "blank_nonzero_fraction": 0.413921,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.00016,
+    "blank_fraction_alpha_over_64": 4.6e-05,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman169.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.211246,
+    "partial_fraction": 0.788446,
+    "blank_alpha_max": 6,
+    "blank_nonzero_fraction": 0.149722,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman170.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.530557,
+    "partial_fraction": 0.468493,
+    "blank_alpha_max": 234,
+    "blank_nonzero_fraction": 0.022825,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000813,
+    "blank_fraction_alpha_over_64": 0.000618,
+    "blank_fraction_alpha_over_128": 0.000401
+  },
+  {
+    "file": "Characters/Female/woman173.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.477561,
+    "partial_fraction": 0.522061,
+    "blank_alpha_max": 10,
+    "blank_nonzero_fraction": 0.040464,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman174.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.475691,
+    "partial_fraction": 0.523652,
+    "blank_alpha_max": 119,
+    "blank_nonzero_fraction": 0.037911,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000321,
+    "blank_fraction_alpha_over_64": 0.00024,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman175.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.461817,
+    "partial_fraction": 0.537577,
+    "blank_alpha_max": 35,
+    "blank_nonzero_fraction": 0.031272,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000103,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman176.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.347355,
+    "partial_fraction": 0.652318,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.041906,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman177.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.351558,
+    "partial_fraction": 0.648042,
+    "blank_alpha_max": 197,
+    "blank_nonzero_fraction": 0.296754,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000435,
+    "blank_fraction_alpha_over_64": 0.00024,
+    "blank_fraction_alpha_over_128": 0.000137
+  },
+  {
+    "file": "Characters/Female/woman2.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.403597,
+    "partial_fraction": 0.595848,
+    "blank_alpha_max": 188,
+    "blank_nonzero_fraction": 0.142602,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000366,
+    "blank_fraction_alpha_over_64": 0.000309,
+    "blank_fraction_alpha_over_128": 0.000195
+  },
+  {
+    "file": "Characters/Female/woman20.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.524564,
+    "partial_fraction": 0.474312,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.024072,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman21.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.42697,
+    "partial_fraction": 0.572144,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.103523,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman27.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.442309,
+    "partial_fraction": 0.55693,
+    "blank_alpha_max": 251,
+    "blank_nonzero_fraction": 0.196928,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000618,
+    "blank_fraction_alpha_over_64": 0.000515,
+    "blank_fraction_alpha_over_128": 0.000332
+  },
+  {
+    "file": "Characters/Female/woman29.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.453524,
+    "partial_fraction": 0.545825,
+    "blank_alpha_max": 5,
+    "blank_nonzero_fraction": 0.01788,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman3.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.460927,
+    "partial_fraction": 0.53855,
+    "blank_alpha_max": 11,
+    "blank_nonzero_fraction": 0.179872,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman32.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.013853,
+    "partial_fraction": 0.986139,
+    "blank_alpha_max": 7,
+    "blank_nonzero_fraction": 0.751345,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman34.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.542328,
+    "partial_fraction": 0.456624,
+    "blank_alpha_max": 58,
+    "blank_nonzero_fraction": 0.020135,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000252,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman35.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.397235,
+    "partial_fraction": 0.602454,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.067386,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman36.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.303168,
+    "partial_fraction": 0.696368,
+    "blank_alpha_max": 8,
+    "blank_nonzero_fraction": 0.194902,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman37.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.040481,
+    "partial_fraction": 0.959448,
+    "blank_alpha_max": 4,
+    "blank_nonzero_fraction": 0.351526,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman39.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.239801,
+    "partial_fraction": 0.759759,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.05887,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman46.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.003404,
+    "partial_fraction": 0.996595,
+    "blank_alpha_max": 130,
+    "blank_nonzero_fraction": 0.938761,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.000309,
+    "blank_fraction_alpha_over_64": 0.000103,
+    "blank_fraction_alpha_over_128": 1.1e-05
+  },
+  {
+    "file": "Characters/Female/woman47.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.427896,
+    "partial_fraction": 0.571726,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.080321,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman5.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.52498,
+    "partial_fraction": 0.473767,
+    "blank_alpha_max": 10,
+    "blank_nonzero_fraction": 0.003388,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman50.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.336919,
+    "partial_fraction": 0.662912,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.034546,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman57.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.514771,
+    "partial_fraction": 0.484421,
+    "blank_alpha_max": 154,
+    "blank_nonzero_fraction": 0.031948,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000412,
+    "blank_fraction_alpha_over_64": 0.000309,
+    "blank_fraction_alpha_over_128": 0.000137
+  },
+  {
+    "file": "Characters/Female/woman59.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.386228,
+    "partial_fraction": 0.6132,
+    "blank_alpha_max": 54,
+    "blank_nonzero_fraction": 0.026877,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000263,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman65.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.262938,
+    "partial_fraction": 0.73688,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.149241,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman71.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.334619,
+    "partial_fraction": 0.664887,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.099334,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman72.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.46782,
+    "partial_fraction": 0.531824,
+    "blank_alpha_max": 255,
+    "blank_nonzero_fraction": 0.02255,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.006868,
+    "blank_fraction_alpha_over_64": 0.006341,
+    "blank_fraction_alpha_over_128": 0.005758
+  },
+  {
+    "file": "Characters/Female/woman74.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.364723,
+    "partial_fraction": 0.635067,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.040212,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman75.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.350216,
+    "partial_fraction": 0.649369,
+    "blank_alpha_max": 239,
+    "blank_nonzero_fraction": 0.076795,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000412,
+    "blank_fraction_alpha_over_64": 0.000309,
+    "blank_fraction_alpha_over_128": 0.00024
+  },
+  {
+    "file": "Characters/Female/woman78.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.407872,
+    "partial_fraction": 0.591979,
+    "blank_alpha_max": 242,
+    "blank_nonzero_fraction": 0.017021,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.00063,
+    "blank_fraction_alpha_over_64": 0.000458,
+    "blank_fraction_alpha_over_128": 0.000378
+  },
+  {
+    "file": "Characters/Female/woman79.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.39605,
+    "partial_fraction": 0.603425,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.047137,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman81.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.181091,
+    "partial_fraction": 0.818841,
+    "blank_alpha_max": 16,
+    "blank_nonzero_fraction": 0.30535,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Female/woman82.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.382437,
+    "partial_fraction": 0.617171,
+    "blank_alpha_max": 246,
+    "blank_nonzero_fraction": 0.359138,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000767,
+    "blank_fraction_alpha_over_64": 0.000618,
+    "blank_fraction_alpha_over_128": 0.000366
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Assassin-boss01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.499956,
+    "partial_fraction": 0.499499,
+    "blank_alpha_max": 252,
+    "blank_nonzero_fraction": 0.073121,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.001202,
+    "blank_fraction_alpha_over_64": 0.000939,
+    "blank_fraction_alpha_over_128": 0.000767
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Assassin-Leader-01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.530461,
+    "partial_fraction": 0.469083,
+    "blank_alpha_max": 251,
+    "blank_nonzero_fraction": 0.043566,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.001637,
+    "blank_fraction_alpha_over_64": 0.001385,
+    "blank_fraction_alpha_over_128": 0.001076
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Assassin02.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.541234,
+    "partial_fraction": 0.457974,
+    "blank_alpha_max": 152,
+    "blank_nonzero_fraction": 0.109166,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000378,
+    "blank_fraction_alpha_over_64": 0.000286,
+    "blank_fraction_alpha_over_128": 0.000103
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Bandit-Leader01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.339525,
+    "partial_fraction": 0.660166,
+    "blank_alpha_max": 250,
+    "blank_nonzero_fraction": 0.154793,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.001419,
+    "blank_fraction_alpha_over_64": 0.001179,
+    "blank_fraction_alpha_over_128": 0.000881
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Bandit01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.577833,
+    "partial_fraction": 0.420854,
+    "blank_alpha_max": 255,
+    "blank_nonzero_fraction": 0.007177,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0034,
+    "blank_fraction_alpha_over_64": 0.003033,
+    "blank_fraction_alpha_over_128": 0.002827
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Bandit02.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.554388,
+    "partial_fraction": 0.444696,
+    "blank_alpha_max": 10,
+    "blank_nonzero_fraction": 0.043028,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Beggar01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.552588,
+    "partial_fraction": 0.446282,
+    "blank_alpha_max": 249,
+    "blank_nonzero_fraction": 0.00649,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.001087,
+    "blank_fraction_alpha_over_64": 0.000778,
+    "blank_fraction_alpha_over_128": 0.000549
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Berserker.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.509769,
+    "partial_fraction": 0.489652,
+    "blank_alpha_max": 4,
+    "blank_nonzero_fraction": 0.015098,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Blacksmith.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.515085,
+    "partial_fraction": 0.484148,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.023008,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Boss01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.445319,
+    "partial_fraction": 0.553994,
+    "blank_alpha_max": 4,
+    "blank_nonzero_fraction": 0.093176,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-commoner.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.452069,
+    "partial_fraction": 0.546741,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.105252,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-commoner2.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.363491,
+    "partial_fraction": 0.635953,
+    "blank_alpha_max": 247,
+    "blank_nonzero_fraction": 0.091916,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.00087,
+    "blank_fraction_alpha_over_64": 0.000721,
+    "blank_fraction_alpha_over_128": 0.000424
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Explorer01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.588082,
+    "partial_fraction": 0.410964,
+    "blank_alpha_max": 59,
+    "blank_nonzero_fraction": 0.018566,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.00024,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Farmer01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.0,
+    "partial_fraction": 0.999999,
+    "blank_alpha_max": 236,
+    "blank_nonzero_fraction": 1.0,
+    "flags": [
+      "sin_pixeles_totalmente_transparentes",
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 1.0,
+    "blank_fraction_alpha_over_64": 1.0,
+    "blank_fraction_alpha_over_128": 0.359161
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Farmer02.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.436731,
+    "partial_fraction": 0.562491,
+    "blank_alpha_max": 4,
+    "blank_nonzero_fraction": 0.069836,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Mage-Damage01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.451793,
+    "partial_fraction": 0.547695,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.071095,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Mage-Healer01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.054186,
+    "partial_fraction": 0.945714,
+    "blank_alpha_max": 4,
+    "blank_nonzero_fraction": 0.277798,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Noblewoman1.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.532134,
+    "partial_fraction": 0.467381,
+    "blank_alpha_max": 255,
+    "blank_nonzero_fraction": 0.033172,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.001477,
+    "blank_fraction_alpha_over_64": 0.001259,
+    "blank_fraction_alpha_over_128": 0.00095
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Noblewoman2.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.497079,
+    "partial_fraction": 0.502255,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.051121,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Old-Hero.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.652299,
+    "partial_fraction": 0.346102,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.001603,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Pirate-1.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.523298,
+    "partial_fraction": 0.475357,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.052471,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Pirate-leader.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.538608,
+    "partial_fraction": 0.459756,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.000881,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Shopkeeper.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.383033,
+    "partial_fraction": 0.616295,
+    "blank_alpha_max": 4,
+    "blank_nonzero_fraction": 0.280122,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Soldier-Boss01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.631264,
+    "partial_fraction": 0.368062,
+    "blank_alpha_max": 16,
+    "blank_nonzero_fraction": 0.001019,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Soldier-Heavy01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.669529,
+    "partial_fraction": 0.3281,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.001454,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Soldier-Mid01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.556226,
+    "partial_fraction": 0.4431,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.020054,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Female/E-W-Soldier-Mid02.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.470466,
+    "partial_fraction": 0.52865,
+    "blank_alpha_max": 255,
+    "blank_nonzero_fraction": 0.082118,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.011481,
+    "blank_fraction_alpha_over_64": 0.011092,
+    "blank_fraction_alpha_over_128": 0.010497
+  },
+  {
+    "file": "Characters/Male/male1.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.486081,
+    "partial_fraction": 0.512858,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.216433,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male10.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.574061,
+    "partial_fraction": 0.424309,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.001019,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male14.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.480943,
+    "partial_fraction": 0.518005,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.153717,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male16.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.033731,
+    "partial_fraction": 0.965913,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.702571,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male18.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.530443,
+    "partial_fraction": 0.468736,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.032863,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male2.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.457121,
+    "partial_fraction": 0.54212,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.204162,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male29.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.539025,
+    "partial_fraction": 0.460103,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.036091,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male31.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.599639,
+    "partial_fraction": 0.399619,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.00831,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male35.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.514338,
+    "partial_fraction": 0.485047,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.034523,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male36.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.080931,
+    "partial_fraction": 0.918852,
+    "blank_alpha_max": 4,
+    "blank_nonzero_fraction": 0.722683,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male37.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.048626,
+    "partial_fraction": 0.951291,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.522687,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male4.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.05582,
+    "partial_fraction": 0.943686,
+    "blank_alpha_max": 4,
+    "blank_nonzero_fraction": 0.380497,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male40.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.301447,
+    "partial_fraction": 0.697976,
+    "blank_alpha_max": 200,
+    "blank_nonzero_fraction": 0.281072,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000195,
+    "blank_fraction_alpha_over_64": 0.000114,
+    "blank_fraction_alpha_over_128": 9.2e-05
+  },
+  {
+    "file": "Characters/Male/male45.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.251915,
+    "partial_fraction": 0.747713,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.302626,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male48.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.462242,
+    "partial_fraction": 0.537125,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.025881,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male5.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.43358,
+    "partial_fraction": 0.565642,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.104279,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male53.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.390143,
+    "partial_fraction": 0.609431,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.098521,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male55.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.567962,
+    "partial_fraction": 0.43025,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.009959,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male59.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.000885,
+    "partial_fraction": 0.999111,
+    "blank_alpha_max": 14,
+    "blank_nonzero_fraction": 0.984169,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male62.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.476856,
+    "partial_fraction": 0.522645,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.119388,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male63.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.221201,
+    "partial_fraction": 0.778453,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.218276,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male67.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.514035,
+    "partial_fraction": 0.485431,
+    "blank_alpha_max": 6,
+    "blank_nonzero_fraction": 0.024862,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male69.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.312934,
+    "partial_fraction": 0.686523,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.239234,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male7.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.469719,
+    "partial_fraction": 0.529403,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.15485,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male70.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.514746,
+    "partial_fraction": 0.484386,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.096106,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male71.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.535072,
+    "partial_fraction": 0.463965,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.041299,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male72.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.546378,
+    "partial_fraction": 0.452486,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.037545,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male73.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.411223,
+    "partial_fraction": 0.588373,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.217429,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male74.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.421571,
+    "partial_fraction": 0.57784,
+    "blank_alpha_max": 199,
+    "blank_nonzero_fraction": 0.1122,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.00016,
+    "blank_fraction_alpha_over_64": 0.000137,
+    "blank_fraction_alpha_over_128": 0.000103
+  },
+  {
+    "file": "Characters/Male/male75.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.485916,
+    "partial_fraction": 0.513428,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.064719,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male76.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.460325,
+    "partial_fraction": 0.538463,
+    "blank_alpha_max": 4,
+    "blank_nonzero_fraction": 0.191559,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male77.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.439611,
+    "partial_fraction": 0.559852,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.150214,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Characters/Male/male78.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.523092,
+    "partial_fraction": 0.47615,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.006387,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Assassin-boss01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.549896,
+    "partial_fraction": 0.449014,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.030242,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Assassin-Leader-01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.525857,
+    "partial_fraction": 0.473514,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.0561,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Assassin02.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.66455,
+    "partial_fraction": 0.33314,
+    "blank_alpha_max": 234,
+    "blank_nonzero_fraction": 0.002347,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.00071,
+    "blank_fraction_alpha_over_64": 0.000424,
+    "blank_fraction_alpha_over_128": 0.000343
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Bandit-Leader01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.607292,
+    "partial_fraction": 0.391178,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.014205,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Bandit01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.499924,
+    "partial_fraction": 0.499032,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.107564,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Bandit02.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.548722,
+    "partial_fraction": 0.450438,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.01258,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Beggar01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.626792,
+    "partial_fraction": 0.371089,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.004991,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Berserker.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.460845,
+    "partial_fraction": 0.538599,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.059351,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Blacksmith.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.531053,
+    "partial_fraction": 0.468033,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.056775,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Boss01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.0,
+    "partial_fraction": 1.0,
+    "blank_alpha_max": 71,
+    "blank_nonzero_fraction": 1.0,
+    "flags": [
+      "sin_pixeles_totalmente_transparentes",
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.337492,
+    "blank_fraction_alpha_over_64": 0.003548,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-commoner.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.103949,
+    "partial_fraction": 0.895317,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.334619,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-commoner2.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.190747,
+    "partial_fraction": 0.808742,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.175465,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Executoner.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.626607,
+    "partial_fraction": 0.372148,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.002644,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Explorer01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.407485,
+    "partial_fraction": 0.591772,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.23437,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Farmer01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.390498,
+    "partial_fraction": 0.608605,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.065498,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Farmer02.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.461834,
+    "partial_fraction": 0.536926,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.030952,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Mage-Damage01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.407708,
+    "partial_fraction": 0.591649,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.156567,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Mage-Healer01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.316635,
+    "partial_fraction": 0.682908,
+    "blank_alpha_max": 192,
+    "blank_nonzero_fraction": 0.030448,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.000469,
+    "blank_fraction_alpha_over_64": 0.000366,
+    "blank_fraction_alpha_over_128": 0.000229
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Noblewoman1.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.603584,
+    "partial_fraction": 0.394544,
+    "blank_alpha_max": 255,
+    "blank_nonzero_fraction": 0.071896,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.053513,
+    "blank_fraction_alpha_over_64": 0.051888,
+    "blank_fraction_alpha_over_128": 0.050239
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Noblewoman2.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.635525,
+    "partial_fraction": 0.362906,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.000275,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Old-Hero.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.289264,
+    "partial_fraction": 0.71013,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.172512,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Pirate-1.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.577338,
+    "partial_fraction": 0.420755,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.024118,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Pirate-leader.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.446766,
+    "partial_fraction": 0.552425,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.012477,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Shopkeeper.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.05111,
+    "partial_fraction": 0.948719,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.505231,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Soldier-Boss01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.667367,
+    "partial_fraction": 0.331505,
+    "blank_alpha_max": 1,
+    "blank_nonzero_fraction": 0.00459,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Soldier-Heavy01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.018661,
+    "partial_fraction": 0.98129,
+    "blank_alpha_max": 3,
+    "blank_nonzero_fraction": 0.71712,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias",
+      "posible_fondo_residual"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Soldier-Leader01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.418487,
+    "partial_fraction": 0.580727,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.089513,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Soldier-Mid01.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.474627,
+    "partial_fraction": 0.524883,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.134944,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  },
+  {
+    "file": "Enemies/E-Male/E-M-Soldier-Mid02.png",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "transparent_fraction": 0.402926,
+    "partial_fraction": 0.596281,
+    "blank_alpha_max": 2,
+    "blank_nonzero_fraction": 0.25803,
+    "flags": [
+      "ultimas_dos_celdas_no_vacias"
+    ],
+    "blank_fraction_alpha_over_16": 0.0,
+    "blank_fraction_alpha_over_64": 0.0,
+    "blank_fraction_alpha_over_128": 0.0
+  }
+]

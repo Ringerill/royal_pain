@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bfsewlkktikkj"]
 
 [ext_resource type="Script" uid="uid://cbniuq8pl7uu7" path="res://scenes/combat/combat.gd" id="1_5vqsm"]
-[ext_resource type="Texture2D" uid="uid://ddp5jumithj2k" path="res://assets/TurnFight-Trining_Ground.png" id="2_6aonj"]
+[ext_resource type="Texture2D" uid="uid://ddp5jumithj2k" path="res://assets/battle/backgrounds/training_ground.png" id="2_6aonj"]
 
 [sub_resource type="Gradient" id="Gradient_floor"]
 offsets = PackedFloat32Array(0, 0.5, 1)

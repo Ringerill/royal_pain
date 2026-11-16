@@ -1,23 +1,23 @@
 extends RefCounted
 # Fondos de combate por bioma. Para añadir fondos, deja imágenes (PNG/JPG/WebP) en
-# assets/backgrounds/<bioma>/ ; se elige una al azar. Si la carpeta está vacía, se usa el fondo de serie.
+# assets/battle/backgrounds/biomes/<bioma>/ ; se elige una al azar. Si la carpeta está vacía, se usa el fondo de serie.
 # Biomas: hielo, montana, bosque, llanura, desierto, costa, torneo.
 # Uso: const BiomeBackgrounds = preload("res://scripts/resources/biome_backgrounds.gd")
 
-const DIR := "res://assets/backgrounds/%s/"
+const DIR := "res://assets/battle/backgrounds/biomes/%s/"
 const EXTENSIONS := ["png", "jpg", "jpeg", "webp"]
 const TOURNAMENT := "torneo"
 const DEFAULT_BIOME := "llanura"
 
 # Fondo de serie de cada bioma (los que ya existían).
 const FALLBACK := {
-	"hielo": "res://assets/TurnFight-Snow.png",
-	"montana": "res://assets/TurnFight-Snow.png",
-	"bosque": "res://assets/TurnFight-Meadow.png",
-	"llanura": "res://assets/TurnFight-Meadow.png",
-	"desierto": "res://assets/TurnFight-Desert.png",
-	"costa": "res://assets/TurnFight-Seaside.png",
-	"torneo": "res://assets/TurnFight-Trining_Ground.png",
+	"hielo": "res://assets/battle/backgrounds/meadow_winter.png",
+	"montana": "res://assets/battle/backgrounds/meadow_winter.png",
+	"bosque": "res://assets/battle/backgrounds/meadow.png",
+	"llanura": "res://assets/battle/backgrounds/meadow.png",
+	"desierto": "res://assets/battle/backgrounds/desert.png",
+	"costa": "res://assets/battle/backgrounds/seaside.png",
+	"torneo": "res://assets/battle/backgrounds/training_ground.png",
 }
 
 static var _cache := {}   # bioma -> rutas encontradas (se lee la carpeta una sola vez)

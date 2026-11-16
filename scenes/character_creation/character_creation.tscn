@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://d0j14knu5hbba"]
 
 [ext_resource type="Script" uid="uid://doyvu6cqycjdt" path="res://scenes/character_creation/character_creation.gd" id="1_5w2ck"]
-[ext_resource type="Texture2D" uid="uid://bgfn3h8hf6c42" path="res://assets/Character_Creation.png" id="2_28tfh"]
+[ext_resource type="Texture2D" uid="uid://bgfn3h8hf6c42" path="res://assets/ui/backgrounds/character_creation.png" id="2_28tfh"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_cndol"]
 content_margin_top = 30.0

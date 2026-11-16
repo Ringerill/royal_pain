@@ -90,7 +90,7 @@ func _run() -> void:
 	var A := CharacterEnums.Alignment
 	var F := CharacterEnums.FighterType
 	var c := _char(F.TANQUE, P.ASTUTO, A.TIRANO, 1)
-	check(Array(S.trees_for(c)) == ["tanque", "p_astuto", "a_tirano"], "trees_for: luchador, personalidad, alineamiento")
+	check(Array(S.trees_for(c)) == ["p_astuto"], "trees_for: solo el de su personalidad (Astuto → Frío)")
 	check(S.points_for_level(1) == 0 and S.points_for_level(3) == 1 and S.points_for_level(20) == 6, "points_for_level: 1 cada 3 niveles")
 	check(S.points_free(c) == 0, "nivel 1: sin puntos")
 	var b0: Array = S.basic_nodes("p_astuto", 0)
@@ -116,12 +116,12 @@ func _run() -> void:
 	print("[vías y Tomo del olvido]")
 	var v := _char(F.DUELISTA, P.LEAL, A.HUMILDE, 9)
 	S.ensure_kit(v)
-	var tv: String = S.trees_for(v)[1]   # personalidad (sin kit base que cuente)
+	var tv: String = S.trees_for(v)[0]   # personalidad (sin kit base que cuente)
 	var b1: Array = S.basic_nodes(tv, 1)
 	var b2: Array = S.basic_nodes(tv, 2)
 	check(S.learn(v, b1[0]) and S.chosen_branches(v, tv) == [1], "la primera habilidad de una rama la elige como vía")
 	check(S.branch_locked(v, b2[0]) and not S.can_learn(v, b2[0]), "las otras ramas del árbol quedan cerradas")
-	check(not S.branch_locked(v, S.basic_nodes(S.trees_for(v)[2], 2)[0]), "en los otros árboles aún puedes elegir")
+	check(S.trees_for(v).size() == 1, "un solo árbol de puntos")
 	var lost: int = S.forget_trees(v)
 	check(lost >= 1 and S.chosen_branches(v, tv).is_empty() and S.can_learn(v, b2[0]), "el Tomo del olvido reabre las vías (olvida %d)" % lost)
 	check(not ConsumableCatalog.combat_item("tomo_olvido") and not "tomo_olvido" in ConsumableCatalog.common_ids(), "el Tomo es raro y no se usa en combate")

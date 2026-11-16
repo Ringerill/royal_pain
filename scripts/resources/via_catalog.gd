@@ -33,6 +33,16 @@ const DATA := {
 		"bonus": {"loot": 1.0, "outlaw_friendly": true, "enemy_morale": -10}, "malus": {"patrols": true, "city_closed_below_fame": 0}},
 }
 
+# Alineamiento antiguo que se guarda junto a la vía (sistemas que aún lo usan).
+const TO_ALIGNMENT := {
+	Via.TIRANO: 5, Via.CONQUISTADOR: 0, Via.HUMILDE: 3, Via.BENEVOLENTE: 1, Via.RESERVADO: 4,
+	Via.AMBICIOSO: 2, Via.JUSTICIERO: 1, Via.VILLANO: 5,
+}
+
+static func summary(v: int) -> String:
+	var d: Dictionary = DATA.get(v, {})
+	return "Mecánica: %s.\nMeta: %s." % [d.get("mechanic", "?"), d.get("goal", "?")]
+
 static func name_of(v: int) -> String:
 	return DATA.get(v, {}).get("name", "?")
 

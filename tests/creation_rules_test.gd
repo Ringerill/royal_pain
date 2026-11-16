@@ -51,12 +51,12 @@ func _run() -> void:
 	print("[combate RPG]")
 	var f := Character.new()
 	f.agility = 6
-	f.equipment.append(_item("Ropas de Viaje"))
+	f.equipment.append(_item("Jubón Raído"))
 	var a_light: float = RS.compute(f).agilidad
 	f.agility = 14
 	var a_fast: float = RS.compute(f).agilidad
 	check(a_fast > a_light, "más Agilidad → más agilidad RPG (%.1f > %.1f)" % [a_fast, a_light])
-	f.equipment.clear(); f.equipment.append(_item("Peto de Placas"))
+	f.equipment.clear(); f.equipment.append(_item("Peto de Hierro"))
 	var a_heavy: float = RS.compute(f).agilidad
 	check(a_heavy < a_fast and RS.armor_class(f) == RS.ArmorClass.PLACAS, "las placas pesan (%.1f < %.1f)" % [a_heavy, a_fast])
 	f.combat = 15; f.strategy = 15
@@ -66,22 +66,28 @@ func _run() -> void:
 	var c := Character.new()
 	c.first_name = "Prueba"
 	c.traits_locked = false
-	var weapon := _item(CC.CREATION_WEAPONS["Contundente"])
-	check(weapon != null and RS.WEAPON_BY_ITEM.get(weapon.equipment_name) == RS.DamageType.CONTUNDENTE, "arma básica contundente")
+	var weapon := _item(CC.CREATION_WEAPONS["Maza"])
+	check(weapon != null and int(weapon.get_meta(RS.META_WCLASS)) == RS.WeaponClass.MAZA and weapon.icon != null, "arma básica: maza de nivel 1, con su dibujo")
 	check(CC.CREATION_ACCESSORIES.size() == 6 and _item(CC.CREATION_ACCESSORIES["agility"]).agility_mod == 1, "6 accesorios (+1 cada atributo)")
 	c.equipment.append(weapon)
 	c.equipment.append(_item(CC.CREATION_ARMORS["Malla"]))
 	check(not c.creation_equipment_errors().is_empty(), "sin accesorio: inválido")
 	c.equipment.append(_item(CC.CREATION_ACCESSORIES["charisma"]))
 	check(c.creation_equipment_errors().is_empty(), "arma + armadura + accesorio: válido")
-	c.equipment.append(_item("Rodela"))
+	c.equipment.append(_item("Rodela de Tablas"))
 	check(c.creation_equipment_errors().is_empty(), "con escudo: válido")
-	c.equipment.append(_item("Escudo Redondo"))
+	c.equipment.append(_item("Rodela Claveteada"))
 	check(not c.creation_equipment_errors().is_empty(), "dos escudos: inválido")
 	c.equipment.pop_back()
-	c.equipment.append(_item("Espada Larga"))
+	c.equipment.append(_item("Espada Bastarda"))
 	check(not c.creation_equipment_errors().is_empty(), "pieza no básica: inválida")
 	c.equipment.pop_back()
+	var maza: Equipment = c.equipment[0]
+	c.equipment[0] = _item(CC.CREATION_WEAPONS["Mandoble"])
+	check(not c.creation_equipment_errors().is_empty(), "mandoble con escudo: inválido")
+	c.equipment.pop_back()
+	check(c.creation_equipment_errors().is_empty(), "mandoble sin escudo: válido")
+	c.equipment[0] = maza
 	for t in GD.advantages.slice(0, 3):
 		c.add_trait(t)
 	c.add_trait(GD.disadvantages[0])
@@ -94,7 +100,7 @@ func _run() -> void:
 	if Character.tree_api_ready(TREES):
 		check(not c.creation_skill_errors().is_empty(), "sin básicas: inválido")
 		var opts: Array = c.basic_tree_options()
-		check(opts.size() == 3, "3 vías a elegir (una por árbol)")
+		check(opts.size() == 1, "una vía a elegir: el árbol de su personalidad")
 		for o in opts:
 			c.choose_basic(o, str(o.ids[0]))
 		check(c.creation_skill_errors().is_empty() and c.is_creation_valid().valid, "una vía por árbol: personaje válido")

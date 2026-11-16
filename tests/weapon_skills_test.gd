@@ -106,7 +106,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	var tabs: TabContainer = panel._tabs
-	check(tabs.get_tab_count() == 4 and tabs.get_tab_title(3) == "Arma", "el panel tiene la pestaña «Arma»")
+	check(tabs.get_tab_count() == 2 and tabs.get_tab_title(1) == "Arma", "el panel tiene la pestaña «Arma»")
 	panel._show_hint("esp_media_luna")
 	check("nivel 12" in str(panel._hint.text), "la ayuda dice el nivel del escalón")
 	holder.queue_free()

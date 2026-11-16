@@ -108,7 +108,7 @@ func _load_for_edit(c: Character) -> void:
 	_on_last_name_changed(c.last_name)
 	if c.portrait != null:
 		_select_portrait(c.portrait)
-	for pair in [[opt_personality, c.personality], [opt_alignment, c.alignment], [opt_fighter_type, c.fighter_type]]:
+	for pair in [[opt_personality, c.persona_v2()], [opt_alignment, maxi(0, c.via)], [opt_fighter_type, c.fighter_type]]:
 		var opt: OptionButton = pair[0]
 		var idx := opt.get_item_index(int(pair[1]))
 		if idx >= 0:
@@ -211,6 +211,11 @@ var personality_desc: Label
 
 func _populate_personality_options() -> void:
 	opt_personality.clear()
+	for p in PersonaCatalog.Persona.values():   # rediseño v2: las 9 personalidades
+		opt_personality.add_item(PersonaCatalog.name_of(p), p)
+	if opt_personality.item_count > 0:
+		_v2_personas_done()
+		return
 	for p in Character.Personality.values():
 		opt_personality.add_item(DialogueCatalog.personality_name(p), p)
 	# Descripción de la personalidad elegida, bajo el desplegable.
@@ -224,18 +229,38 @@ func _populate_personality_options() -> void:
 		opt_personality.item_selected.connect(func(_i): _refresh_personality_desc())
 	_refresh_personality_desc()
 
+func _v2_personas_done() -> void:
+	if personality_desc == null:
+		personality_desc = Label.new()
+		personality_desc.theme_type_variation = &"MutedLabel"
+		personality_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		personality_desc.custom_minimum_size = Vector2(220, 0)
+		personality_desc.add_theme_font_size_override("font_size", 14)
+		opt_personality.get_parent().add_child(personality_desc)
+		opt_personality.item_selected.connect(func(_i): _refresh_personality_desc())
+	_refresh_personality_desc()
+
 func _refresh_personality_desc() -> void:
 	if personality_desc != null and opt_personality.selected >= 0:
-		personality_desc.text = DialogueCatalog.personality_description(opt_personality.get_selected_id())
+		personality_desc.text = PersonaCatalog.summary(opt_personality.get_selected_id())
+	if via_desc != null and opt_alignment.selected >= 0:
+		via_desc.text = ViaCatalog.summary(opt_alignment.get_selected_id())
 
 func _populate_alignment_options() -> void:
 	opt_alignment.clear()
-	opt_alignment.add_item("Conquistador", CharacterEnums.Alignment.CONQUISTADOR)
-	opt_alignment.add_item("Pacifista", CharacterEnums.Alignment.PACIFISTA)
-	opt_alignment.add_item("Ambicioso", CharacterEnums.Alignment.AMBICIOSO)
-	opt_alignment.add_item("Humilde", CharacterEnums.Alignment.HUMILDE)
-	opt_alignment.add_item("Diplomático", CharacterEnums.Alignment.DIPLOMATICO)
-	opt_alignment.add_item("Tirano", CharacterEnums.Alignment.TIRANO)
+	for v in ViaCatalog.Via.values():   # rediseño v2: la vía sustituye al alineamiento
+		opt_alignment.add_item(ViaCatalog.name_of(v), v)
+	if via_desc == null:
+		via_desc = Label.new()
+		via_desc.theme_type_variation = &"MutedLabel"
+		via_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		via_desc.custom_minimum_size = Vector2(220, 0)
+		via_desc.add_theme_font_size_override("font_size", 14)
+		opt_alignment.get_parent().add_child(via_desc)
+		opt_alignment.item_selected.connect(func(_i): _refresh_personality_desc())
+	_refresh_personality_desc()
+
+var via_desc: Label
 
 func _populate_fighter_type_options() -> void:
 	opt_fighter_type.clear()
@@ -251,8 +276,10 @@ func _on_personality_or_alignment_changed(_index: int) -> void:
 	_build_skills_lists()   # cambian los árboles: se vuelven a elegir las básicas
 
 func _recalculate_points() -> void:
-	character.personality = opt_personality.get_selected_id()
-	character.alignment = opt_alignment.get_selected_id()
+	character.persona = opt_personality.get_selected_id()
+	character.personality = PersonaCatalog.TO_OLD.get(character.persona, 0)
+	character.via = opt_alignment.get_selected_id()
+	character.alignment = ViaCatalog.TO_ALIGNMENT.get(character.via, 0)
 	character.fighter_type = opt_fighter_type.get_selected_id()
 	allocator.setup(character.personality, character.alignment, character.fighter_type)
 
@@ -486,7 +513,7 @@ func _build_equipment_list() -> void:
 	var shields := {"Sin escudo": ""}
 	for n: String in CC.CREATION_SHIELDS:
 		shields[n] = n
-	for row in [["Arma", CC.SLOT_ARMA, CC.CREATION_WEAPONS], ["Escudo", CC.SLOT_ESCUDO, shields],
+	for row in [["Arma (solo la más básica)", CC.SLOT_ARMA, CC.CREATION_WEAPONS], ["Escudo (no con mandoble ni arco)", CC.SLOT_ESCUDO, shields],
 			["Armadura", CC.SLOT_ARMADURA, CC.CREATION_ARMORS], ["Accesorio", CC.SLOT_ACCESORIO, accessories]]:
 		_add_header(equipment_list, row[0])
 		var ob := OptionButton.new()
@@ -497,7 +524,11 @@ func _build_equipment_list() -> void:
 			ob.set_item_metadata(ob.item_count - 1, item_name)
 			var e := _catalog_item(item_name)
 			if e != null:
-				ob.set_item_tooltip(ob.item_count - 1, e.description)
+				ob.set_item_tooltip(ob.item_count - 1, GearCatalog.describe(item_name))
+				if e.icon != null:
+					ob.set_item_icon(ob.item_count - 1, e.icon)
+		ob.add_theme_constant_override("icon_max_width", 28)
+		ob.get_popup().add_theme_constant_override("icon_max_width", 28)
 		ob.item_selected.connect(func(_k: int): _apply_gear())
 		equipment_list.add_child(ob)
 		_gear_buttons[row[1]] = ob
@@ -521,7 +552,7 @@ func _apply_gear() -> void:
 	_update_continue_button()
 
 func _refresh_equipment_count() -> void:
-	lbl_equipment_count.text = "Un arma, una armadura, un accesorio y, si quieres, un escudo."
+	lbl_equipment_count.text = "El arma más básica de su tipo, un accesorio y, si quieres, armadura y escudo (no con armas a dos manos). Las monturas se consiguen después."
 
 func _on_bio_changed() -> void:
 	character.biography = edit_bio.text
@@ -584,6 +615,9 @@ func _randomize_all() -> void:
 	for ob: OptionButton in _gear_buttons.values():
 		ob.select(randi() % ob.item_count)
 	_apply_gear()
+	if RpgStats.two_handed(character):   # sin escudo con armas a dos manos
+		(_gear_buttons[GameData.ContentCatalog.SLOT_ESCUDO] as OptionButton).select(0)
+		_apply_gear()
 
 	edit_bio.text = RANDOM_BIOS.pick_random()
 	_on_bio_changed()

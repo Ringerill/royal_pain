@@ -333,10 +333,11 @@ func apply_trait_and_equipment_modifiers() -> void:
 ## misma ranura, la quita (restando sus bonos) y la devuelve; si no, devuelve null.
 func equip(item: Equipment) -> Equipment:
 	var replaced: Equipment = null
-	for e: Equipment in equipment:
-		if e.slot == item.slot:
-			replaced = e
-			break
+	var same := equipment.filter(func(e: Equipment) -> bool: return e != null and e.slot == item.slot)
+	if item.slot == "Accesorio" and same.size() < GearCatalog.MAX_ACCESSORIES:
+		same = []   # rediseño v2: dos accesorios
+	if not same.is_empty():
+		replaced = same[0]
 	if replaced != null:
 		unequip(replaced)
 	equipment.append(item)
@@ -394,11 +395,15 @@ func creation_equipment_errors() -> Array[String]:
 		count[e.slot] = int(count.get(e.slot, 0)) + 1
 		if not allowed.has(e.slot) or not (e.equipment_name in allowed[e.slot]):
 			errors.append("%s no es equipo inicial." % e.equipment_name)
-	for slot in [CC.SLOT_ARMA, CC.SLOT_ARMADURA, CC.SLOT_ACCESORIO]:
+	for slot in [CC.SLOT_ARMA, CC.SLOT_ACCESORIO]:
 		if int(count.get(slot, 0)) != 1:
 			errors.append("Elige un(a) %s." % slot.to_lower())
+	if int(count.get(CC.SLOT_ARMADURA, 0)) > 1:
+		errors.append("Solo una armadura.")
 	if int(count.get(CC.SLOT_ESCUDO, 0)) > 1:
 		errors.append("Solo un escudo.")
+	if int(count.get(CC.SLOT_ESCUDO, 0)) > 0 and RpgStats.two_handed(self):
+		errors.append("El mandoble y el arco van a dos manos: sin escudo.")
 	return errors
 
 ## Una vía (una habilidad básica) en cada árbol: personalidad, alineación y tipo de luchador.

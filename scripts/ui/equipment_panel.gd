@@ -124,6 +124,8 @@ func _rebuild() -> void:
 	_title.add_child(stats)
 	for slot: String in SLOTS:
 		_slots.add_child(_slot_row(slot))
+		if slot == "Accesorio":   # rediseño v2: dos accesorios
+			_slots.add_child(_slot_row(slot, 1))
 	if PartyData.stash.is_empty():
 		var empty := Label.new()
 		empty.text = "Vacío. Lo que quites a alguien queda aquí."
@@ -132,13 +134,11 @@ func _rebuild() -> void:
 	for e: Equipment in PartyData.stash:
 		_stash.add_child(_stash_row(e))
 
-func _item_in(c: Character, slot: String) -> Equipment:
-	for e: Equipment in c.equipment:
-		if e.slot == slot:
-			return e
-	return null
+func _item_in(c: Character, slot: String, idx: int = 0) -> Equipment:
+	var found := c.equipment.filter(func(e: Equipment) -> bool: return e != null and e.slot == slot)
+	return found[idx] if idx < found.size() else null
 
-func _slot_row(slot: String) -> Control:
+func _slot_row(slot: String, idx: int = 0) -> Control:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardPanel"
 	var row := HBoxContainer.new()
@@ -149,7 +149,7 @@ func _slot_row(slot: String) -> Control:
 	slot_l.custom_minimum_size = Vector2(90, 0)
 	slot_l.theme_type_variation = &"MutedLabel"
 	row.add_child(slot_l)
-	var e := _item_in(selected, slot)
+	var e := _item_in(selected, slot, idx)
 	var info := HBoxContainer.new()
 	info.add_theme_constant_override("separation", 8)
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -157,6 +157,8 @@ func _slot_row(slot: String) -> Control:
 	var name_l := Label.new()
 	name_l.text = e.equipment_name if e != null else "—"
 	info.add_child(name_l)
+	if e != null and slot == "Escudo" and RpgStats.two_handed(selected):
+		name_l.text += " (sin efecto: arma a dos manos)"
 	if e != null:
 		StatIcons.item_badges(info, e, 16)
 		var take := Button.new()
@@ -190,6 +192,8 @@ func _stash_row(e: Equipment) -> Control:
 	var put := Button.new()
 	put.text = "Equipar a %s" % selected.first_name
 	var current := _item_in(selected, e.slot)
+	if e.slot == "Accesorio" and _item_in(selected, e.slot, 1) == null:
+		current = null
 	put.tooltip_text = ("Cambia %s por esta pieza." % current.equipment_name) if current != null else "Ranura libre."
 	put.pressed.connect(func():
 		_feedback.text = PartyData.equip_from_stash(selected, e)

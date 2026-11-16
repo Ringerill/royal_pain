@@ -50,6 +50,10 @@ const WEAPON_TREE_BY_ITEM := {
 	"Arco Corto": "w_arco", "Arco Largo": "w_arco", "Ballesta de Cranequín": "w_ballesta",
 }
 const WEAPON_TREE_BY_TYPE := ["w_estoque", "w_maza", "w_espada", "w_hacha", "w_maza", "w_estoque"]   # por FighterType
+# Rediseño v2: un árbol por clase de arma (RpgStats.WeaponClass) y uno por personalidad (PersonaCatalog).
+const WEAPON_TREE_BY_CLASS := ["w_espada", "w_asta", "w_arco", "w_hacha", "w_maza"]
+const PERSONA_TREES := ["p_valiente", "p_prudente", "p_astuto", "p_leal", "p_arrogante", "p_cobarde",
+	"p_romantico", "p_generoso", "p_cruel"]   # por PersonaCatalog.Persona
 # Técnicas que pasaron de los árboles de luchador a las armas → nodo que ocupa ahora su sitio
 # (mismo escalón). Las partidas antiguas que las habían aprendido reciben el nuevo (ensure_kit).
 const MOVED_TO_WEAPON := {
@@ -991,9 +995,14 @@ static func personality_tree(p: int) -> String:
 static func alignment_tree(a: int) -> String:
 	return ALIGNMENT_TREES[clampi(a, 0, ALIGNMENT_TREES.size() - 1)]
 
-## Los tres árboles del personaje: [luchador, personalidad, alineamiento].
+## Árbol de personalidad del rediseño v2 (las 9 personalidades nuevas).
+static func persona_tree(c: Character) -> String:
+	return PERSONA_TREES[clampi(c.persona_v2(), 0, PERSONA_TREES.size() - 1)]
+
+## Árboles en los que se gastan puntos. Rediseño v2: solo el de su personalidad (el del arma se
+## desbloquea por nivel mientras se lleva; las pasivas las dan tipo, equipo, origen y vía).
 static func trees_for(c: Character) -> Array[String]:
-	var out: Array[String] = [fighter_tree(c.fighter_type), personality_tree(c.personality), alignment_tree(c.alignment)]
+	var out: Array[String] = [persona_tree(c)]
 	return out
 
 ## {"id", "name", "branches": [{"name", "nodes": [ids...]}]} (vacío si no existe).
@@ -1033,6 +1042,8 @@ static func weapon_tree_of(c: Character) -> String:
 	if c.has_meta(EnemyCatalog.META_WEAPON):   # enemigos genéricos: el arma que les tocó
 		return WEAPON_TREE_BY_ITEM.get(str(c.get_meta(EnemyCatalog.META_WEAPON)), "")
 	for e: Equipment in c.equipment:
+		if e != null and e.slot == "Arma" and e.has_meta(RpgStats.META_WCLASS):   # equipo v2: por clase
+			return WEAPON_TREE_BY_CLASS[clampi(int(e.get_meta(RpgStats.META_WCLASS)), 0, 4)]
 		if e != null and WEAPON_TREE_BY_ITEM.has(e.equipment_name):
 			return WEAPON_TREE_BY_ITEM[e.equipment_name]
 	return WEAPON_TREE_BY_TYPE[clampi(c.fighter_type, 0, WEAPON_TREE_BY_TYPE.size() - 1)]
@@ -1262,7 +1273,8 @@ static func ensure_kit(c: Character) -> void:
 					c.learned_skills.remove_at(i)
 				else:
 					c.learned_skills[i] = repl
-	var trees: Array = [fighter_tree(c.fighter_type)] if c.has_meta("enemy_type") else Array(trees_for(c))
+	# Rediseño v2: el tipo de luchador ya no es un árbol de puntos, pero sigue dando su kit base (sus pasivas).
+	var trees: Array = [fighter_tree(c.fighter_type)] if c.has_meta("enemy_type") else Array(trees_for(c)) + [fighter_tree(c.fighter_type)]
 	for tid: String in trees:
 		var has_basic := false
 		for b in 3:

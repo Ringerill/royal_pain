@@ -618,7 +618,7 @@ func _strike(att: Fighter, def: Fighter, pow: float, dt: int, fx: Dictionary, in
 		_log("  ¡%s esquiva!" % def.name())
 		return false
 	att.first_sure_used = true
-	if bool(def.s.shield) and not def.has("derribado") and rng.randf() < RpgStats.SHIELD_BLOCK + def.fx("block"):
+	if bool(def.s.shield) and not def.has("derribado") and rng.randf() < RpgStats.SHIELD_BLOCK + float(def.s.get("block", 0.0)) + def.fx("block"):
 		h["blocked"] = true
 		info.bad += 1
 		_log("  ¡%s bloquea con el escudo!" % def.name())

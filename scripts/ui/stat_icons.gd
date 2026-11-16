@@ -169,7 +169,16 @@ static func item_badges(parent: Node, e: Equipment, size: int = 16, with_mods: b
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 6)
 	var type_icon: TextureRect = null
-	if RpgStats.WEAPON_BY_ITEM.has(e.equipment_name):
+	var art := GearCatalog.icon(e.equipment_name)
+	if art != null:   # equipo nuevo: su dibujo
+		var r := TextureRect.new()
+		r.texture = art
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		r.custom_minimum_size = Vector2(size + 10, size + 10)
+		r.tooltip_text = GearCatalog.describe(e.equipment_name)
+		type_icon = r
+	elif RpgStats.WEAPON_BY_ITEM.has(e.equipment_name):
 		var dt: int = RpgStats.WEAPON_BY_ITEM[e.equipment_name]
 		type_icon = SkillIcons.damage_icon(dt, size)
 		type_icon.tooltip_text = "Daño: " + RpgStats.DAMAGE_NAMES[dt]
@@ -276,6 +285,15 @@ static func consumable_texture(id: String) -> Texture2D:
 	return SkillIcons.texture(CONSUMABLE_ICONS.get(id, "help"))
 
 static func consumable_icon(id: String, size: int = 16) -> TextureRect:
+	var art := ConsumableCatalog.icon_texture(id)
+	if art != null:   # v2: su dibujo
+		var r := TextureRect.new()
+		r.texture = art
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		r.custom_minimum_size = Vector2(size + 6, size + 6)
+		r.tooltip_text = ConsumableCatalog.item_name(id)
+		return r
 	return SkillIcons.make(consumable_texture(id), size, CONSUMABLE_COLOR, ConsumableCatalog.item_name(id))
 
 ## «[img]» de un icono para RichTextLabel (con su color).

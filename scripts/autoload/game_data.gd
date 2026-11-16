@@ -3,7 +3,7 @@ extends Node
 # Los catálogos se construyen a partir de ContentCatalog (datos) — para añadir contenido, edita ese archivo.
 
 const ContentCatalog = preload("res://scripts/resources/content_catalog.gd")
-const MAX_EQUIPMENT := 3   # piezas de equipo (una por ranura)
+const MAX_EQUIPMENT := 6   # arma, escudo, armadura, montura y 2 accesorios
 
 var general_skills: Array[Skill] = []
 var combat_skills: Array[Skill] = []
@@ -113,11 +113,12 @@ func _make_equipment(e: Dictionary) -> Equipment:
 	item.charisma_mod = mods.get("charisma", 0)
 	item.strategy_mod = mods.get("strategy", 0)
 	item.agility_mod = mods.get("agility", 0)
+	GearCatalog.tag(item)   # equipo nuevo (v2): icono, clase de arma, armadura, bloqueo
 	return item
 
 ## Texto breve con lo que hace una entrada del catálogo (para listas y tooltips).
 func effect_summary(entry_name: String) -> String:
-	for list in [ContentCatalog.GENERAL_SKILLS, ContentCatalog.COMBAT_SKILLS, ContentCatalog.BATTLE_SKILLS,
+	for list in [GearCatalog.entries(), ContentCatalog.GENERAL_SKILLS, ContentCatalog.COMBAT_SKILLS, ContentCatalog.BATTLE_SKILLS,
 			ContentCatalog.ADVANTAGES, ContentCatalog.DISADVANTAGES, ContentCatalog.EQUIPMENT]:
 		for e: Dictionary in list:
 			if e.name == entry_name:
@@ -139,5 +140,10 @@ func _ready() -> void:
 	advantages = _traits_from(ContentCatalog.ADVANTAGES, true)
 	disadvantages = _traits_from(ContentCatalog.DISADVANTAGES, false)
 	equipment_catalog.clear()
-	for e: Dictionary in ContentCatalog.EQUIPMENT:
+	# Rediseño v2: el equipo nuevo (GearCatalog) sustituye a las armas, armaduras, escudos y accesorios
+	# antiguos; de ContentCatalog quedan las monturas y las piezas únicas con habilidad propia.
+	for e: Dictionary in GearCatalog.entries():
 		equipment_catalog.append(_make_equipment(e))
+	for e: Dictionary in ContentCatalog.EQUIPMENT:
+		if e.get("slot", "") == ContentCatalog.SLOT_MONTURA or e.has("unique"):
+			equipment_catalog.append(_make_equipment(e))

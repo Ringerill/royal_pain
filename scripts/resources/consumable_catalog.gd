@@ -26,7 +26,18 @@ const NET_CHANCE := 0.85         # Red de caza: probabilidad base de derribar
 # IA enemiga: pocos objetos y uso ocasional.
 const ENEMY_BAG_CHANCE := 0.4    # probabilidad de que el bando rival lleve objetos
 const ENEMY_BAG_MAX := 2         # 1–2 objetos en total
-const ENEMY_POOL := ["venda", "unguento", "aceite", "red"]
+const ENEMY_POOL := ["pocion1", "pocion2", "cuchillo", "cuchillo_veneno", "bomba"]
+# Rediseño v2 (assets/items/items.png, rejilla 6×3): curación, PT y resurrección en 3 niveles,
+# arrojadizas y remedios de los estados nuevos. Los antiguos quedan como «legacy» (bolsas guardadas).
+const POTION_HEAL := [0.25, 0.45, 0.7]
+const TONIC_PT := [0.3, 0.6, 1.0]
+const REVIVE_HP := [0.2, 0.45, 0.8]
+const BOMB_DMG := 0.12           # a todos los rivales (fracción de sus PV máximos)
+const KNIFE_DMG := 0.12
+const POISON_KNIFE_DMG := 0.06
+const KUNAI_DMG := 0.16
+const SHURIKEN_DMG := 0.08       # dos golpes al azar
+const CURES := {"antidoto": "veneno", "remedio_paralisis": "paralisis", "remedio_miedo": "miedo", "remedio_agotamiento": "agotamiento"}
 const AI_ITEM_CHANCE := 0.35
 const AI_HEAL_HP := 0.4
 const LOOT_CHANCE := 0.5         # tras ganar: probabilidad de encontrar objetos
@@ -46,7 +57,32 @@ const ITEMS := {
 	"tomo_olvido": {"name": "Tomo del olvido", "price": 260, "tgt": "none", "market": 3, "rare": true,
 		"desc": "Fuera de combate (en Habilidades): olvidas lo aprendido en tus árboles, recuperas los puntos y eliges vía de nuevo."},
 	"hierbas": {"name": "Hierbas", "price": 18, "tgt": "ally", "market": 0, "desc": "Purgan Debilitado, Cegado y Ardiendo; curan algo."},
+	# --- v2 ---
+	"pocion1": {"name": "Poción menor", "price": 20, "tgt": "ally", "market": 0, "icon": 0, "v2": true, "desc": "Cura un 25 % de la vida."},
+	"pocion2": {"name": "Poción", "price": 45, "tgt": "ally", "market": 1, "icon": 1, "v2": true, "desc": "Cura un 45 % de la vida."},
+	"pocion3": {"name": "Poción mayor", "price": 90, "tgt": "ally", "market": 2, "icon": 2, "v2": true, "desc": "Cura un 70 % de la vida."},
+	"tonico1": {"name": "Tónico menor", "price": 20, "tgt": "ally", "market": 0, "icon": 3, "v2": true, "desc": "Recupera un 30 % de los PT."},
+	"tonico2": {"name": "Tónico", "price": 45, "tgt": "ally", "market": 1, "icon": 4, "v2": true, "desc": "Recupera un 60 % de los PT."},
+	"tonico3": {"name": "Tónico mayor", "price": 90, "tgt": "ally", "market": 2, "icon": 5, "v2": true, "desc": "Recupera todos los PT."},
+	"despertar1": {"name": "Sales de despertar", "price": 60, "tgt": "ko_ally", "market": 1, "icon": 6, "v2": true, "desc": "Levanta a un aliado caído con un 20 % de vida."},
+	"despertar2": {"name": "Tintura de vida", "price": 120, "tgt": "ko_ally", "market": 2, "icon": 7, "v2": true, "desc": "Levanta a un aliado caído con un 45 % de vida."},
+	"despertar3": {"name": "Elixir de vida", "price": 240, "tgt": "ko_ally", "market": 3, "icon": 8, "v2": true, "desc": "Levanta a un aliado caído con un 80 % de vida."},
+	"bomba": {"name": "Bomba", "price": 50, "tgt": "enemies", "market": 2, "icon": 9, "v2": true, "desc": "Daña a todos los rivales."},
+	"cuchillo": {"name": "Cuchillo arrojadizo", "price": 15, "tgt": "enemy", "market": 0, "icon": 10, "v2": true, "desc": "Daño a un rival."},
+	"cuchillo_veneno": {"name": "Cuchillo envenenado", "price": 30, "tgt": "enemy", "market": 1, "icon": 11, "v2": true, "desc": "Algo de daño y veneno."},
+	"kunai": {"name": "Kunai", "price": 35, "tgt": "enemy", "market": 1, "icon": 12, "v2": true, "desc": "Daño alto a un rival."},
+	"shuriken": {"name": "Shuriken", "price": 30, "tgt": "enemies", "market": 1, "icon": 13, "v2": true, "desc": "Dos golpes a rivales al azar."},
+	"antidoto": {"name": "Antídoto", "price": 15, "tgt": "ally", "market": 0, "icon": 14, "v2": true, "desc": "Quita el veneno."},
+	"remedio_paralisis": {"name": "Remedio de parálisis", "price": 20, "tgt": "ally", "market": 0, "icon": 15, "v2": true, "desc": "Quita la parálisis."},
+	"remedio_miedo": {"name": "Remedio de miedo", "price": 20, "tgt": "ally", "market": 0, "icon": 16, "v2": true, "desc": "Quita el miedo."},
+	"remedio_agotamiento": {"name": "Remedio de agotamiento", "price": 25, "tgt": "ally", "market": 1, "icon": 17, "v2": true, "desc": "Quita el agotamiento."},
 }
+
+## Icono del objeto (v2: su dibujo en items.png); null para los antiguos.
+static func icon_texture(id: String) -> Texture2D:
+	if not item(id).has("icon"):
+		return null
+	return GearCatalog.sheet_cell(GearCatalog.ITEM_SHEET, GearCatalog.GRIDS.item, int(item(id).icon))
 
 static func item(id: String) -> Dictionary:
 	return ITEMS.get(id, {})
@@ -84,10 +120,10 @@ static func combat_item(id: String) -> bool:
 
 ## Objetos comunes (para botín y sucesos): sin los raros.
 static func common_ids() -> Array:
-	return ITEMS.keys().filter(func(id: String) -> bool: return not ITEMS[id].get("rare", false))
+	return ITEMS.keys().filter(func(id: String) -> bool: return ITEMS[id].get("v2", false) and int(ITEMS[id].market) <= 1)
 
 static func shop_items(market_level: int) -> Array:
-	return ITEMS.keys().filter(func(id: String) -> bool: return int(ITEMS[id].market) <= market_level)
+	return ITEMS.keys().filter(func(id: String) -> bool: return (ITEMS[id].get("v2", false) or id == "tomo_olvido") and int(ITEMS[id].market) <= market_level)
 
 static func summary(bag: Dictionary) -> String:
 	var parts := []
@@ -133,6 +169,10 @@ static func targets(mgr: RpgBattleManager, f, id: String) -> Array:
 			return mgr.active_of(1 - f.side)
 		"allies":
 			return [f]
+		"enemies":
+			return [f]
+		"ko_ally":
+			return mgr.side_fighters(f.side).filter(func(o) -> bool: return o.down and not o.dead)
 	return mgr.active_of(f.side)
 
 ## Aplica el objeto action.item sobre action.target. false si no se pudo (no gasta el turno).
@@ -150,6 +190,38 @@ static func use(mgr: RpgBattleManager, f, action: Dictionary) -> bool:
 	take(bag, id)
 	mgr._log("%s usa %s%s." % [f.name(), item_name(id), (" con %s" % t.name()) if t != f and item(id).tgt != "allies" else ""])
 	match id:
+		"pocion1", "pocion2", "pocion3":
+			var i := int(id.right(1)) - 1
+			t.hp = mini(t.max_hp, t.hp + maxi(1, roundi(t.max_hp * POTION_HEAL[i])))
+		"tonico1", "tonico2", "tonico3":
+			var i := int(id.right(1)) - 1
+			t.pt = mini(t.max_pt, t.pt + maxi(1, roundi(t.max_pt * TONIC_PT[i])))
+		"despertar1", "despertar2", "despertar3":
+			var i := int(id.right(1)) - 1
+			t.down = false
+			t.hp = maxi(1, roundi(t.max_hp * REVIVE_HP[i]))
+			t.active = mgr.active_of(f.side).size() < mgr.max_active
+			t.next_time = mgr.now + t.interval()
+			mgr._log("  ¡%s se levanta!" % t.name())
+		"bomba":
+			for o in mgr.active_of(1 - f.side):
+				_throw(mgr, f, o, BOMB_DMG)
+		"cuchillo":
+			_throw(mgr, f, t, KNIFE_DMG)
+		"kunai":
+			_throw(mgr, f, t, KUNAI_DMG)
+		"cuchillo_veneno":
+			_throw(mgr, f, t, POISON_KNIFE_DMG)
+			if t.up():
+				mgr._add_status(t, "veneno", 3, f)
+				mgr._log("  %s: Veneno." % t.name())
+		"shuriken":
+			for k in 2:
+				var foes: Array = mgr.active_of(1 - f.side)
+				if not foes.is_empty():
+					_throw(mgr, f, foes.pick_random(), SHURIKEN_DMG)
+		"antidoto", "remedio_paralisis", "remedio_miedo", "remedio_agotamiento":
+			t.statuses.erase(CURES[id])
 		"venda", "unguento", "hierbas":
 			var frac: float = {"venda": HEAL_SMALL, "unguento": HEAL_MEDIUM, "hierbas": HEAL_HERBS}[id]
 			t.hp = mini(t.max_hp, t.hp + maxi(1, roundi(t.max_hp * frac)))
@@ -190,13 +262,20 @@ static func use(mgr: RpgBattleManager, f, action: Dictionary) -> bool:
 				mgr._log("  %s esquiva la red." % t.name())
 	return true
 
+static func _throw(mgr: RpgBattleManager, f, t, frac: float) -> void:
+	if t == null or not t.up():
+		return
+	var dmg := maxi(1, roundi(t.max_hp * frac))
+	mgr._log("  %s recibe %d." % [t.name(), dmg])
+	mgr._damage(t, dmg, f)
+
 ## IA: a veces usa un objeto de su bolsa ({} si no).
 static func ai_pick(mgr: RpgBattleManager, f) -> Dictionary:
 	var bag: Dictionary = mgr.bags[f.side]
 	if bag.is_empty() or mgr.rng.randf() >= AI_ITEM_CHANCE:
 		return {}
 	if f.hp_ratio() < AI_HEAL_HP:
-		for id in ["unguento", "venda", "hierbas"]:
+		for id in ["pocion3", "pocion2", "pocion1", "unguento", "venda", "hierbas"]:
 			if count(bag, id) > 0:
 				return {"type": "objeto", "item": id, "target": f}
 	var foes := mgr.active_of(1 - f.side)
@@ -208,5 +287,8 @@ static func ai_pick(mgr: RpgBattleManager, f) -> Dictionary:
 			strongest = o
 	for id in ["red", "aceite"]:
 		if count(bag, id) > 0 and not strongest.has("derribado"):
+			return {"type": "objeto", "item": id, "target": strongest}
+	for id in ["bomba", "kunai", "cuchillo_veneno", "cuchillo", "shuriken"]:
+		if count(bag, id) > 0:
 			return {"type": "objeto", "item": id, "target": strongest}
 	return {}

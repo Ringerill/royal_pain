@@ -53,6 +53,9 @@ func _item(name: String) -> Equipment:
 	for e: Equipment in GD.equipment_catalog:
 		if e.equipment_name == name:
 			return e
+	for e: Dictionary in GD.ContentCatalog.EQUIPMENT:   # rediseño v2: piezas antiguas fuera de la venta
+		if e.name == name:
+			return GD._make_equipment(e)
 	return null
 
 func _run() -> void:

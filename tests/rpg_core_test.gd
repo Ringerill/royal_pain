@@ -123,14 +123,15 @@ func _run() -> void:
 	print("[árbol]")
 	var bad := []
 	for n: Dictionary in SkillTreeCatalog.all_nodes():
-		if not n.tree in SkillTreeCatalog.FIGHTER_TREES:
+		if not n.tree in SkillTreeCatalog.PERSONA_TREES:   # rediseño v2: los árboles de personalidad
 			continue
-		var c := _char(SkillTreeCatalog.FIGHTER_TREES.find(n.tree), 20)
+		var c := _char(F.DUELISTA, 20)
+		c.persona = SkillTreeCatalog.PERSONA_TREES.find(n.tree)
 		SkillTreeCatalog.grant_points(c, 20, "prueba")
 		var has_effect: bool = float(n.get("pow", 0)) > 0 or not n.get("st", []).is_empty() or n.has("heal") or not n.get("fx", {}).is_empty()
 		if not _learn_chain(c, n.id) or not has_effect:
 			bad.append(n.id)
-	check(bad.is_empty(), "todos los nodos de los tipos se aprenden y tienen efecto %s" % [bad])
+	check(bad.is_empty(), "todos los nodos de las personalidades se aprenden y tienen efecto %s" % [bad])
 	for ft in F.values():
 		check(SkillTreeCatalog.nodes_of_tree(SkillTreeCatalog.fighter_tree(ft)).size() in range(20, 25), "%s: 20-24 nodos" % CharacterEnums.fighter_type_name(ft))
 	var low := _char(F.DUELISTA, 1)

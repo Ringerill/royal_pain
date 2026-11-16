@@ -128,6 +128,8 @@ static func armor_class(c: Character) -> int:
 	if c.has_meta(META_ARMOR):
 		return int(c.get_meta(META_ARMOR))
 	for e: Equipment in c.equipment:
+		if e != null and e.slot == "Armadura" and e.has_meta(META_ARMOR):
+			return int(e.get_meta(META_ARMOR))
 		if ARMOR_BY_ITEM.has(e.equipment_name):
 			return ARMOR_BY_ITEM[e.equipment_name]
 	return ARMOR_BY_ROLE.get(c.role, ArmorClass.CUERO)
@@ -136,15 +138,23 @@ static func weapon_type(c: Character) -> int:
 	if c.has_meta(META_DAMAGE):
 		return int(c.get_meta(META_DAMAGE))
 	for e: Equipment in c.equipment:
+		if e != null and e.slot == "Arma" and e.has_meta(META_DAMAGE):
+			return int(e.get_meta(META_DAMAGE))
 		if WEAPON_BY_ITEM.has(e.equipment_name):
 			return WEAPON_BY_ITEM[e.equipment_name]
 	return WEAPON_BY_TYPE.get(c.fighter_type, DamageType.TAJO)
 
+## El escudo solo sirve en la mano libre: con mandoble o arco (a dos manos) no cuenta.
 static func shield(c: Character) -> Equipment:
+	if weapon_class(c) in [WeaponClass.MANDOBLE, WeaponClass.ARCO]:
+		return null
 	for e: Equipment in c.equipment:
-		if e.slot == "Escudo":
+		if e != null and e.slot == "Escudo":
 			return e
 	return null
+
+static func two_handed(c: Character) -> bool:
+	return weapon_class(c) in [WeaponClass.MANDOBLE, WeaponClass.ARCO]
 
 ## Afinidad de un tipo de daño contra una armadura. Un escudo mejora un paso la defensa ante Proyectil.
 static func affinity(dmg: int, armor: int, has_shield: bool = false) -> int:
@@ -176,7 +186,7 @@ static func weapon_class(c: Character) -> int:
 	for e: Equipment in c.equipment:
 		if e != null and e.equipment_name in TWO_HANDED:
 			return WeaponClass.MANDOBLE
-		if e != null and e.has_meta(META_WCLASS):
+		if e != null and e.slot == "Arma" and e.has_meta(META_WCLASS):
 			return int(e.get_meta(META_WCLASS))
 	return class_of_damage(weapon_type(c))
 
@@ -249,6 +259,7 @@ static func compute(c: Character) -> Dictionary:
 	fuerza *= 1.0 + _fx(c, LEGACY_FX_DMG) + p.get("fuerza_pct", 0.0)
 	var defensa: float = (DEF_BASE + DEF_PER_DEFENSE * c.defense + DEF_PER_LEVEL * lv) * t.defensa
 	defensa += ARMOR_DEF[armor] + (SHIELD_DEF_BY_TIER.get(sh.tier, 1) if sh else 0) + p.get("defensa", 0.0)
+	var block: float = float(sh.get_meta("block", 0.0)) if sh else 0.0
 	var agi: float = AGI_BASE + AGI_PER_ATTR * c.agility + AGI_PER_LEVEL * lv + ARMOR_AGI[armor] + t.agilidad
 	agi += p.get("agilidad", 0.0) + _fx(c, "initiative") * LEGACY_INITIATIVE_TO_AGI
 	var aim: float = AIM_BASE + AIM_PER_ATTR * (c.combat + c.strategy) + AIM_PER_LEVEL * lv + t.punteria + p.get("punteria", 0.0)
@@ -258,7 +269,7 @@ static func compute(c: Character) -> Dictionary:
 		"pv": maxi(1, roundi(pv)), "pt": maxi(0, roundi(pt)),
 		"fuerza": maxf(1.0, fuerza), "defensa": maxf(0.0, defensa),
 		"agilidad": maxf(1.0, agi), "punteria": aim, "voluntad": will,
-		"armor": armor, "weapon": weapon_type(c), "shield": sh != null, "wclass": weapon_class(c),
+		"armor": armor, "weapon": weapon_type(c), "shield": sh != null, "wclass": weapon_class(c), "block": block,
 		"crit": _fx(c, LEGACY_FX_CRIT) + p.get("crit", 0.0),
 		"crit_mult": _fx(c, "crit_mult") + p.get("crit_mult", 0.0),
 		"evasion": _fx(c, LEGACY_FX_DODGE) + p.get("evasion", 0.0),

@@ -5,7 +5,7 @@ extends Control
 # aprenderla ya, apagada = bloqueada. Al elegir una, su ficha aparece a la derecha con «Aprender».
 # Uso: load("res://scripts/ui/skill_tree_panel.gd").open(nodo, personaje)
 
-const TAB_NAMES := ["Combate", "Personalidad", "Alineación"]
+const TAB_NAMES := ["Personalidad"]   # rediseño v2: un árbol de puntos (más la pestaña del arma)
 const WEAPON_TAB := "Arma"
 const TIER_MARK := ["", "I", "II", "III", "IV"]
 const NODE_SIZE := 50

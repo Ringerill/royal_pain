@@ -34,12 +34,12 @@ func _run() -> void:
 	for c: Character in [player, npc]:
 		var p: Control = Panel.open(root, c)
 		await process_frame
-		check(p._tabs.get_tab_count() == 4, "3 árboles + pestaña de arma")
+		check(p._tabs.get_tab_count() == 2, "árbol de personalidad + pestaña de arma")
 		var ok := true
-		for t in 3:
+		for t in 1:
 			var cols := _cols(p, t)
 			ok = ok and cols.size() == 3 and cols.all(func(col: Node) -> bool: return col.find_children("*", "Button", true, false).filter(func(b): return b.has_meta("skill_id")).size() >= 4)
-		check(ok, "3 árboles × 3 ramas con nodos (en árbol)")
+		check(ok, "3 ramas con nodos (en árbol)")
 		p.queue_free()
 		await process_frame
 

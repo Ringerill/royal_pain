@@ -52,6 +52,19 @@ const TREE := {
 	Persona.IRASCIBLE: ["Rabia", "Golpe salvaje", "Rugido", "Berserker"],
 }
 
+# Personalidad antigua que se guarda junto a la nueva (diálogos e IA que aún usan las 12).
+const TO_OLD := {
+	Persona.VALIENTE: 6, Persona.PRAGMATICO: 2, Persona.FRIO: 5, Persona.GENTIL: 1, Persona.EGOCENTRICO: 3,
+	Persona.RESERVADO: 9, Persona.INGENUO: 10, Persona.ALEGRE: 8, Persona.IRASCIBLE: 7,
+}
+
+## Resumen para la creación: estadísticas y técnicas de su árbol.
+static func summary(p: int) -> String:
+	var parts := []
+	for k in STATS.get(p, {}):
+		parts.append("%s %+d" % [GameData.STAT_LABELS.get(k, k), int(STATS[p][k])])
+	return "%s.\nÁrbol: %s." % [", ".join(parts), ", ".join(TREE.get(p, []))]
+
 # Equivalencia desde las 12 personalidades antiguas (para personajes y guardados existentes).
 const FROM_OLD := {
 	0: Persona.EGOCENTRICO,   # AMBICIOSO

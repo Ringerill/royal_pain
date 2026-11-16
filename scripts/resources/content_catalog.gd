@@ -243,12 +243,14 @@ const EQUIPMENT := [
 ]
 
 # Equipo que se elige al crear el personaje (un arma, una armadura, un accesorio y, si quiere, un escudo).
-const CREATION_WEAPONS := {"Tajo": "Espada Corta", "Estocada": "Lanza", "Contundente": "Garrote", "Proyectil": "Arco Corto"}
-const CREATION_SHIELDS := ["Rodela", "Escudo Redondo"]
-const CREATION_ARMORS := {"Sin armadura": "Ropas de Viaje", "Cuero": "Gambesón", "Malla": "Cota Ligera", "Placas": "Peto de Placas"}
+# Rediseño v2: solo el arma más básica de cada tipo (GearCatalog, nivel 1); sin montura.
+const CREATION_WEAPONS := {"Espada": "Espada Mellada", "Mandoble": "Mandoble Oxidado", "Lanza": "Lanza de Fresno",
+	"Maza": "Garrote Herrado", "Arco": "Arco de Caza"}
+const CREATION_SHIELDS := ["Rodela de Tablas"]
+const CREATION_ARMORS := {"Sin armadura": "", "Cuero": "Jubón Raído", "Malla": "Cota de Anillas", "Placas": "Peto de Hierro"}
 const CREATION_ACCESSORIES := {
-	"leadership": "Bastón de Mando", "charisma": "Broche de Plata", "strategy": "Tablillas de Cera",
-	"combat": "Muñequeras de Cuero", "defense": "Amuleto de Hierro", "agility": "Botas Ligeras",
+	"leadership": "Bolsa de Cinto", "charisma": "Alfiler de Cobre", "strategy": "Cartera de Fieltro",
+	"combat": "Muñequera Anudada", "defense": "Vendas Acolchadas", "agility": "Cinta de Cuero",
 }
 
 # Calidad del equipo inicial de los PNJ según su rango: niveles permitidos y piezas.

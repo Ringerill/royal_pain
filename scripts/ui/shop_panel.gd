@@ -313,7 +313,8 @@ func _item_row(list: VBoxContainer, title: String, desc: String, action: String,
 	return btn
 
 func _slot_taken(player: Character, slot: String) -> bool:
-	return player.equipment.any(func(e: Equipment) -> bool: return e.slot == slot)
+	var n := player.equipment.filter(func(e: Equipment) -> bool: return e.slot == slot).size()
+	return n >= (GearCatalog.MAX_ACCESSORIES if slot == "Accesorio" else 1)
 
 func _row(list: VBoxContainer, item: Equipment, action: String, disabled_reason: String, prefix: String = "") -> Button:
 	var card := PanelContainer.new()

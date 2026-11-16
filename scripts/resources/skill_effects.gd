@@ -83,7 +83,7 @@ static var _fx_by_name := {}
 static func _fx_table() -> Dictionary:
 	if _fx_by_name.is_empty():
 		for list in [ContentCatalog.GENERAL_SKILLS, ContentCatalog.COMBAT_SKILLS, ContentCatalog.BATTLE_SKILLS,
-				ContentCatalog.ADVANTAGES, ContentCatalog.DISADVANTAGES, ContentCatalog.EQUIPMENT]:
+				ContentCatalog.ADVANTAGES, ContentCatalog.DISADVANTAGES, ContentCatalog.EQUIPMENT, GearCatalog.entries()]:
 			for e: Dictionary in list:
 				_fx_by_name[e.name] = e.get("fx", {})
 	return _fx_by_name

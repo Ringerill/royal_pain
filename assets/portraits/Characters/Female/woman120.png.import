@@ -10,7 +10,7 @@ metadata={
 
 [deps]
 
-source_file="res://assets/portraits/characters/female/woman120.png"
+source_file="res://assets/portraits/Characters/Female/woman120.png"
 dest_files=["res://.godot/imported/woman120.png-2cb5a4c14c94e7e953f28b2f541dd708.ctex"]
 
 [params]

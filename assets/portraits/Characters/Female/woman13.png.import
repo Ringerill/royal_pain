@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnnw1rl67472f"
-path="res://.godot/imported/woman13.png-cafc7f293d7422c1c6c42f9e9faa361f.ctex"
+path="res://.godot/imported/woman13.png-cf0b64a1e63248dd17996d9ee3a19c4e.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/portraits/Characters/Female/woman13.png"
-dest_files=["res://.godot/imported/woman13.png-cafc7f293d7422c1c6c42f9e9faa361f.ctex"]
+dest_files=["res://.godot/imported/woman13.png-cf0b64a1e63248dd17996d9ee3a19c4e.ctex"]
 
 [params]
 

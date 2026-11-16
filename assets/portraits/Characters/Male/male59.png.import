@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bjo120w78x8bg"
-path="res://.godot/imported/male59.png-19c4f21670b9369898c2f476b406e7e9.ctex"
+path="res://.godot/imported/male59.png-eef9039886831e37708a0d8f0bde342e.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/portraits/Characters/Male/male59.png"
-dest_files=["res://.godot/imported/male59.png-19c4f21670b9369898c2f476b406e7e9.ctex"]
+dest_files=["res://.godot/imported/male59.png-eef9039886831e37708a0d8f0bde342e.ctex"]
 
 [params]
 

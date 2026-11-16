@@ -23,6 +23,7 @@ func _find_button(node: Node, contains: String) -> Button:
 func _run() -> void:
 	seed(11)
 	var GM = root.get_node("GameManager")
+	GM.v2_presence = false   # prueba del sistema antiguo (presencia por reino, no por lugar)
 	var RD = root.get_node("RelationsData")
 	var MD = root.get_node("MapData")
 	var CS = root.get_node("CombatSetup")

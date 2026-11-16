@@ -308,6 +308,10 @@ func _on_encounter(g: Dictionary) -> void:
 		g.met = false   # ahora no: volverá a intentarlo
 		return
 	var p := GameManager.player_character
+	var hostile: bool = g.type == "bandidos" or (g.type == "patrulla" and RoadTraffic.patrol_hostile())
+	if hostile and ViaData.stealth_avoids():   # sigilo (vía Reservado)
+		_message("Sigilo", "Os ocultáis a tiempo: %s pasa de largo sin veros." % RoadTraffic.TYPES[g.type].name.to_lower())
+		return
 	match str(g.type):
 		"bandidos":
 			var toll := maxi(TOLL_MIN, roundi(p.gold * TOLL_SHARE))
@@ -352,7 +356,7 @@ func _on_encounter(g: Dictionary) -> void:
 			])
 		"viajero":
 			_choices("Viajero", "Un viajero solitario te saluda desde el borde del camino.", [
-				["Conversar", func(): _message("Viajero", PlaceArt.rumor())],
+				["Conversar", func(): _talk_to_traveler()],
 				["Comerciar", func(): _trader("Viajero")],
 				["Seguir", func(): pass],
 			])
@@ -375,12 +379,35 @@ func _choices(title_text: String, text: String, specs: Array) -> void:
 func _road_fight(g: Dictionary, foe_name: String, context: String, power: int, win_effects: Dictionary, win_text: String, remove_group := true) -> void:
 	if remove_group:
 		RoadTraffic.remove(g)
-	var fight := {"type": "duel", "no_rival": true, "context": context,
+	var deed: Array = {"Bandido": ["rescue", "rescues"], "Asaltante de caminos": ["rescue", "rescues"],
+		"Guardia de caravana": ["raid", "raids"]}.get(foe_name, [])
+	var fight := {"type": "duel", "no_rival": true, "context": context, "via_deed": deed,
+		"captive": "Cabecilla bandido" if foe_name == "Bandido" else "",
 		"foe": {"name": foe_name, "role": Character.Role.SOLDADO, "power": power, "personality": "CRUEL"},
 		"win": {"effects": win_effects, "result": win_text}, "lose": {"effects": {}, "result": "Os retiráis como podéis."}}
 	var scene := CombatSetup.begin_event_fight(fight, RoadTraffic.TYPES[g.type].name)
 	if not scene.is_empty():
 		get_tree().change_scene_to_file(scene)
+
+## Viajero: alguien del reino de camino a otro lugar; mientras estéis juntos podéis hablar.
+func _talk_to_traveler() -> void:
+	var pool := RelationsData.courtiers(Journey.kingdom).filter(func(r: Relationship) -> bool:
+		return RelationsData.sociable(r) and RelationsData.node_of(r) != Journey.at)
+	if pool.is_empty():
+		_message("Viajero", PlaceArt.rumor())
+		return
+	var r: Relationship = pool[randi() % pool.size()]
+	RelationsData.road_company = r.person_name
+	load("res://scripts/ui/conversation_panel.gd").open(self, r)
+
+## Prisionero tras un combate (ViaData): qué hacer con él.
+func _prisoner_dialog() -> void:
+	var who := ViaData.pending_prisoner
+	var specs := []
+	for o in ViaData.prisoner_options():
+		var choice: String = o[0]
+		specs.append([o[1], func(): _message("Prisionero", ViaData.resolve_prisoner(choice))])
+	_choices("Prisionero", "%s se rinde y queda a tu merced." % who, specs)
 
 ## Vendedor ambulante: pociones y remedios algo más baratos.
 func _trader(title_text: String) -> void:
@@ -551,6 +578,7 @@ func _kingdom_name() -> String:
 
 func _on_arrived(i: int) -> void:
 	Sfx.play("travel_hop", -6.0)
+	RelationsData.road_company = ""   # quien iba contigo sigue su camino
 	if not Journey.is_traveling():
 		_select(i)
 		_contract_arrival(i)
@@ -582,8 +610,10 @@ func _check_events() -> void:
 		return
 	var lapsed: Array = ContractData.check_deadlines()
 	if not lapsed.is_empty():
-		_message("Encargos", "
-".join(lapsed))
+		_message("Encargos", "\n".join(lapsed))
+		return
+	if not ViaData.pending_prisoner.is_empty():
+		_prisoner_dialog()
 		return
 	if GameManager.has_pending_event():
 		_show_event(GameManager.pending_event)
@@ -742,6 +772,13 @@ func _open_relations() -> void:
 
 func _open_journal() -> void:
 	var lines: Array[String] = []
+	var p := GameManager.player_character
+	if p.via >= 0:
+		var pr: Array = ViaData.progress()
+		lines.append("Vía: %s — meta: %s" % [ViaCatalog.name_of(p.via), ViaCatalog.DATA[p.via].goal])
+		lines.append("   %s" % pr[2])
+		lines.append("Rango: %s · soldados %d de %d" % [RankCatalog.name_of(p.rank_v2()), p.soldiers, RankCatalog.max_soldiers(p.rank_v2(), p.leadership)])
+		lines.append("")
 	for c: Dictionary in ContractData.active:
 		lines.append("Encargo: %s · quedan %d días" % [ContractData.title(c), int(c.deadline) - Journey.day_index()])
 	if not lines.is_empty():

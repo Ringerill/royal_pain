@@ -24,6 +24,7 @@ enum RivalryStage { CONOCIDO, RIVAL, NEMESIS, RESPETO }
 @export_group("Romance")
 @export_range(0, 100) var affection: int = 0  # intimidad con el jugador (amistad o amor)
 @export var romance: bool = false             # hay amor, no solo amistad (solo entre hombre y mujer)
+@export var sworn: bool = false               # hermandad jurada (rediseño v2): sube la moral del grupo en combate
 @export var last_courted_month: int = -1
 @export var rival_suitor: String = ""         # otro pretendiente que compite por su afecto
 

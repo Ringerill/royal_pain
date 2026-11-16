@@ -102,6 +102,10 @@ var pending_campaign_months := 0
 ## Pantalla principal del juego (rediseño v2: el mapa del reino). Todo «volver al mapa» va aquí.
 const MAP_SCENE := "res://scenes/kingdom_map/kingdom_map.tscn"
 const OLD_MAP_SCENE := "res://scenes/map/map.tscn"
+var v2_presence := true   # rediseño v2: tratar solo con quien está en tu mismo lugar (las pruebas antiguas lo apagan)
+
+func uses_kingdom_map() -> bool:
+	return v2_presence and is_game_active and get_node_or_null("/root/Journey") != null
 
 func advance_turn() -> void:
 	if not is_game_active:

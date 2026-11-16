@@ -7,6 +7,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var GM = root.get_node("GameManager")
+	GM.v2_presence = false   # prueba del sistema antiguo (presencia por reino, no por lugar)
 	var RD = root.get_node("RelationsData")
 	var MD = root.get_node("MapData")
 	var CL = load("res://scripts/resources/character_loader.gd")

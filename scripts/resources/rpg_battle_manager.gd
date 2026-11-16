@@ -47,6 +47,7 @@ const PARALYSIS_SKIP := 0.5
 const MIEDO_HIT := 0.25
 const AGOTAMIENTO_MULT := 0.8
 const EXHAUSTED_TURNS := 99     # entrar agotado por falta de energía: todo el combate
+const SWORN_MORALE := 10
 const TICK := 100.0
 const START_JITTER := 0.1
 # PV de los enemigos genéricos según cuántos son (ver _scale_generic_groups).
@@ -257,6 +258,16 @@ func setup(side_a: Array, side_b: Array, opts: Dictionary = {}) -> void:
 		f.next_time *= 1.0 - minf(INIT_MAX, _side_fx(f.side, "ally_init"))
 		var fear: float = _side_fx(1 - f.side, "fear") + int(dread[1 - f.side]) * INFAMY_FEAR
 		f.morale = clampi(f.morale + roundi(_side_fx(f.side, "ally_morale") - fear), 0, 100)
+	var sworn := 0   # hermandad jurada: el grupo lucha con más moral si hay un hermano de armas
+	var tree := Engine.get_main_loop() as SceneTree
+	var rd: Node = tree.root.get_node_or_null("RelationsData") if tree != null else null
+	for f: Fighter in side_fighters(0):
+		var rel: Relationship = rd.get_relation(f.c.full_name()) if rd != null else null
+		if rel != null and rel.sworn:
+			sworn += 1
+	if sworn > 0:
+		for f: Fighter in side_fighters(0):
+			f.morale = clampi(f.morale + SWORN_MORALE, 0, 100)
 	for f: Fighter in fighters:   # sin energía se lucha agotado
 		if f.c.is_exhausted():
 			f.statuses["agotamiento"] = {"turns": EXHAUSTED_TURNS, "src": null, "power": 0.0}

@@ -150,6 +150,16 @@ func _show_outside() -> void:
 		b.tooltip_text = why
 		b.pressed.connect(enter.bind(id))
 		row.add_child(b)
+	var people := RelationsData.people_here()
+	if not people.is_empty():
+		var pb := Button.new()
+		pb.text = "Gente aquí (%d)" % people.size()
+		pb.icon = SkillIcons.texture("conversation")
+		pb.expand_icon = false
+		pb.add_theme_constant_override("icon_max_width", 28)
+		pb.custom_minimum_size = Vector2(150, 48)
+		pb.pressed.connect(_people)
+		row.add_child(pb)
 	var out := Button.new()
 	out.text = "Salir al mapa"
 	out.custom_minimum_size = Vector2(150, 48)
@@ -307,7 +317,14 @@ func _row(text: String, icon: Texture2D, btn: String, cb: Callable, disabled := 
 func _player() -> Character:
 	return GameManager.player_character
 
+## Precios: la vía Humilde paga menos (ViaCatalog: prices −30 %).
+static func price(amount: int) -> int:
+	var p: Character = GameManager.player_character
+	var mult := 1.0 + float(ViaCatalog.bonus(p.via, "prices", 0.0)) if p != null and p.via >= 0 else 1.0
+	return maxi(1, roundi(amount * mult))
+
 func _pay(amount: int) -> bool:
+	amount = price(amount)
 	if _player().gold < amount:
 		say("No te llega el oro.", "serio")
 		return false
@@ -410,6 +427,7 @@ func _tavern(msg: String = "") -> void:
 		say(PlaceArt.rumor(), "neutral")
 		option("Volver", _tavern))
 	option("Tablón de encargos", _board.bind(false))
+	option("Hacer faenas (%d h)" % int(ViaData.CHORE_HOURS), func(): _tavern(ViaData.chore()), _player().energy < 15, "Trabajo honrado: oro y fama de buena gente (vía Humilde).")
 	option("Apostar a los dados (%d de oro)" % BET, func():
 		if not _pay(BET):
 			return
@@ -447,6 +465,7 @@ func _church(msg: String = "") -> void:
 			for c: Character in _group():
 				c.current_health = c.max_health
 			_church("Que tus heridas sanen. Ve con cuidado."), not hurt, "Nadie está herido." if not hurt else "")
+	option("Repartir limosna (%d de oro)" % ViaData.ALMS_GOLD, func(): _church(ViaData.alms()), _player().gold < ViaData.ALMS_GOLD, "Clemencia con los necesitados (vía Benevolente).")
 	var donated := Journey.day_index() / ContractData.REFRESH_DAYS == int(Journey.donations.get(house_key(), -1))
 	option("Donar %d de oro (fama +%d)" % [DONATION, DONATION_FAME], func():
 		if _pay(DONATION):
@@ -503,10 +522,23 @@ func _house(msg: String = "") -> void:
 				_house("¡Enhorabuena! La casa es tuya."), _player().gold < price)
 	_leave_option()
 
+# --- Gente del lugar (rediseño v2: solo se trata con quien está aquí) ---
+
+func _people() -> void:
+	_building = "taberna"
+	enter("taberna")
+	_clear()
+	say("Hoy hay buena gente por aquí. ¿Con quién quieres hablar?")
+	for r: Relationship in RelationsData.people_here():
+		_row("%s — %s" % [r.person_name, RelationsData.intimacy_label(r)], r.character.get_face() if r.character != null else null, "Hablar", func():
+			load("res://scripts/ui/conversation_panel.gd").open(self, r))
+	_leave_option()
+
 # --- Callejón (de noche): encargos turbios ---
 
 func _alley(msg: String = "") -> void:
 	_clear()
 	say(msg if not msg.is_empty() else "¿Buscas algo que no se vende a la luz del día?", "serio")
 	option("Encargos turbios", _board.bind(true))
+	option("Extorsionar a los comerciantes", func(): _alley(ViaData.extort()), false, "Oro fácil a cambio de fama (vía Villano).")
 	_leave_option()

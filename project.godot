@@ -53,6 +53,7 @@ Journey="*res://scripts/autoload/journey.gd"
 ContractData="*res://scripts/autoload/contract_data.gd"
 RoadTraffic="*res://scripts/autoload/road_traffic.gd"
 Expeditions="*res://scripts/autoload/expeditions.gd"
+ViaData="*res://scripts/autoload/via_data.gd"
 
 [display]
 

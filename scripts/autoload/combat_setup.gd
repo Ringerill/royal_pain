@@ -182,7 +182,8 @@ func begin_event_fight(fight: Dictionary, event_title: String) -> String:
 		return ""   # quien llama ya debió impedirlo (EventCatalog.can_choose, MissionData.action_blocker)
 	pending_outcome = {"title": event_title, "win": fight.get("win", {}), "lose": fight.get("lose", {}),
 		"no_rival": fight.get("no_rival", false), "contract_uid": str(fight.get("contract_uid", "")),
-		"expedition": bool(fight.get("expedition", false))}
+		"expedition": bool(fight.get("expedition", false)), "via_deed": fight.get("via_deed", []),
+		"captive": str(fight.get("captive", ""))}
 	var foe := make_event_foe(fight.get("foe", {}), player)
 	if fight.get("type", "duel") == "battle":
 		var castle: Castle = MapData.get_castle_by_id(GameManager.home_castle_id)
@@ -224,7 +225,13 @@ func apply_outcome(won: bool) -> String:
 	var mission_uid: String = pending_outcome.get("mission_uid", "")
 	var contract_uid: String = str(pending_outcome.get("contract_uid", ""))
 	var expedition: bool = bool(pending_outcome.get("expedition", false))
+	var via_deed: Array = pending_outcome.get("via_deed", [])
+	var captive: String = str(pending_outcome.get("captive", ""))
 	pending_outcome = {}
+	if won and not via_deed.is_empty():   # hechos de vía (ViaData): rescates, saqueos…
+		ViaData.record(str(via_deed[0]), str(via_deed[1]) if via_deed.size() > 1 else "")
+	if won and not captive.is_empty():
+		ViaData.maybe_capture(captive)
 	if expedition:   # sala de una expedición o ronda de la arena (Expeditions)
 		return Expeditions.resolve_fight(won)
 	if not mission_uid.is_empty():

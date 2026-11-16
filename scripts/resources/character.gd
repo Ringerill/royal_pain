@@ -342,6 +342,12 @@ func equip(item: Equipment) -> Equipment:
 		unequip(replaced)
 	equipment.append(item)
 	_apply_item_mods(item, 1)
+	if item.slot == "Arma":   # colección (vía Ambicioso)
+		var tree := Engine.get_main_loop() as SceneTree
+		var vd := tree.root.get_node_or_null("ViaData") if tree != null else null
+		var gm := tree.root.get_node_or_null("GameManager") if tree != null else null
+		if vd != null and gm != null and gm.player_character == self:
+			vd.note_weapon(item.equipment_name)
 	return replaced
 
 func unequip(item: Equipment) -> void:

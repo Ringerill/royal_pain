@@ -1200,11 +1200,36 @@ func zone_kingdom() -> int:
 	var travel := get_node_or_null("/root/TravelData")
 	return travel.zone_kingdom() if travel != null else GameManager.player_kingdom
 
+## Rediseño v2: lugar del reino donde vive cada persona (los señores, en la capital).
+func node_of(r: Relationship) -> int:
+	if r == null or r.kingdom < 0:
+		return -1
+	if r.kind == Relationship.Kind.SENOR:
+		return 0
+	var settle := KingdomMaps.nodes(r.kingdom).filter(func(n: Dictionary) -> bool: return n.type in KingdomMaps.SETTLEMENT_TYPES)
+	if settle.is_empty():
+		return 0
+	return int(settle[absi(hash(r.person_name)) % settle.size()].index)
+
+var road_company := ""   # con quien te cruzaste en el camino (presente hasta que cambies de lugar)
+
+## Gente que está en el lugar donde estás (rediseño v2: solo se trata con quien tienes delante).
+func people_here() -> Array[Relationship]:
+	var out: Array[Relationship] = []
+	for r: Relationship in relations:
+		if sociable(r) and r.kind != Relationship.Kind.CONYUGE and r.kingdom == Journey.kingdom and node_of(r) == Journey.at:
+			out.append(r)
+	return out
+
 ## ¿Tienes a esa persona delante? Tu séquito viaja contigo y tu cónyuge vive en tu casa.
 func person_present(r: Relationship) -> bool:
 	if r == null:
 		return false
-	if r.person_name in retinue or in_area(r):
+	if r.person_name in retinue or r.person_name == road_company:
+		return true
+	if GameManager.uses_kingdom_map() and r.kind != Relationship.Kind.CONYUGE:
+		return r.kingdom == Journey.kingdom and node_of(r) == Journey.at and not Journey.is_traveling()
+	if in_area(r):
 		return true
 	var travel := get_node_or_null("/root/TravelData")
 	return r.kind == Relationship.Kind.CONYUGE and (travel == null or travel.is_at_home())

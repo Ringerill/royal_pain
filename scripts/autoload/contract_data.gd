@@ -28,6 +28,8 @@ const KINDS := {
 		"text": "Han secuestrado a la hija de un tendero. La retienen en %s: tráela antes del día %d."},
 	"turbio": {"name": "Turbio", "fight": false, "gold": [150, 260], "fame": -4, "night": true,
 		"text": "Nadie debe saber qué hay en esta caja. Déjala en %s antes del día %d."},
+	"recompensa": {"name": "Se busca", "fight": true, "gold": [220, 320], "fame": 5,
+		"text": "Se busca a un cabecilla forajido escondido en %s. Recompensa si cae antes del día %d."},
 }
 const DAY_KINDS := ["entregar", "escoltar", "cazar", "despejar", "rescatar"]
 
@@ -68,10 +70,13 @@ func _generate(k: int, i: int, week: int, night: bool) -> Array:
 	var nodes := KingdomMaps.nodes(k)
 	var out := []
 	var n := 1 if night else BOARD_SIZE
+	var bounty_slot := -1   # «se busca»: siempre para los justicieros; a veces para los demás
+	if not night and (GameManager.player_character.via == ViaCatalog.Via.JUSTICIERO or rng.randf() < 0.25):
+		bounty_slot = n - 1
 	for j in n:
-		var kind: String = "turbio" if night else DAY_KINDS[rng.randi() % DAY_KINDS.size()]
+		var kind: String = "turbio" if night else ("recompensa" if j == bounty_slot else DAY_KINDS[rng.randi() % DAY_KINDS.size()])
 		var candidates := nodes.filter(func(x: Dictionary) -> bool: return x.index != i)
-		if kind in ["despejar", "rescatar"]:
+		if kind in ["despejar", "rescatar", "recompensa"]:
 			var wild := candidates.filter(func(x: Dictionary) -> bool: return not x.type in KingdomMaps.SETTLEMENT_TYPES)
 			if not wild.is_empty():
 				candidates = wild
@@ -149,9 +154,9 @@ func on_arrived(k: int, i: int) -> Dictionary:
 
 func _fight_for(c: Dictionary) -> Dictionary:
 	var foe_name: String = {"cazar": "Salteador", "despejar": "Cabecilla forajido", "rescatar": "Secuestrador",
-		"escoltar": "Asaltante de caminos"}.get(c.kind, "Bandido")
+		"escoltar": "Asaltante de caminos", "recompensa": "Forajido buscado"}.get(c.kind, "Bandido")
 	return {"type": "duel", "no_rival": true, "context": "camino", "contract_uid": c.uid,
-		"foe": {"name": foe_name, "role": Character.Role.SOLDADO, "power": 1, "personality": "CRUEL"},
+		"foe": {"name": foe_name, "role": Character.Role.SOLDADO, "power": 2 if c.kind == "recompensa" else 1, "personality": "CRUEL"},
 		"win": {"effects": {}, "result": "El camino queda libre."},
 		"lose": {"effects": {}, "result": "Tienes que retirarte."}}
 
@@ -172,6 +177,14 @@ func _complete(c: Dictionary, ok: bool) -> String:
 		p.add_fame(int(c.fame))
 		completed += 1
 		WorldEvents.record("Encargo cumplido: %s." % title(c), "", true)
+		ViaData.record("contract", "contracts")
+		match str(c.kind):
+			"rescatar", "cazar", "despejar":
+				ViaData.record("rescue", "rescues")
+			"recompensa":
+				ViaData.record("bounty", "bounties")
+			"turbio":
+				ViaData.record("extort")
 	changed.emit()
 	return "Encargo cumplido: %s.\n+%d de oro · Fama %+d." % [title(c), int(c.gold), int(c.fame)]
 

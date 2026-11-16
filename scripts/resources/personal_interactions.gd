@@ -13,6 +13,7 @@ const DINNER_COST := 10
 const INTRO_MIN_AFFECTION := 30
 const TRAIN_XP := 35
 const TRAIN_PLAYER_XP := 20
+const SWORN_MIN_AFFECTION := 80
 
 static func kinds(r: Relationship) -> Array:
 	var out := []
@@ -34,6 +35,8 @@ static func kinds(r: Relationship) -> Array:
 
 static func for_relation(r: Relationship) -> Array:
 	var out := []
+	if not r.sworn and not r.romance and r.kind != Relationship.Kind.CONYUGE and r.affection >= SWORN_MIN_AFFECTION:
+		out.append(["hermandad", "Jurar hermandad", "Os juráis lealtad como hermanos: más moral cuando lucháis juntos."])
 	for k in kinds(r):
 		match k:
 			"spouse":
@@ -101,7 +104,11 @@ static func _lord_of(r: Relationship) -> Relationship:
 	return null
 
 static func _gain(r: Relationship, base: int) -> int:
-	return maxi(1, roundi(base * RelationsData.honor_affinity_mult(r)))
+	var f := 1.0
+	var p: Character = GameManager.player_character
+	if p != null and r.character != null:   # rediseño v2: afinidad entre personalidades
+		f = PersonaCatalog.affinity_factor(p.persona_v2(), r.character.persona_v2())
+	return maxi(1, roundi(base * RelationsData.honor_affinity_mult(r) * f))
 
 static func perform(r: Relationship, id: String) -> String:
 	var reason := blocker(r, id)
@@ -116,6 +123,10 @@ static func perform(r: Relationship, id: String) -> String:
 	RelationsData.interaction_months[r.person_name] = GameManager.months_elapsed()
 	var text := ""
 	match id:
+		"hermandad":
+			r.sworn = true
+			r.adjust_affection(5)
+			text = "Mezcláis vuestra sangre y juráis protegeros. Desde hoy, %s es tu hermano de armas." % r.person_name
 		"velada":
 			var g := _gain(r, 7)
 			r.adjust_affection(g)

@@ -185,6 +185,11 @@ func resolve_fight(won: bool) -> String:
 		return t
 	var rm: Dictionary = room(int(run.layer), int(run.room))
 	rm.done = true
+	if str(rm.type) == "jefe":
+		ViaData.record("boss", "bosses")
+		if run.kind == "expedicion":
+			ViaData.record("bounty", "bounties")
+			ViaData.maybe_capture(_fight_for(rm, int(run.layer)).foe.name)
 	if run.kind == "torneo":   # entre rondas os curan
 		for c: Character in _group():
 			c.current_health = c.max_health

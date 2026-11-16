@@ -354,6 +354,17 @@ func _on_encounter(g: Dictionary) -> void:
 				["Asaltarla", func(): _road_fight(g, "Guardia de caravana", "historia", 0, {"gold": RAID_GOLD, "fame": RAID_FAME}, "La caravana es tuya.")],
 				["Seguir", func(): pass],
 			])
+		"ejercito":
+			_choices("Ejército enemigo", "Un ejército enemigo marcha por el camino. Llevas %d soldados." % p.soldiers, [
+				["Presentar batalla", func():
+					RoadTraffic.remove(g)
+					var scene := CombatSetup.begin_event_fight(Career.army_fight(), "Ejército enemigo")
+					if not scene.is_empty():
+						get_tree().change_scene_to_file(scene)],
+				["Apartarse del camino (2 h)", func():
+					Journey.wait_hours(2.0)
+					_message("Ejército enemigo", "Os escondéis hasta que pasa.")],
+			])
 		"viajero":
 			_choices("Viajero", "Un viajero solitario te saluda desde el borde del camino.", [
 				["Conversar", func(): _talk_to_traveler()],
@@ -615,6 +626,18 @@ func _check_events() -> void:
 	if not ViaData.pending_prisoner.is_empty():
 		_prisoner_dialog()
 		return
+	if Career.pending_pirates:
+		var pf: Dictionary = Career.pirate_fight()
+		_choices("¡Piratas!", "En plena travesía, un barco pirata os aborda.", [
+			["¡A las armas!", func():
+				var scene := CombatSetup.begin_event_fight(pf, "Piratas")
+				if not scene.is_empty():
+					get_tree().change_scene_to_file(scene)],
+			["Entregar la carga (−20 % de tu oro)", func():
+				GameManager.player_character.gold = roundi(GameManager.player_character.gold * 0.8)
+				_message("Piratas", "Se llevan lo que quieren y os dejan seguir.")],
+		])
+		return
 	if GameManager.has_pending_event():
 		_show_event(GameManager.pending_event)
 	elif WorldEvents.has_notifications():
@@ -847,8 +870,11 @@ func _open_world() -> void:
 			b.tooltip_text = ("%s · ≈%d h%s" % ["Por mar" if r.sea else "Por tierra", roundi(r.hours), (" · pasaje %d de oro" % r.cost) if r.cost > 0 else ""]) if r.ok else str(r.why)
 			b.disabled = not r.ok
 			b.pressed.connect(func():
+				var sea: bool = r.sea
 				var why := Journey.travel_to_kingdom(kd)
 				if why.is_empty():
+					if sea:
+						Career.roll_pirates()   # por mar, a veces asaltan los piratas
 					_world.queue_free()
 					_build_nodes()
 					_layout.call_deferred()

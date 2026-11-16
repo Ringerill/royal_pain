@@ -13,6 +13,7 @@ const TYPES := {
 	"patrulla": {"name": "Patrulla", "icon": "knight-banner", "count": 1, "speed": 1.2, "color": Color("5b8fd0")},
 	"caravana": {"name": "Caravana", "icon": "two-coins", "count": 1, "speed": 0.7, "color": Color("d4af5a")},
 	"viajero": {"name": "Viajero", "icon": "person", "count": 2, "speed": 0.9, "color": Color("9fd08a")},
+	"ejercito": {"name": "Ejército enemigo", "icon": "flying-flag", "count": 0, "speed": 0.8, "color": Color("8a2a2a")},
 }
 const MEET_DIST := 0.12          # fracción del tramo
 const NIGHT_BANDIT_BONUS := 1    # de noche hay un grupo de bandidos más
@@ -74,6 +75,10 @@ func _populate(k: int) -> void:
 	for t: String in TYPES:
 		for n in int(TYPES[t].count) + (NIGHT_BANDIT_BONUS if t == "bandidos" else 0):
 			_spawn(t)
+	# En guerra, un ejército enemigo recorre tu reino o el reino enemigo en el que estés.
+	var hostile: Array = RelationsData.hostile_kingdoms()
+	if not hostile.is_empty() and (k == GameManager.player_kingdom or k in hostile):
+		_spawn("ejercito")
 
 func _spawn(t: String) -> void:
 	var nodes := KingdomMaps.nodes(_kingdom)

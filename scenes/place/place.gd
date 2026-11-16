@@ -16,9 +16,10 @@ const BUILDINGS := {
 	"posada": {"name": "Posada", "icon": "bindle", "bg": "room", "who": "Posadero", "gender": 0},
 	"casa": {"name": "Tu casa", "icon": "castle", "bg": "home_hallway", "who": "Criada", "gender": 1},
 	"callejon": {"name": "Callejón", "icon": "running-ninja", "bg": "back_alley", "who": "Contrabandista", "gender": -1},
+	"trono": {"name": "Salón del trono", "icon": "crown", "bg": "throne", "who": "Chambelán", "gender": 0},
 }
 const BY_TYPE := {
-	"capital": ["tienda", "herreria", "taberna", "iglesia", "biblioteca", "posada", "casa", "callejon"],
+	"capital": ["trono", "tienda", "herreria", "taberna", "iglesia", "biblioteca", "posada", "casa", "callejon"],
 	"ciudad": ["tienda", "herreria", "taberna", "iglesia", "biblioteca", "posada", "casa", "callejon"],
 	"puerto": ["tienda", "herreria", "taberna", "posada", "callejon"],
 	"pueblo": ["tienda", "taberna", "iglesia", "posada"],
@@ -263,6 +264,7 @@ func enter(id: String) -> void:
 		"posada": _inn()
 		"casa": _house()
 		"callejon": _alley()
+		"trono": _throne()
 
 func say(text: String, expr: String = "") -> void:
 	if expr.is_empty():
@@ -520,6 +522,42 @@ func _house(msg: String = "") -> void:
 			if _pay(price):
 				Journey.houses.append(house_key())
 				_house("¡Enhorabuena! La casa es tuya."), _player().gold < price)
+	_leave_option()
+
+# --- Trono (capital): audiencia, ascensos, soldados, gobierno ---
+
+func _throne(msg: String = "") -> void:
+	_clear()
+	var p := _player()
+	var nr: int = Career.next_rank()
+	say(msg if not msg.is_empty() else "Su señoría os recibirá. Sois %s; ¿qué asunto os trae?" % RankCatalog.name_of(p.rank_v2()), "serio")
+	if nr >= 0:
+		var why: String = Career.promotion_blocker()
+		option("Pedir el ascenso a %s" % RankCatalog.name_of(nr), func(): _throne(Career.promote()), not why.is_empty(),
+			why if not why.is_empty() else str(Career.MILESTONES[nr].text))
+	if Career.pays_soldiers():
+		for n in [5, 20]:
+			var w: String = Career.recruit_blocker(n)
+			option("Reclutar %d soldados (%d de oro)" % [n, n * Career.RECRUIT_COST], func(): _throne(Career.recruit(n)), not w.is_empty(), w)
+	else:
+		option("Pedir soldados a tu comandante", func():
+			Career.assign_soldiers()
+			_throne("Se te asignan soldados según tu fama: llevas %d de %d." % [p.soldiers, Career.max_soldiers()]),
+			Career.max_soldiers() == 0, "Según tu rango y tu fama.")
+	var mine: Array = Career.governed()
+	if not mine.is_empty():
+		option("Gobernar %s" % mine[0].castle_name, func():
+			GameManager.current_castle = mine[0]
+			get_tree().change_scene_to_file("res://scenes/castle_interior/castle_interior.tscn"))
+	if p.rank_v2() >= RankCatalog.Rank.NOBLE:
+		for r: Relationship in Career.purge_targets().slice(0, 3):
+			option("Purgar a %s (Terror)" % r.person_name, func(): _throne(Career.purge(r)), false, "Vía Tirano. Cuesta fama.")
+	if p.rank_v2() >= RankCatalog.Rank.CABALLERO:
+		for c: Castle in MapData.castles:
+			if c.kingdom in RelationsData.hostile_kingdoms() and c.kingdom != GameManager.player_kingdom:
+				option("Ultimátum a %s" % c.castle_name, func(): _throne(Career.ultimatum(c)), false,
+					"Vía Conquistador: se rinde si llevas %d soldados (o con suerte)." % Career.ULTIMATUM_SOLDIERS)
+				break
 	_leave_option()
 
 # --- Gente del lugar (rediseño v2: solo se trata con quien está aquí) ---

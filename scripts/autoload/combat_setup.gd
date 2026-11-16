@@ -228,6 +228,8 @@ func apply_outcome(won: bool) -> String:
 	var via_deed: Array = pending_outcome.get("via_deed", [])
 	var captive: String = str(pending_outcome.get("captive", ""))
 	pending_outcome = {}
+	if won:
+		Career.note_win()
 	if won and not via_deed.is_empty():   # hechos de vía (ViaData): rescates, saqueos…
 		ViaData.record(str(via_deed[0]), str(via_deed[1]) if via_deed.size() > 1 else "")
 	if won and not captive.is_empty():

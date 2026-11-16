@@ -14,7 +14,7 @@ Resumen de las fases que faltan del plan de revisión. El detalle completo, con 
 ## Rediseño v2 (noviembre de 2026)
 
 Las 9 fases de `docs/REDISENO.md` están programadas y subidas; queda la **revisión del usuario**.
-Lo simplificado y lo que falta está en `docs/REDISENO.md` §10. Lo más grande pendiente: la batalla
+Detalle de lo hecho en `docs/RESUMEN_REDISENO.md`; lo simplificado y lo que falta, en `docs/REDISENO.md` §10. Lo más grande pendiente: la batalla
 de nodos en tiempo real sobre el mapa del reino y las técnicas propias de cada personalidad.
 
 ## Lo que viene (16 de noviembre de 2026) (anterior al rediseño)

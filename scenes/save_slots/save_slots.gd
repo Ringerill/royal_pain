@@ -96,7 +96,7 @@ func _on_save_pressed(slot: String, occupied: bool) -> void:
 
 func _on_load_pressed(slot: String) -> void:
 	if SaveSystem.load_game(slot):
-		get_tree().change_scene_to_file("res://scenes/map/map.tscn")
+		get_tree().change_scene_to_file(GameManager.MAP_SCENE)
 	else:
 		feedback_label.text = "No se pudo cargar la %s." % SaveSystem.slot_title(slot)
 

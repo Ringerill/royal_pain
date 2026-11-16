@@ -188,4 +188,4 @@ func _on_comenzar_pressed() -> void:
 	DynastyData.aging_enabled = aging_check.button_pressed
 	GameManager.start_new_game(character, castle.castle_id)
 	GameManager.change_state(GameStateEnums.State.MAP)
-	get_tree().change_scene_to_file("res://scenes/map/map.tscn")
+	get_tree().change_scene_to_file(GameManager.MAP_SCENE)

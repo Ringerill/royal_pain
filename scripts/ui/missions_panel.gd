@@ -2,7 +2,7 @@ extends Control
 # Ventana de encargos activos (MissionData): plazo, progreso, recompensa y la acción que los cumple.
 # Uso: const MissionsPanel = preload("res://scripts/ui/missions_panel.gd"); MissionsPanel.open(nodo)
 
-const MAP_SCENE := "res://scenes/map/map.tscn"
+const MAP_SCENE := "res://scenes/kingdom_map/kingdom_map.tscn"
 
 var _list: VBoxContainer
 var _feedback: Label

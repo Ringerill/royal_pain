@@ -410,5 +410,5 @@ func _show_feedback(text: String, rebuild: bool = true) -> void:
 		_rebuild()
 
 func _on_back_pressed() -> void:
-	var scene := "res://scenes/map/map.tscn" if GameManager.is_game_active else "res://scenes/main_menu/main_menu.tscn"
+	var scene := GameManager.MAP_SCENE if GameManager.is_game_active else "res://scenes/main_menu/main_menu.tscn"
 	get_tree().change_scene_to_file(scene)

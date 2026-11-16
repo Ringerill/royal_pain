@@ -104,7 +104,7 @@ func _ready() -> void:
 		castle = MapData.get_castle_by_id(army.current_castle_id) if army != null else null
 	if invited.is_empty() and skirmish.is_empty() and (army == null or not army.pending_battle or castle == null):
 		# Nadie llegó aquí desde una batalla pendiente del mapa; evita un crash.
-		var fallback := "res://scenes/map/map.tscn" if GameManager.is_game_active else "res://scenes/main_menu/main_menu.tscn"
+		var fallback := GameManager.MAP_SCENE if GameManager.is_game_active else "res://scenes/main_menu/main_menu.tscn"
 		get_tree().change_scene_to_file(fallback)
 		return
 
@@ -1652,7 +1652,7 @@ func _on_back_to_map_pressed() -> void:
 		get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn")
 		return
 	GameManager.change_state(GameStateEnums.State.MAP)
-	get_tree().change_scene_to_file("res://scenes/map/map.tscn")
+	get_tree().change_scene_to_file(GameManager.MAP_SCENE)
 
 # T o el botón Y del mando terminan el turno. H/C/R dan órdenes al pelotón elegido; 1–9, habilidades.
 func _unhandled_input(event: InputEvent) -> void:

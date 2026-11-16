@@ -147,7 +147,7 @@ func finish_campaign(result: Dictionary) -> Dictionary:
 		if not caught.is_empty():
 			rivalry = (rivalry + " " + caught).strip_edges()
 			if CaptureData.is_captive():
-				CombatSetup.return_scene = "res://scenes/map/map.tscn"
+				CombatSetup.return_scene = GameManager.MAP_SCENE
 	if CombatSetup.is_tournament():
 		var t := tournament_round_ended(winner, rivalry)
 		out.text = t.text
@@ -187,7 +187,7 @@ func resolve_death(result: Dictionary, winner: Character) -> String:
 		if c == owner:
 			if DynastyData.has_method("on_player_died"):
 				DynastyData.on_player_died(cause)
-			CombatSetup.return_scene = "res://scenes/map/map.tscn"   # el mapa abre la sucesión
+			CombatSetup.return_scene = GameManager.MAP_SCENE   # el mapa abre la sucesión
 			log_lines.append("☠ %s muere %s." % [c.full_name(), cause])
 			lines.append("☠ Has muerto %s. Tu dinastía buscará un heredero." % cause)
 			continue

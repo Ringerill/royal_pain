@@ -191,7 +191,7 @@ func begin_event_fight(fight: Dictionary, event_title: String) -> String:
 		return "res://scenes/battle/battle.tscn"
 	start_campaign_duel(player, foe)
 	duel_to_death = bool(fight.get("to_death", false))
-	return_scene = "res://scenes/map/map.tscn"
+	return_scene = GameManager.MAP_SCENE
 	group_fight = true
 	fight_context = str(fight.get("context", "camino"))
 	enemy_party = make_enemy_party(foe, fight_context, player)

@@ -99,6 +99,10 @@ func restore_game(character: Character, start_castle_id: String, kingdom: int, m
 const CAMPAIGN_MONTHS := 2
 var pending_campaign_months := 0
 
+## Pantalla principal del juego (rediseño v2: el mapa del reino). Todo «volver al mapa» va aquí.
+const MAP_SCENE := "res://scenes/kingdom_map/kingdom_map.tscn"
+const OLD_MAP_SCENE := "res://scenes/map/map.tscn"
+
 func advance_turn() -> void:
 	if not is_game_active:
 		push_warning("GameManager: se intentó avanzar el turno sin una partida activa.")

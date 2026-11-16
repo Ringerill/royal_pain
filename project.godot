@@ -49,6 +49,7 @@ ReputationEvents="*res://scripts/autoload/reputation_events.gd"
 WorldGrowth="*res://scripts/autoload/world_growth.gd"
 RoyalCourt="*res://scripts/autoload/royal_court.gd"
 TouchSupport="*res://scripts/autoload/touch_support.gd"
+Journey="*res://scripts/autoload/journey.gd"
 
 [display]
 

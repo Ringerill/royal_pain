@@ -254,7 +254,7 @@ func _on_ascend_pressed() -> void:
 		_build_role_actions()
 
 func _on_volver_mapa_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/map/map.tscn")
+	get_tree().change_scene_to_file(GameManager.MAP_SCENE)
 
 # --- Acciones específicas por rol ---
 # Cada entrada: {label, tooltip, locked (bool), callback (Callable, solo si no está locked)}

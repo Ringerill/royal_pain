@@ -12,4 +12,4 @@ func _process(delta: float) -> void:
 	
 func _on_exit_interior_pressed() -> void:
 	# Placeholder: la interfaz específica por rol (ciudad, barracas, etc.) se construye más adelante.
-	get_tree().change_scene_to_file("res://scenes/map/map.tscn")
+	get_tree().change_scene_to_file(GameManager.MAP_SCENE)

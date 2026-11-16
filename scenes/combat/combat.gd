@@ -858,7 +858,7 @@ func _on_duel_ended(winner: Character, reason: String) -> void:
 			if not caught.is_empty():
 				rivalry = (rivalry + " " + caught).strip_edges()
 				if CaptureData.is_captive():
-					CombatSetup.return_scene = "res://scenes/map/map.tscn"
+					CombatSetup.return_scene = GameManager.MAP_SCENE
 		btn_volver_menu.disabled = false
 		btn_volver_menu.tooltip_text = ""
 		if CombatSetup.is_tournament():
@@ -963,7 +963,7 @@ func _resolve_death(winner: Character) -> String:
 	if loser == _owner:
 		if DynastyData.has_method("on_player_died"):
 			DynastyData.on_player_died(cause)
-		CombatSetup.return_scene = "res://scenes/map/map.tscn"   # el mapa abre la sucesión
+		CombatSetup.return_scene = GameManager.MAP_SCENE   # el mapa abre la sucesión
 		btn_volver_menu.text = "Volver al Mapa"
 		turn_log_buffer += "\n☠ %s muere %s." % [loser.full_name(), cause]
 		LogView.show(log_label, turn_log_buffer)

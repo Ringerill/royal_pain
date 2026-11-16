@@ -64,7 +64,7 @@ func _on_mapa_pressed() -> void:
 			btn_mapa.text = "No se pudo cargar la partida"
 			btn_mapa.disabled = true
 			return
-	get_tree().change_scene_to_file("res://scenes/map/map.tscn")
+	get_tree().change_scene_to_file(GameManager.MAP_SCENE)
 
 func _on_salir_pressed() -> void:
 	get_tree().quit()

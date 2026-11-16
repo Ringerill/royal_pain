@@ -27,6 +27,20 @@ const TONE_WORDS := {
 	"verguenza": ["perdona", "disculpa", "no sé qué decir"],
 }
 
+const RUMORS := [
+	"Dicen que en los caminos del norte hay más bandidos que mercaderes.",
+	"El herrero jura que su acero aguanta un mandoble. Yo no lo probaría.",
+	"Una caravana salió ayer hacia la capital con más guardias que fardos.",
+	"En la torre olvidada se oyen ruidos de noche. Nadie que haya subido ha vuelto a contarlo.",
+	"Los nobles se pelean por todo, menos por pagar lo que deben.",
+	"Si vas a viajar de noche, lleva antídotos: los forajidos untan veneno en sus cuchillos.",
+	"El que no descansa acaba tirado en la cuneta, y sin la bolsa.",
+	"La lanza vence a la espada, dicen los viejos soldados; pero el arco vence a la lanza.",
+]
+
+static func rumor() -> String:
+	return RUMORS[randi() % RUMORS.size()]
+
 static var _cache := {}
 
 ## Fondo de un lugar con la estación y la noche actuales (cae a la versión base si falta la variante).

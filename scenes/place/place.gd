@@ -37,16 +37,6 @@ const BET := 20
 const BET_WIN := 0.47
 const UPGRADE_MARKUP := 1.2
 const SELL_SHARE := 0.4
-const RUMORS := [
-	"Dicen que en los caminos del norte hay más bandidos que mercaderes.",
-	"El herrero jura que su acero aguanta un mandoble. Yo no lo probaría.",
-	"Una caravana salió ayer hacia la capital con más guardias que fardos.",
-	"En la torre olvidada se oyen ruidos de noche. Nadie que haya subido ha vuelto a contarlo.",
-	"Los nobles se pelean por todo, menos por pagar lo que deben.",
-	"Si vas a viajar de noche, lleva antídotos: los forajidos untan veneno en sus cuchillos.",
-	"El que no descansa acaba tirado en la cuneta, y sin la bolsa.",
-	"La lanza vence a la espada, dicen los viejos soldados; pero el arco vence a la lanza.",
-]
 
 var _k := 0
 var _i := 0
@@ -417,7 +407,7 @@ func _tavern(msg: String = "") -> void:
 	say(msg if not msg.is_empty() else "¡Pasa, pasa! ¿Cerveza, rumores o trabajo?")
 	option("Escuchar rumores", func():
 		_clear()
-		say(RUMORS[randi() % RUMORS.size()], "neutral")
+		say(PlaceArt.rumor(), "neutral")
 		option("Volver", _tavern))
 	option("Tablón de encargos", _board.bind(false))
 	option("Apostar a los dados (%d de oro)" % BET, func():

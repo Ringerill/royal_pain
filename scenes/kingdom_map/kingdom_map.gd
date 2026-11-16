@@ -35,6 +35,20 @@ var _pending_fight := {}
 var _pending_fight_title := ""
 var _pending_duel_rival: Character
 var _pending_duel_to_death := false
+var _traffic: Control
+const TRAFFIC_ICON := 30.0
+# Encuentros en el camino (fase 6)
+const TOLL_SHARE := 0.15          # bandidos: peaje (parte de tu oro)
+const TOLL_MIN := 10
+const BRIBE := 60                 # patrulla hostil: soborno
+const FLEE_BASE := 0.35
+const FLEE_PER_AGI := 0.03
+const ESCORT_HOURS := 2.0
+const ESCORT_GOLD := 60
+const ESCORT_AMBUSH := 0.5
+const RAID_GOLD := 150
+const RAID_FAME := -5
+const TRADER_DISCOUNT := 0.9
 
 func _ready() -> void:
 	if not GameManager.is_game_active or GameManager.player_character == null:
@@ -57,6 +71,8 @@ func _ready() -> void:
 	Journey.arrived.connect(_on_arrived)
 	Journey.fainted.connect(func(t: String): _message("Desmayo", t))
 	Journey.month_passed.connect(_after_month)
+	RoadTraffic.encounter.connect(_on_encounter)
+	RoadTraffic.moved.connect(_traffic.queue_redraw)
 	resized.connect(_layout)
 	_layout.call_deferred()
 	_refresh()
@@ -65,6 +81,10 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if Journey.changed.is_connected(_refresh):
 		Journey.changed.disconnect(_refresh)
+	if RoadTraffic.encounter.is_connected(_on_encounter):
+		RoadTraffic.encounter.disconnect(_on_encounter)
+	if is_instance_valid(_traffic) and RoadTraffic.moved.is_connected(_traffic.queue_redraw):
+		RoadTraffic.moved.disconnect(_traffic.queue_redraw)
 
 # --- Construcción ---
 
@@ -85,6 +105,11 @@ func _build() -> void:
 	_roads.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_roads.draw.connect(_draw_roads)
 	add_child(_roads)
+	_traffic = Control.new()   # grupos en los caminos (RoadTraffic)
+	_traffic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_traffic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_traffic.draw.connect(_draw_traffic)
+	add_child(_traffic)
 	_tint = ColorRect.new()
 	_tint.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -265,6 +290,125 @@ func _draw_roads() -> void:
 			pts.append(_to_screen(Journey.node(i).pos))
 		_roads.draw_polyline(pts, ROUTE_COLOR, 5.0, true)
 
+func _draw_traffic() -> void:
+	for g: Dictionary in RoadTraffic.groups:
+		var d: Dictionary = RoadTraffic.TYPES[g.type]
+		var p := _to_screen(RoadTraffic.position_of(g))
+		_traffic.draw_circle(p, TRAFFIC_ICON * 0.55, Color(0, 0, 0, 0.55))
+		_traffic.draw_circle(p, TRAFFIC_ICON * 0.5, d.color.darkened(0.35))
+		var tex := SkillIcons.texture(d.icon)
+		if tex != null:
+			var r := Rect2(p - Vector2(TRAFFIC_ICON, TRAFFIC_ICON) * 0.35, Vector2(TRAFFIC_ICON, TRAFFIC_ICON) * 0.7)
+			_traffic.draw_texture_rect(tex, r, false, Color(1, 1, 1))
+
+# --- Encuentros en el camino (RoadTraffic) ---
+
+func _on_encounter(g: Dictionary) -> void:
+	if is_instance_valid(_dialog) or GameManager.has_pending_event():
+		g.met = false   # ahora no: volverá a intentarlo
+		return
+	var p := GameManager.player_character
+	match str(g.type):
+		"bandidos":
+			var toll := maxi(TOLL_MIN, roundi(p.gold * TOLL_SHARE))
+			_choices("Bandidos en el camino", "«¡La bolsa o la vida!» Un grupo armado os corta el paso.", [
+				["Luchar", func(): _road_fight(g, "Bandido", "camino", 0, {"gold": 30}, "Los bandidos huyen o caen.")],
+				["Pagar el peaje (%d de oro)" % toll, func():
+					p.gold = maxi(0, p.gold - toll)
+					RoadTraffic.remove(g)
+					_message("Bandidos", "Pagas %d de oro y os dejan pasar." % toll)],
+				["Huir", func():
+					if randf() < clampf(FLEE_BASE + p.agility * FLEE_PER_AGI, 0.1, 0.9):
+						_message("Bandidos", "Escapáis por el bosque.")
+					else:
+						_road_fight(g, "Bandido", "camino", 0, {"gold": 30}, "No había escapatoria, pero vencéis.")],
+			])
+		"patrulla":
+			if RoadTraffic.patrol_hostile():
+				_choices("Patrulla", "«¡Alto! Se te busca por tus fechorías.»", [
+					["Luchar", func(): _road_fight(g, "Sargento de patrulla", "historia", 1, {"fame": -3}, "La patrulla cae.")],
+					["Sobornar (%d de oro)" % BRIBE, func():
+						if p.gold >= BRIBE:
+							p.gold -= BRIBE
+							_message("Patrulla", "El sargento se guarda el oro y mira hacia otro lado.")
+						else:
+							_road_fight(g, "Sargento de patrulla", "historia", 1, {"fame": -3}, "Sin oro, solo quedaban las armas.")],
+				])
+			else:
+				_message("Patrulla", "Una patrulla del reino os saluda: «Los caminos están más seguros con gente como vos.»")
+		"caravana":
+			_choices("Caravana", "Una caravana de mercaderes avanza despacio, con pocos guardias.", [
+				["Escoltarla un tramo (%d h)" % int(ESCORT_HOURS), func():
+					Journey.wait_hours(ESCORT_HOURS)
+					if randf() < ESCORT_AMBUSH:
+						_road_fight(g, "Asaltante de caminos", "camino", 0, {"gold": ESCORT_GOLD, "fame": 1}, "Los asaltantes huyen. El mercader paga.", false)
+					else:
+						p.gold += ESCORT_GOLD
+						p.add_fame(1)
+						_message("Caravana", "Tramo tranquilo. El mercader te paga %d de oro." % ESCORT_GOLD)],
+				["Comerciar", func(): _trader("Caravana")],
+				["Asaltarla", func(): _road_fight(g, "Guardia de caravana", "historia", 0, {"gold": RAID_GOLD, "fame": RAID_FAME}, "La caravana es tuya.")],
+				["Seguir", func(): pass],
+			])
+		"viajero":
+			_choices("Viajero", "Un viajero solitario te saluda desde el borde del camino.", [
+				["Conversar", func(): _message("Viajero", PlaceArt.rumor())],
+				["Comerciar", func(): _trader("Viajero")],
+				["Seguir", func(): pass],
+			])
+
+func _choices(title_text: String, text: String, specs: Array) -> void:
+	var box := _dialog_box(title_text)
+	_rich(box, text)
+	for spec in specs:
+		var b := Button.new()
+		b.text = spec[0]
+		var cb: Callable = spec[1]
+		b.pressed.connect(func():
+			_dialog.queue_free()
+			_dialog = null
+			cb.call()
+			if not is_instance_valid(_dialog):
+				_check_events.call_deferred())
+		box.add_child(b)
+
+func _road_fight(g: Dictionary, foe_name: String, context: String, power: int, win_effects: Dictionary, win_text: String, remove_group := true) -> void:
+	if remove_group:
+		RoadTraffic.remove(g)
+	var fight := {"type": "duel", "no_rival": true, "context": context,
+		"foe": {"name": foe_name, "role": Character.Role.SOLDADO, "power": power, "personality": "CRUEL"},
+		"win": {"effects": win_effects, "result": win_text}, "lose": {"effects": {}, "result": "Os retiráis como podéis."}}
+	var scene := CombatSetup.begin_event_fight(fight, RoadTraffic.TYPES[g.type].name)
+	if not scene.is_empty():
+		get_tree().change_scene_to_file(scene)
+
+## Vendedor ambulante: pociones y remedios algo más baratos.
+func _trader(title_text: String) -> void:
+	var p := GameManager.player_character
+	var box := _dialog_box(title_text)
+	_rich(box, "Tiene algunas cosas a buen precio. Llevas %d de oro." % p.gold)
+	for id in ["pocion1", "tonico1", "antidoto", "remedio_paralisis", "cuchillo"]:
+		var price := roundi(int(ConsumableCatalog.item(id).price) * TRADER_DISCOUNT)
+		var b := Button.new()
+		b.text = "%s — %d de oro" % [ConsumableCatalog.item_name(id), price]
+		b.icon = ConsumableCatalog.icon_texture(id)
+		b.expand_icon = false
+		b.add_theme_constant_override("icon_max_width", 24)
+		b.disabled = p.gold < price or ConsumableCatalog.count(p.consumables, id) >= ConsumableCatalog.MAX_STACK
+		b.pressed.connect(func():
+			p.gold -= price
+			ConsumableCatalog.add(p.consumables, id)
+			_dialog.queue_free()
+			_dialog = null
+			_trader(title_text))
+		box.add_child(b)
+	var done := Button.new()
+	done.text = "Seguir el camino"
+	done.pressed.connect(func():
+		_dialog.queue_free()
+		_dialog = null)
+	box.add_child(done)
+
 func _process(_delta: float) -> void:
 	if Journey.is_traveling():
 		_place_player()
@@ -356,9 +500,24 @@ func _show_place(i: int) -> void:
 		if n.type in KingdomMaps.EXPEDITION_TYPES:
 			var exp := Button.new()
 			exp.text = "Explorar"
-			exp.disabled = true
-			exp.tooltip_text = "Las expediciones (mazmorras con nodos) llegan en la fase 6."
+			var why := Expeditions.blocker(Journey.kingdom, i)
+			exp.disabled = not why.is_empty()
+			exp.tooltip_text = why if not why.is_empty() else "Salas con combates, tesoros y trampas; un jefe al final."
+			exp.pressed.connect(func():
+				if Expeditions.start_expedition(Journey.kingdom, i):
+					get_tree().change_scene_to_file(Expeditions.SCENE))
 			row.add_child(exp)
+		if n.type == "arena":
+			for spec in [["torneo", "Torneo (3 rondas)"], ["jefes", "Desafío de jefes"]]:
+				var ab := Button.new()
+				ab.text = spec[1]
+				var aw := Expeditions.arena_blocker(Journey.kingdom, i, spec[0])
+				ab.disabled = not aw.is_empty()
+				ab.tooltip_text = aw if not aw.is_empty() else "Una vez al mes. Premio en oro y fama."
+				ab.pressed.connect(func():
+					if Expeditions.start_arena(Journey.kingdom, i, spec[0]):
+						get_tree().change_scene_to_file(Expeditions.SCENE))
+				row.add_child(ab)
 		if Journey.can_sleep():
 			var s := Button.new()
 			s.text = "Dormir (8 h)"

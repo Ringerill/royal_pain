@@ -271,3 +271,33 @@ y la orden cultista como opción del jugador.
 9. **Limpieza y pulido**: quitar lo descartado, valores y equilibrio, tutorial y glosario.
 
 Revisión del usuario **al terminar todo**.
+
+---
+
+## 10. Estado de la implementación (noviembre de 2026)
+
+Las 9 fases están programadas sobre `main`, cada una con su prueba (`tests/v2_*_test.gd`).
+Lo que se hizo de forma **simplificada** respecto a este documento, para revisarlo juntos:
+
+- **Combate**: la vista con sprites es la de por defecto; las 4 antiguas siguen en Opciones.
+  El fondo usa el bioma, pero aún no cambia con la noche. Los enemigos genéricos nunca van
+  montados.
+- **Árboles**: el de personalidad reutiliza los árboles antiguos de las personalidades más
+  parecidas (las técnicas con los nombres de `PersonaCatalog.TREE` están por hacer); el del arma
+  depende de su clase.
+- **Lugares**: los PNJ de cada edificio salen de los retratos genéricos con nombres de una sola
+  cultura. Bodas en la iglesia y reclutar en la taberna no tienen botón propio (se hacen desde
+  Relaciones y el trono).
+- **Mundo vivo**: los grupos solo se simulan en el reino donde estás.
+- **Relaciones**: la gente vive en un lugar fijo de su reino (los señores, en la capital). La
+  hermandad da moral en combate; «te defiende sola» y los bonos de rival no están.
+- **Vías**: metas y contadores de las 8; las de Tirano y Conquistador dependen de la Purga y el
+  Ultimátum del salón del trono.
+- **Reinos y ejércitos**: los ejércitos enemigos aparecen en los caminos cuando hay guerra y se
+  combaten «en el sitio» (combate RPG con tus soldados). **La batalla de nodos en tiempo real con
+  órdenes sobre el mapa no está hecha.** El gobierno usa la pantalla del castillo antigua.
+- **Limpieza**: complots y ambiciones, misiones antiguas y la herencia dinástica están apagados
+  (`GameManager.v2_retired`); su código sigue en el proyecto. Al morir, la partida termina. El
+  honor sigue existiendo por dentro, pero el HUD nuevo solo muestra la fama. El mapa antiguo ya
+  no es accesible desde el menú.
+- **Equilibrio**: los valores son una primera propuesta; no se han ajustado con partidas largas.

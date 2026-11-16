@@ -23,11 +23,40 @@ const CATEGORIES := [
 	"Séquito y compañeros", "Encargos", "Eventos y noticias", "Fama y honor",
 	"Nivel y dinastía", "Obras y exploración", "Viaje",
 	"Prisioneros", "Intrigas e historias", "Hazañas y final", "Interfaz y atajos",
+	"Vías y metas", "Rangos y soldados", "Combate con sprites", "Lugares y encargos", "Caminos y expediciones",
 ]
 
 const DYNAMIC := ["Personalidades", "Habilidades", "Rasgos y desventajas", "Equipamiento"]
 
 const ENTRIES := {
+	"Vías y metas": [
+		["Vía", "Tu motivación: Tirano, Conquistador, Humilde, Benevolente, Reservado, Ambicioso, Justiciero o Villano. Se elige al crear el personaje y cambia por tus actos: si los de otra vía superan claramente a los de la tuya, cambias (con aviso)."],
+		["Meta", "Cada vía tiene una meta con contador (Diario). Cumplirla es ganar la partida; puedes seguir jugando."],
+		["Mecánicas", "Cualquiera puede usarlas; tu vía las potencia: faenas (taberna), limosna (iglesia), extorsión (callejón), sigilo (evitar encuentros hostiles), colección de armas, «se busca» en el tablón, Purga y Ultimátum (salón del trono)."],
+		["Personalidad", "Una de 9. Da algo de estadísticas, su árbol de técnicas y afinidades: con unas personalidades congenias más que con otras."],
+	],
+	"Rangos y soldados": [
+		["Rangos", "Inafiliado, trabajador, soldado, caballero, noble y rey. Se asciende por hitos (encargos, jefes, victorias, fama y, para el título de noble, oro) pidiéndolo en el salón del trono de una capital. La corona se reclama o se conquista."],
+		["Soldados", "Cada rango permite llevar más (+5 % por punto de Liderazgo). Por debajo de noble te los asigna tu comandante según tu fama; nobles y reyes reclutan y pagan cada mes. En combate sale 1 soldado por cada 10 (máx. 4); con más de 40, son más fuertes."],
+		["Alianzas", "Duran un plazo (12 meses; 6 para el Conquistador). Al vencer, se rompen."],
+	],
+	"Combate con sprites": [
+		["Clases de arma", "Espada → Lanza → Arco → Mandoble → Maza → Espada: cada una gana a las dos siguientes (×1,4) y pierde ante las dos anteriores (×0,6). La armadura solo da números."],
+		["Escudo", "En la mano libre (no con mandoble ni arco): anula la ventaja del atacante y a veces bloquea el golpe entero."],
+		["Estados", "Veneno (daño fijo, 3 turnos), parálisis (50 % de perder el turno), miedo (menos acierto y sin técnicas), agotamiento (menos Fuerza y Defensa; también por tener poca energía) y derribado (al caer del caballo: pierde un turno)."],
+		["Montura", "El caballo encaja parte de cada golpe. Si cae, el jinete queda derribado."],
+	],
+	"Lugares y encargos": [
+		["Ciudades", "Escena del lugar con sus edificios; dentro, la gente te habla en persona. De noche solo abren taberna, posada, casa y callejón."],
+		["Encargos", "En el tablón de la taberna: entregas, escoltas, cazas, despejes, rescates y «se busca»; de noche, turbios en el callejón. Tienen destino y plazo en días; fallar o abandonar cuesta fama."],
+		["Casa y posada", "Dormir recupera la energía y guarda la partida. La posada cuesta poco; la casa propia se compra una vez."],
+	],
+	"Caminos y expediciones": [
+		["Encuentros", "Bandidos, patrullas, caravanas, viajeros y, en guerra, ejércitos recorren los caminos. Si te cruzas con ellos, decides: luchar, pagar, huir, escoltar, asaltar o comerciar."],
+		["Expediciones", "Cuevas, torres olvidadas y campamentos bandidos: niveles de salas (combate, tesoro, descanso, trampa) y un jefe. Se renuevan a los 20 días."],
+		["Arena", "Torneo de 3 rondas y desafío de 4 jefes, una vez al mes cada uno."],
+		["Prisioneros", "Tras vencer a bandidos o jefes puede rendirse uno: reclutarlo, pedir rescate, liberarlo, ejecutarlo o venderlo."],
+	],
 	"Duelo": [
 		["Técnicas de arma", "Cada familia de arma tiene sus propias técnicas: espada, hacha, estoque y daga, lanza y pica, maza, arco y ballesta. No cuestan puntos: las tienes mientras lleves esa arma y se desbloquean con el nivel (escalón I a nivel 1, II a nivel 4, III a nivel 8 y IV a nivel 12). Sin arma, usas las de la familia de tu tipo de luchador. Se ven en la pestaña «Arma» de las habilidades."],
 		["Tipos de daño","Tu arma marca tu tipo de daño (Tajo, Estocada, Contundente o Proyectil), y tus técnicas golpean con ese mismo tipo. Solo cambian las que usan otro objeto: los proyectiles lanzados (Disparo, Honda, Tirar piedras, Dardos) y los golpes de escudo (Contundente)."],

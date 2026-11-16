@@ -29,6 +29,8 @@ func _free_courtier(RD, gender: int, exclude: Array):
 func _run() -> void:
 	seed(7)
 	var GM = root.get_node("GameManager")
+	GM.v2_retired = false   # prueba del sistema antiguo
+	GM.v2_presence = false
 	var MD = root.get_node("MapData")
 	var RD = root.get_node("RelationsData")
 	var DD = root.get_node("DynastyData")

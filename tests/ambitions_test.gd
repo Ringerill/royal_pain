@@ -70,6 +70,8 @@ func _event_with_act(e: Dictionary, act: String) -> int:
 func _run() -> void:
 	seed(11)
 	GM = root.get_node("GameManager"); MD = root.get_node("MapData"); RD = root.get_node("RelationsData")
+	GM.v2_retired = false   # prueba del sistema antiguo (complots y ambiciones)
+	GM.v2_presence = false
 	AD = root.get_node("AmbitionData"); WE = root.get_node("WorldEvents")
 	CH = load("res://scripts/resources/character.gd"); CL = load("res://scripts/resources/character_loader.gd")
 	SS = load("res://scripts/resources/save_system.gd")

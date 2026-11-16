@@ -127,9 +127,12 @@ func room(l: int, r: int) -> Dictionary:
 func enter(l: int, r: int) -> Dictionary:
 	if not [l, r] in choices():
 		return {}
+	var rm: Dictionary = room(l, r)
+	if str(rm.type) in ["combate", "jefe"]:
+		run["pending"] = [l, r]   # se avanza al ganar (resolve_fight)
+		return {"fight": _fight_for(rm, l)}
 	run.layer = l
 	run.room = r
-	var rm: Dictionary = room(l, r)
 	var p: Character = GameManager.player_character
 	match str(rm.type):
 		"tesoro":
@@ -183,6 +186,10 @@ func resolve_fight(won: bool) -> String:
 		run = {}
 		changed.emit()
 		return t
+	var pend: Array = run.get("pending", [run.layer, run.room])
+	run.layer = int(pend[0])
+	run.room = int(pend[1])
+	run.erase("pending")
 	var rm: Dictionary = room(int(run.layer), int(run.room))
 	rm.done = true
 	if str(rm.type) == "jefe":

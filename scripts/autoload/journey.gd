@@ -41,6 +41,7 @@ var speed_index := 1                  # índice en SPEEDS (0 = pausa)
 var names := {}                       # "reino:índice" -> nombre del lugar en esta partida
 # Fase 5: casas compradas ("reino:índice"), semana de la última donación y día del último estudio por lugar.
 var houses: Array = []
+var tutorial_seen := false
 var donations := {}
 var studies := {}
 var _months_applied := 0
@@ -55,6 +56,7 @@ func _ready() -> void:
 func reset() -> void:
 	hours = START_HOUR
 	houses = []
+	tutorial_seen = false
 	donations = {}
 	studies = {}
 	kingdom = GameManager.player_kingdom if GameManager.player_kingdom >= 0 else KingdomEnums.Kingdom.HIELO
@@ -402,7 +404,7 @@ func _generate_names() -> void:
 
 func save_state() -> Dictionary:
 	return {"hours": hours, "kingdom": kingdom, "at": at, "names": names, "months": _months_applied,
-		"speed": speed_index, "houses": houses, "donations": donations, "studies": studies}
+		"speed": speed_index, "houses": houses, "donations": donations, "studies": studies, "tutorial": tutorial_seen}
 
 func load_state(d: Dictionary) -> void:
 	hours = float(d.get("hours", START_HOUR))
@@ -410,6 +412,7 @@ func load_state(d: Dictionary) -> void:
 	at = int(d.get("at", 0))
 	names = d.get("names", {})
 	houses = Array(d.get("houses", []))
+	tutorial_seen = bool(d.get("tutorial", true))
 	donations = d.get("donations", {})
 	studies = d.get("studies", {})
 	_months_applied = int(d.get("months", day_index() / DAYS_PER_MONTH))

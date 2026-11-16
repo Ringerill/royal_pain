@@ -11,7 +11,13 @@ Resumen de las fases que faltan del plan de revisión. El detalle completo, con 
 | 5. Sesión de noviembre de 2026 (v9–v10) | ✅ Hecha — detalle en «Royal Pain — Estado del Proyecto.md» |
 | 6. Sesión del 11–16 de noviembre (0.10.4–0.10.21) | ✅ Hecha — resumen en `docs/RESUMEN_SESION.md` |
 
-## Lo que viene (16 de noviembre de 2026)
+## Rediseño v2 (noviembre de 2026)
+
+Las 9 fases de `docs/REDISENO.md` están programadas y subidas; queda la **revisión del usuario**.
+Lo simplificado y lo que falta está en `docs/REDISENO.md` §10. Lo más grande pendiente: la batalla
+de nodos en tiempo real sobre el mapa del reino y las técnicas propias de cada personalidad.
+
+## Lo que viene (16 de noviembre de 2026) (anterior al rediseño)
 
 Orden recomendado: 1 → 2 → 3, y después arrancar Ages of Warfare.
 

@@ -59,6 +59,8 @@ func _on_month_passed(_month: int, _year: int) -> void:
 	var player: Character = GameManager.player_character
 	if not GameManager.is_game_active or player == null:
 		return
+	if GameManager.v2_retired:   # misiones antiguas: las sustituyen los encargos del tablón (ContractData)
+		return
 	for m: Dictionary in active.duplicate():
 		if _is_fulfilled(m):
 			_complete(m)

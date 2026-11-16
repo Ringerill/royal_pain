@@ -54,8 +54,10 @@ func _ready() -> void:
 	if not GameManager.is_game_active or GameManager.player_character == null:
 		get_tree().change_scene_to_file.call_deferred("res://scenes/main_menu/main_menu.tscn")
 		return
-	# (La sucesión dinástica se retira en la fase 9; mientras exista, la lleva el mapa antiguo.)
-	if DynastyData.needs_succession():
+	# Rediseño v2: no hay dinastía. Si mueres, la partida termina.
+	if DynastyData.needs_succession() and GameManager.v2_retired:
+		GameManager.game_over_reason = "Has muerto. Sin herederos que tomen tu nombre, tu historia termina aquí."
+	elif DynastyData.needs_succession():
 		get_tree().change_scene_to_file.call_deferred(GameManager.OLD_MAP_SCENE)
 		return
 	if Journey.kingdom < 0 or Journey.names.is_empty():
@@ -77,6 +79,12 @@ func _ready() -> void:
 	_layout.call_deferred()
 	_refresh()
 	_check_events.call_deferred()
+	if not Journey.tutorial_seen:
+		Journey.tutorial_seen = true
+		_message.call_deferred("Cómo se juega", TUTORIAL)
+
+const GlossaryData = preload("res://scripts/resources/glossary_data.gd")
+const TUTORIAL := "Pulsa un lugar del mapa para ver qué hay y viajar hasta él: el tiempo solo corre mientras viajas (velocidad arriba a la derecha) y cansa. Si te quedas sin energía, te desmayas y pierdes oro: duerme en posadas y casas.\n\nEn ciudades, pueblos y puertos pulsa «Entrar»: tiendas, herrería, taberna (encargos), iglesia, biblioteca y, en las capitales, el salón del trono, donde se piden los ascensos.\n\nPor los caminos hay bandidos, patrullas, caravanas y viajeros. Cuevas, torres y campamentos bandidos se exploran por salas; la arena tiene torneos.\n\nTu vía tiene una meta: mírala en el Diario. Cúmplela y habrás ganado."
 
 func _exit_tree() -> void:
 	if Journey.changed.is_connected(_refresh):
@@ -820,7 +828,7 @@ func _open_menu() -> void:
 			SaveSystem.slots_return_scene = GameManager.MAP_SCENE
 			get_tree().change_scene_to_file("res://scenes/save_slots/save_slots.tscn")],
 		["Opciones", func(): OptionsPanel.open(self)],
-		["Mapa antiguo (provisional)", func(): get_tree().change_scene_to_file(GameManager.OLD_MAP_SCENE)],
+		["Glosario", func(): GlossaryData.open(get_tree(), GameManager.MAP_SCENE, "Viaje")],
 		["Salir al menú principal", func():
 			SaveSystem.save_game()
 			GameManager.change_state(GameStateEnums.State.MENU)

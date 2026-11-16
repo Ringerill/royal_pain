@@ -102,6 +102,8 @@ func ambition_text(person_name: String) -> String:
 func _on_month_passed(_month: int, year: int) -> void:
 	if not GameManager.is_game_active or GameManager.player_character == null:
 		return
+	if GameManager.v2_retired:   # complots y ambiciones: descartados en el rediseño v2
+		return
 	if year != news_year:
 		news_year = year
 		news_count = 0

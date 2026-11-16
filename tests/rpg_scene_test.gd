@@ -68,7 +68,7 @@ func _run() -> void:
 	sc.side_b = foes
 	root.add_child(sc)
 	await create_timer(0.3).timeout
-	var shown_e: int = sc.enemy_row.get_children().filter(func(c): return c.visible).size()
+	var shown_e: int = sc._cards.keys().filter(func(f): return f.side == 1 and (sc._cards[f].root.visible or sc._gone.has(f) or sc._dying.has(f))).size()
 	# (en Primera persona el aliado activo está en su columna, fuera de la fila)
 	# (y quien ya cayó en los primeros turnos de la IA se ha desvanecido: también cuenta)
 	var shown_p: int = sc._cards.keys().filter(func(f): return f.side == 0 and (sc._cards[f].root.visible or sc._gone.has(f) or sc._dying.has(f))).size()

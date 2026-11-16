@@ -13,10 +13,15 @@ extends RefCounted
 #
 # Acciones: atacar, tecnica, defender, objeto (gancho), cambiar (con la reserva; gasta el turno),
 #           abandonar (rendirse / retirarse).
-# Estados: derribado (débil a todo, retrasa su turno), desequilibrado (débil a Contundente), sangrado,
-#          aturdido (pierde el turno), desarmado (−40% Fuerza), debilitado (−20% Fuerza y Defensa),
-#          cegado (−25% acierto), provocado (debe atacar a quien lo provocó), marcado (+20% daño recibido);
-#          a favor: inspirado, furia, guardia_esgrima, fortaleza, oculto, cubierto, guardia (Defender).
+# Estados (rediseño v2): veneno (daño fijo, 3 turnos), parálisis (50 % de perder el turno, 3 turnos),
+#          miedo (−25 % de acierto y sin técnicas), agotamiento (−20 % Fuerza y Defensa; con la energía
+#          baja se entra ya agotado) y derribado (solo al caer del caballo: pierde 1 turno).
+#          Los estados antiguos se traducen al aplicarse (STATUS_ALIAS); los que no tienen equivalente se ignoran.
+#          A favor (hasta rehacer los árboles en la fase 4): inspirado, furia, guardia_esgrima, fortaleza,
+#          oculto, cubierto, guardia (Defender).
+# Clase de arma (RpgStats.WeaponClass): ciclo Espada → Lanza → Arco → Mandoble → Maza; el escudo anula
+# la ventaja del atacante y a veces bloquea el golpe entero. Montura: el caballo absorbe parte de cada
+# golpe; a 0, el jinete cae (derribado).
 
 signal log_line(text: String)
 signal turn_started(f)
@@ -25,7 +30,23 @@ signal fighter_down(f)
 signal swapped(out_f, in_f)
 signal battle_ended(result: Dictionary)
 
+signal dismounted(f)
+
 const MAX_ACTIVE := 4
+const MAX_ACTIVE_V2 := 8        # vista con sprites: hasta 8 por bando
+# Montura
+const HORSE_HP_FRAC := 0.5      # PV del caballo: la mitad de los del jinete
+const HORSE_ABSORB := 0.35      # parte de cada golpe que encaja el caballo
+const HORSE_DMG := 0.1
+const HORSE_AGI := 2.0
+# Estados v2
+const POISON_FRAC := 0.06
+const POISON_TURNS := 3
+const PARALYSIS_TURNS := 3
+const PARALYSIS_SKIP := 0.5
+const MIEDO_HIT := 0.25
+const AGOTAMIENTO_MULT := 0.8
+const EXHAUSTED_TURNS := 99     # entrar agotado por falta de energía: todo el combate
 const TICK := 100.0
 const START_JITTER := 0.1
 # PV de los enemigos genéricos según cuántos son (ver _scale_generic_groups).
@@ -93,13 +114,21 @@ const XP_LOSS_FRAC := 0.3
 const MAX_ROUNDS := 40
 const MAX_TURNS := 1000
 
-const NEGATIVE := ["derribado", "desequilibrado", "sangrado", "aturdido", "desarmado", "debilitado", "cegado", "provocado", "marcado", "analizado"]
+const NEGATIVE := ["derribado", "veneno", "paralisis", "miedo", "agotamiento", "analizado",
+	"desequilibrado", "sangrado", "aturdido", "desarmado", "debilitado", "cegado", "provocado", "marcado"]
+# Estados antiguos -> v2 ("" = se ignora). «derribado» de una técnica tumba el caballo o, a pie, agota.
+const STATUS_ALIAS := {
+	"sangrado": "veneno", "ardiendo": "veneno", "aturdido": "paralisis",
+	"cegado": "miedo", "desarmado": "miedo", "provocado": "miedo",
+	"debilitado": "agotamiento", "desequilibrado": "agotamiento", "marcado": "",
+}
 const STATUS_NAMES := {
 	"derribado": "Derribado", "desequilibrado": "Desequilibrado", "sangrado": "Sangrado", "aturdido": "Aturdido",
 	"desarmado": "Desarmado", "debilitado": "Debilitado", "cegado": "Cegado", "provocado": "Provocado",
 	"marcado": "Marcado", "inspirado": "Inspirado", "furia": "Furia", "guardia_esgrima": "Guardia de esgrima",
 	"fortaleza": "Fortaleza", "oculto": "Oculto", "cubierto": "Cubierto", "guardia": "En guardia",
 	"analizado": "Analizado", "sereno": "Sereno",
+	"veneno": "Veneno", "paralisis": "Parálisis", "miedo": "Miedo", "agotamiento": "Agotamiento",
 	"ardiendo": "Ardiendo", "afilado": "Afilado", "ebrio": "Ebrio", "humo": "Humo",   # consumibles
 }
 
@@ -144,6 +173,9 @@ class Fighter extends RefCounted:
 	var crit_ward_used := false
 	var first_sure_used := false
 	var advanced := false            # este turno se lo adelantó un aliado (la IA no encadena adelantos)
+	var mounted := false
+	var horse_hp := 0
+	var horse_max := 0
 	func fx(k: String) -> float:
 		return float(s.fx.get(k, 0.0))
 	func has(st: String) -> bool:
@@ -176,6 +208,7 @@ var intel_hook := Callable()
 const INFAMY_FEAR := 0.2   # moral que pierde el rival por punto de mala fama del bando (−20 con −100 de fama)
 var bags := [{}, {}]   # consumibles de cada bando (id -> cantidad); el 0 es la bolsa del jugador
 var rng := RandomNumberGenerator.new()
+var max_active := MAX_ACTIVE
 
 ## opts: to_the_death, can_flee, auto_learn ([bandos] que gastan sus puntos solos), seed, item_hook, loot_hook
 func setup(side_a: Array, side_b: Array, opts: Dictionary = {}) -> void:
@@ -185,6 +218,7 @@ func setup(side_a: Array, side_b: Array, opts: Dictionary = {}) -> void:
 	loot_hook = opts.get("loot_hook", Callable())
 	intel_hook = opts.get("intel_hook", Callable())
 	bags = [opts.get("bag", {}), opts.get("enemy_bag", {})]
+	max_active = int(opts.get("max_active", MAX_ACTIVE))
 	if opts.has("seed"):
 		rng.seed = int(opts.seed)
 	var auto: Array = opts.get("auto_learn", [1])
@@ -206,7 +240,12 @@ func setup(side_a: Array, side_b: Array, opts: Dictionary = {}) -> void:
 			f.morale = clampi(MORALE_BASE + roundi(f.s.voluntad * MORALE_PER_WILL), 0, 100)
 			if c.has_meta("campal_troops"):   # campales: la tropa del pelotón suma (fase 4)
 				CampalEncounters.apply_troop_bonus(f)
-			f.active = i < MAX_ACTIVE
+			f.active = i < max_active
+			if RpgStats.mount(c) != null:
+				f.mounted = true
+				f.horse_max = maxi(1, roundi(f.max_hp * HORSE_HP_FRAC))
+				f.horse_hp = f.horse_max
+				f.s.agilidad = float(f.s.agilidad) + HORSE_AGI
 			f.participated = f.active
 			f.next_time = f.interval() * (1.0 + rng.randf() * START_JITTER)
 			fighters.append(f)
@@ -218,6 +257,9 @@ func setup(side_a: Array, side_b: Array, opts: Dictionary = {}) -> void:
 		f.next_time *= 1.0 - minf(INIT_MAX, _side_fx(f.side, "ally_init"))
 		var fear: float = _side_fx(1 - f.side, "fear") + int(dread[1 - f.side]) * INFAMY_FEAR
 		f.morale = clampi(f.morale + roundi(_side_fx(f.side, "ally_morale") - fear), 0, 100)
+	for f: Fighter in fighters:   # sin energía se lucha agotado
+		if f.c.is_exhausted():
+			f.statuses["agotamiento"] = {"turns": EXHAUSTED_TURNS, "src": null, "power": 0.0}
 	_log("¡Comienza el combate!")
 
 # --- Consultas ---
@@ -261,9 +303,7 @@ func timeline(n: int) -> Array:
 func affinity_of(att: Fighter, def: Fighter, dt: int, fx: Dictionary = {}) -> int:
 	if def.has("derribado"):
 		return RpgStats.Affinity.DEBIL
-	if def.has("desequilibrado") and dt == RpgStats.DamageType.CONTUNDENTE:
-		return RpgStats.Affinity.DEBIL
-	var a := RpgStats.affinity(dt, def.s.armor, def.s.shield)
+	var a := RpgStats.affinity_vs(dt, int(att.s.get("wclass", -1)), int(att.s.weapon), int(def.s.get("wclass", -1)), bool(def.s.shield))
 	if a == RpgStats.Affinity.RESISTE and (fx.get("pierce", 0) or def.has("analizado")):
 		a = RpgStats.Affinity.NORMAL
 	return a
@@ -276,6 +316,8 @@ func hit_chance(att: Fighter, def: Fighter, fx: Dictionary = {}) -> float:
 		h += INSPIRADO_HIT
 	if att.has("cegado"):
 		h -= CEGADO_HIT
+	if att.has("miedo"):
+		h -= MIEDO_HIT
 	if att.has("ebrio"):
 		h -= ConsumableCatalog.ALE_HIT
 	var ev: float = def.s.evasion
@@ -300,6 +342,8 @@ func base_damage(att: Fighter, def: Fighter, pow: float, dt: int, fx: Dictionary
 		str_ *= DESARMADO_STR
 	if att.has("debilitado"):
 		str_ *= DEBILITADO_MULT
+	if att.has("agotamiento"):
+		str_ *= AGOTAMIENTO_MULT
 	var dfn: float = def.s.defensa
 	if def.has("fortaleza"):
 		dfn *= FORTALEZA_DEF
@@ -307,11 +351,15 @@ func base_damage(att: Fighter, def: Fighter, pow: float, dt: int, fx: Dictionary
 		dfn *= FURIA_DEF
 	if def.has("debilitado"):
 		dfn *= DEBILITADO_MULT
+	if def.has("agotamiento"):
+		dfn *= AGOTAMIENTO_MULT
 	var mult := 1.0 + att.fx("dmg_t%d" % dt) + _side_fx(att.side, "ally_dmg")
 	if dt == int(att.s.weapon):   # maestrías: más daño con el arma que se lleva
 		mult += att.fx("dmg_arma")
 	if att.has("furia"):
 		mult += FURIA_DMG
+	if att.mounted:
+		mult += HORSE_DMG
 	if att.has("inspirado"):
 		mult += INSPIRADO_DMG
 	if att.has("afilado"):
@@ -349,6 +397,8 @@ func techniques_of(f: Fighter) -> Array:
 	return SkillTreeCatalog.available_techniques(f.c)
 
 func usable_techniques(f: Fighter) -> Array:
+	if f.has("miedo"):
+		return []
 	return techniques_of(f).filter(func(n: Dictionary) -> bool: return f.pt >= int(n.get("pt", 0)) and CampalEncounters.technique_allowed(f.c, n) and not valid_targets(f, n).is_empty())
 
 func valid_targets(f: Fighter, n: Dictionary) -> Array:
@@ -410,7 +460,17 @@ func next_turn() -> Fighter:
 			_finish(-1)
 			return null
 		f.statuses.erase("guardia")
-		f.statuses.erase("derribado")
+		if f.has("derribado"):
+			f.statuses.erase("derribado")
+			_log("%s se levanta del suelo y pierde el turno." % f.name())
+			_end_turn(f)
+			continue
+		if f.has("veneno"):
+			var pz := int(f.statuses.veneno.get("dmg", 1))
+			_log("%s sufre el veneno (−%d)." % [f.name(), pz])
+			_damage(f, pz, null)
+			if not f.up():
+				continue
 		if f.has("sangrado"):
 			var b: Dictionary = f.statuses.sangrado
 			var dmg := maxi(1, roundi(f.max_hp * BLEED_FRAC * (1.0 + float(b.get("power", 0.0)))))
@@ -431,6 +491,10 @@ func next_turn() -> Fighter:
 		if f.has("aturdido"):
 			f.statuses.erase("aturdido")
 			_log("%s está aturdido y pierde el turno." % f.name())
+			_end_turn(f)
+			continue
+		if f.has("paralisis") and rng.randf() < PARALYSIS_SKIP:
+			_log("%s está paralizado y no puede moverse." % f.name())
 			_end_turn(f)
 			continue
 		f.actions_left = int(f.s.actions)
@@ -554,6 +618,11 @@ func _strike(att: Fighter, def: Fighter, pow: float, dt: int, fx: Dictionary, in
 		_log("  ¡%s esquiva!" % def.name())
 		return false
 	att.first_sure_used = true
+	if bool(def.s.shield) and not def.has("derribado") and rng.randf() < RpgStats.SHIELD_BLOCK + def.fx("block"):
+		h["blocked"] = true
+		info.bad += 1
+		_log("  ¡%s bloquea con el escudo!" % def.name())
+		return false
 	h.hit = true
 	h.aff = affinity_of(att, def, dt, fx)
 	_learn_from_hit(att, def, dt)
@@ -575,6 +644,7 @@ func _strike(att: Fighter, def: Fighter, pow: float, dt: int, fx: Dictionary, in
 	_log("  %s recibe %d%s%s" % [def.name(), amount, " (crítico)" if h.crit else "", tag])
 	if h.aff == RpgStats.Affinity.DEBIL:
 		def.morale = maxi(0, def.morale - 5)
+	amount = _horse_absorb(def, amount)
 	_damage(def, amount, att)
 	if att.fx("lifesteal") > 0:
 		att.hp = mini(att.max_hp, att.hp + roundi(amount * att.fx("lifesteal")))
@@ -642,7 +712,7 @@ func _technique(f: Fighter, n: Dictionary, target: Variant, info: Dictionary) ->
 		if fx.has("revive") and t.down and not t.dead:
 			t.down = false
 			t.hp = maxi(1, roundi(t.max_hp * float(fx.revive)))
-			t.active = active_of(f.side).size() < MAX_ACTIVE
+			t.active = active_of(f.side).size() < max_active
 			t.next_time = now + t.interval()
 			_log("  ¡%s se levanta!" % t.name())
 		if fx.has("pt_drain") and t.side != f.side:
@@ -654,10 +724,29 @@ func _technique(f: Fighter, n: Dictionary, target: Variant, info: Dictionary) ->
 	for st in fx.get("self_st", []):
 		_add_status(f, st[0], int(st[1]), f)
 
+## Estado v2 equivalente a uno antiguo ("" si ya no existe).
+static func status_id(st: String) -> String:
+	return STATUS_ALIAS.get(st, st)
+
 func _add_status(t: Fighter, st: String, turns_: int, src: Fighter) -> void:
+	if st == "derribado" and src != null and src != t:   # derribo de técnica: tumba el caballo o, a pie, agota
+		if t.mounted:
+			_hurt_horse(t, t.horse_hp)
+			return
+		st = "agotamiento"
+	st = status_id(st)
+	if st.is_empty():
+		return
+	match st:
+		"veneno":
+			turns_ = POISON_TURNS
+		"paralisis":
+			turns_ = PARALYSIS_TURNS
 	# Lo que se pone uno mismo en su turno dura turns_ turnos completos a partir del siguiente.
 	var extra := 1 if t == current and st != "guardia" else 0
 	t.statuses[st] = {"turns": turns_ + extra, "src": src, "power": src.fx("bleed_bonus") if src else 0.0}
+	if st == "veneno":
+		t.statuses[st]["dmg"] = maxi(1, roundi(t.max_hp * POISON_FRAC * (1.0 + float(t.statuses[st].power))))
 	if st == "analizado" and t.side == 1 and intel_hook.is_valid():
 		intel_hook.call("all", t.c, t.s, -1, -1)
 
@@ -666,21 +755,46 @@ func _learn_from_hit(att: Fighter, def: Fighter, dt: int) -> void:
 	if not intel_hook.is_valid() or att.side == def.side:
 		return
 	if att.side == 0:   # le golpeas: aprendes cómo encaja ese tipo (sin estados temporales)
-		intel_hook.call("aff", def.c, def.s, dt, RpgStats.affinity(dt, def.s.armor, def.s.shield))
+		intel_hook.call("aff", def.c, def.s, dt, RpgStats.affinity_for(dt, int(def.s.get("wclass", -1)), bool(def.s.shield)))
 	elif dt == int(att.s.weapon):   # te golpea con su arma: aprendes su tipo de daño
 		intel_hook.call("weapon", att.c, att.s, dt, -1)
 
 func _try_status(att: Fighter, def: Fighter, st: String, chance: float, turns_: int) -> bool:
 	if st in ["derribado", "desequilibrado"] and def.fx("immune_derribo") > 0:
 		return false
+	var v2 := status_id(st)
+	if v2.is_empty() or (st == "derribado" and not def.mounted and def.has("agotamiento")):
+		return false
 	var res := clampf((def.s.voluntad - STATUS_WILL_REF) * STATUS_PER_WILL + def.fx("status_res"), 0.0, STATUS_RES_MAX)
 	if rng.randf() >= chance * (1.0 - res):
 		return false
+	var was_mounted := def.mounted
 	_add_status(def, st, turns_, att)
-	if st == "derribado":
-		def.next_time += def.interval() * DOWN_DELAY
-	_log("  %s: %s." % [def.name(), STATUS_NAMES.get(st, st)])
+	if st == "derribado" and was_mounted:
+		return true   # _hurt_horse ya lo contó
+	var shown := "agotamiento" if st == "derribado" else v2
+	_log("  %s: %s." % [def.name(), STATUS_NAMES.get(shown, shown)])
 	return true
+
+## El caballo encaja parte del golpe; devuelve lo que le llega al jinete.
+func _horse_absorb(t: Fighter, amount: int) -> int:
+	if not t.mounted or amount <= 0:
+		return amount
+	var part := mini(t.horse_hp, roundi(amount * HORSE_ABSORB))
+	_hurt_horse(t, part)
+	return amount - part
+
+func _hurt_horse(t: Fighter, amount: int) -> void:
+	if not t.mounted:
+		return
+	t.horse_hp = maxi(0, t.horse_hp - amount)
+	if t.horse_hp > 0:
+		return
+	t.mounted = false
+	t.s.agilidad = maxf(1.0, float(t.s.agilidad) - HORSE_AGI)
+	t.statuses["derribado"] = {"turns": 1, "src": null, "power": 0.0}
+	_log("  ¡%s cae del caballo!" % t.name())
+	dismounted.emit(t)
 
 func _damage(t: Fighter, amount: int, _src: Fighter) -> void:
 	t.hp -= amount
@@ -844,8 +958,9 @@ func ai_choose(f: Fighter) -> Dictionary:
 					if fx.has("morale"):
 						sc += ref * AI_MORALE_VALUE * absf(float(fx.morale)) * cunning * (1.0 if o.morale > MORALE_LOW else 0.3)
 					for st in n.get("st", []):
-						if not o.has(st[0]):
-							sc += float(st[1]) * ref * AI_STATUS_VALUE * cunning * (2.0 if st[0] in ["aturdido", "derribado"] else 1.0)
+						var sid := status_id(str(st[0]))
+						if not sid.is_empty() and not o.has(sid):
+							sc += float(st[1]) * ref * AI_STATUS_VALUE * cunning * (2.0 if sid in ["paralisis", "derribado"] else 1.0)
 				else:
 					if n.has("heal"):
 						var miss: float = 1.0 - o.hp_ratio()

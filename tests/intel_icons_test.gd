@@ -65,9 +65,9 @@ func _run() -> void:
 	var s_foe: Dictionary = bm.fighters[1].s
 	var v: Dictionary = intel.view(foe, s_foe)
 	check(v.weapon == -1 and v.armor == -1 and v.aff == [-1, -1, -1, -1], "al principio no se sabe nada")
-	intel.record("aff", foe, s_foe, DT.TAJO, RpgStats.affinity(DT.TAJO, s_foe.armor, s_foe.shield))
+	intel.record("aff", foe, s_foe, DT.TAJO, RpgStats.affinity_for(DT.TAJO, s_foe.wclass, s_foe.shield))
 	v = intel.view(foe, s_foe)
-	check(v.aff[DT.TAJO] == RpgStats.affinity(DT.TAJO, s_foe.armor, s_foe.shield) and v.aff.count(-1) == 3 and v.weapon == -1, "golpearle revela solo ese tipo")
+	check(v.aff[DT.TAJO] == RpgStats.affinity_for(DT.TAJO, s_foe.wclass, s_foe.shield) and v.aff.count(-1) == 3 and v.weapon == -1, "golpearle revela solo ese tipo")
 	intel.record("weapon", foe, s_foe, int(s_foe.weapon), -1)
 	check(intel.view(foe, s_foe).weapon == int(s_foe.weapon), "recibir su golpe revela su tipo de daño")
 	var foe2 := EnemyCatalog.make_enemy("soldado", 7)
@@ -92,7 +92,8 @@ func _run() -> void:
 	var bm2 := RpgBattleManager.new()
 	var log2 := []
 	var heavy := EnemyCatalog.make_enemy("infanteria_pesada", 3)
-	heavy.set_meta(RpgStats.META_ARMOR, RpgStats.ArmorClass.PLACAS)   # el equipo es al azar: se fija Placas
+	heavy.set_meta(RpgStats.META_ARMOR, RpgStats.ArmorClass.PLACAS)
+	heavy.set_meta(RpgStats.META_WCLASS, RpgStats.WeaponClass.MAZA)   # la Maza resiste a la Espada (Tajo)
 	bm2.setup([due], [heavy], {"seed": 2, "intel_hook": func(k, c, s, dt, aff): log2.append([k, dt, aff])})
 	bm2._add_status(bm2.fighters[1], "analizado", 2, bm2.fighters[0])
 	check(log2.size() == 1 and log2[0][0] == "all", "el estado «analizado» avisa de un análisis completo")
@@ -100,7 +101,7 @@ func _run() -> void:
 	for i in 6:
 		bm2._strike(bm2.fighters[0], bm2.fighters[1], 1.0, DT.TAJO, {}, info2, false)
 	var affs: Array = log2.filter(func(e): return e[0] == "aff").map(func(e): return e[2])
-	check(not affs.is_empty() and affs.all(func(a): return a == AF.RESISTE), "con «analizado» se aprende la afinidad base (Placas resiste Tajo)")
+	check(not affs.is_empty() and affs.all(func(a): return a == AF.RESISTE), "con «analizado» se aprende la afinidad base (la Maza resiste el Tajo)")
 	print("[guardado]")
 	var saved: Dictionary = JSON.parse_string(JSON.stringify(intel.save_state()))
 	intel.reset()

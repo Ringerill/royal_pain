@@ -28,7 +28,7 @@ func _run() -> void:
 	var foes: Array = [EnemyCatalog.make_enemy("soldado", 3), EnemyCatalog.make_enemy("infanteria_pesada", 3), EnemyCatalog.make_enemy("arquero", 3)]
 	# Soldado: solo se sabe cómo encaja el Tajo; infante pesado: analizado; arquero: nada.
 	var s0 := RpgStats.compute(foes[0])
-	intel.record("aff", foes[0], s0, RpgStats.DamageType.TAJO, RpgStats.affinity(RpgStats.DamageType.TAJO, s0.armor, s0.shield))
+	intel.record("aff", foes[0], s0, RpgStats.DamageType.TAJO, RpgStats.affinity_for(RpgStats.DamageType.TAJO, s0.wclass, s0.shield))
 	intel.record("weapon", foes[0], s0, int(s0.weapon))
 	intel.record("all", foes[1], RpgStats.compute(foes[1]))
 	var RS = load("res://scenes/rpg_battle/rpg_battle.gd")

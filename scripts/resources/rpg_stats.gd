@@ -153,6 +153,70 @@ static func affinity(dmg: int, armor: int, has_shield: bool = false) -> int:
 		a = Affinity.NORMAL if a == Affinity.DEBIL else Affinity.RESISTE
 	return a
 
+## Rediseño v2: ciclo de armas. Cada clase vence a las dos siguientes y pierde ante las dos anteriores.
+## Espada → Lanza → Arco → Mandoble → Maza → Espada. Sólo las armas fijan ventajas; la armadura da números.
+enum WeaponClass { ESPADA, LANZA, ARCO, MANDOBLE, MAZA }
+const WCLASS_NAMES := ["Espada", "Lanza", "Arco", "Mandoble", "Maza"]
+const META_WCLASS := "rpg_wclass"
+const TWO_HANDED := ["Mandoble", "Hacha de Berserker", "Hacha de Guerra"]
+const SHIELD_BLOCK := 0.15        # probabilidad de bloquear del todo con escudo
+
+static func class_of_damage(dt: int) -> int:
+	match dt:
+		DamageType.ESTOCADA: return WeaponClass.LANZA
+		DamageType.CONTUNDENTE: return WeaponClass.MAZA
+		DamageType.PROYECTIL: return WeaponClass.ARCO
+	return WeaponClass.ESPADA
+
+static func weapon_class(c: Character) -> int:
+	if c.has_meta(META_WCLASS):
+		return int(c.get_meta(META_WCLASS))
+	if str(c.get_meta("rpg_weapon_item", "")) in TWO_HANDED:   # enemigos genéricos (EnemyCatalog.META_WEAPON)
+		return WeaponClass.MANDOBLE
+	for e: Equipment in c.equipment:
+		if e != null and e.equipment_name in TWO_HANDED:
+			return WeaponClass.MANDOBLE
+		if e != null and e.has_meta(META_WCLASS):
+			return int(e.get_meta(META_WCLASS))
+	return class_of_damage(weapon_type(c))
+
+## Ventaja de la clase atacante contra la defensora.
+static func matchup(att: int, def: int) -> int:
+	if att < 0 or def < 0 or att == def:
+		return Affinity.NORMAL
+	var d := posmod(def - att, 5)
+	return Affinity.DEBIL if d <= 2 else Affinity.RESISTE
+
+## Afinidad de un golpe: la clase es la del arma del atacante si el daño es de su arma; si no, la del tipo de daño.
+## El escudo anula la ventaja del atacante (DEBIL → NORMAL).
+static func affinity_vs(dt: int, att_wclass: int, att_weapon_dt: int, def_wclass: int, has_shield: bool) -> int:
+	var ac := att_wclass if dt == att_weapon_dt else class_of_damage(dt)
+	var a := matchup(ac, def_wclass)
+	if has_shield and a == Affinity.DEBIL:
+		a = Affinity.NORMAL
+	return a
+
+## Afinidad vista desde el defensor (lo que muestra el bestiario): la clase del tipo de daño contra la suya.
+static func affinity_for(dt: int, def_wclass: int, has_shield: bool) -> int:
+	return affinity_vs(dt, class_of_damage(dt), dt, def_wclass, has_shield)
+
+static func mount(c: Character) -> Equipment:
+	for e: Equipment in c.equipment:
+		if e != null and e.slot == "Montura":
+			return e
+	return null
+
+## Hoja del caballo para la montura (4 pelajes; la estética sale del nombre de la pieza).
+const HORSE_SHEETS := ["caballo_negro", "caballo_alazan", "caballo_blanco", "caballo_palomino"]
+static func horse_sheet(c: Character) -> String:
+	var m := mount(c)
+	if m == null:
+		return ""
+	var i := absi(hash(m.equipment_name)) % HORSE_SHEETS.size()
+	if m.has_meta("horse"):
+		return "res://assets/horses/%s.png" % str(m.get_meta("horse"))
+	return "res://assets/horses/%s.png" % HORSE_SHEETS[i]
+
 static func affinity_mult(a: int) -> float:
 	return WEAK_MULT if a == Affinity.DEBIL else (RESIST_MULT if a == Affinity.RESISTE else 1.0)
 
@@ -194,7 +258,7 @@ static func compute(c: Character) -> Dictionary:
 		"pv": maxi(1, roundi(pv)), "pt": maxi(0, roundi(pt)),
 		"fuerza": maxf(1.0, fuerza), "defensa": maxf(0.0, defensa),
 		"agilidad": maxf(1.0, agi), "punteria": aim, "voluntad": will,
-		"armor": armor, "weapon": weapon_type(c), "shield": sh != null,
+		"armor": armor, "weapon": weapon_type(c), "shield": sh != null, "wclass": weapon_class(c),
 		"crit": _fx(c, LEGACY_FX_CRIT) + p.get("crit", 0.0),
 		"crit_mult": _fx(c, "crit_mult") + p.get("crit_mult", 0.0),
 		"evasion": _fx(c, LEGACY_FX_DODGE) + p.get("evasion", 0.0),

@@ -39,12 +39,14 @@ var auto_resolve_others := true   # campales: los choques donde no estás tú ni
 const DIFFICULTY_NAMES := ["Fácil", "Normal", "Difícil"]
 var ai_difficulty := 1            # campales: lo bien que juega la IA enemiga
 # Pantalla de combate (duelos y choques de grupo): cómo se colocan los combatientes.
-const COMBAT_VIEW_NAMES := ["Escenario", "Clásica", "Enfocada", "Primera persona"]
+const COMBAT_VIEW_NAMES := ["Escenario (antigua)", "Clásica (antigua)", "Enfocada (antigua)", "Primera persona (antigua)", "Sprites"]
 const COMBAT_VIEW_TIPS := ["Tu grupo a la izquierda y los enemigos a la derecha, de cuerpo entero.",
 	"Enemigos arriba en tarjetas y tu grupo abajo, junto al menú.",
 	"Quien actúa y su objetivo se ven en grande; el resto, pequeño.",
-	"Todos los enemigos en grande; de tu grupo solo se ve el retrato de quien tiene el turno o es objetivo."]
-var combat_view := 0
+	"Todos los enemigos en grande; de tu grupo solo se ve el retrato de quien tiene el turno o es objetivo.",
+	"Vista lateral con sprites animados: enemigos a la izquierda, tu grupo a la derecha."]
+const COMBAT_VIEW_SPRITES := 4
+var combat_view := COMBAT_VIEW_SPRITES
 # Estilo de sonido: 0 = grabado (música de Kevin MacLeod, efectos de Kenney, ambientes de OpenGameArt),
 # 1 = original (todo generado por el juego). Cambia música, efectos y ambiente a la vez.
 const AUDIO_STYLE_NAMES := ["Grabado", "Original"]
@@ -63,7 +65,9 @@ func _ready() -> void:
 		reduced_effects = bool(cfg.get_value("video", "reduced_effects", false))
 		auto_resolve_others = bool(cfg.get_value("game", "auto_resolve_others", true))
 		ai_difficulty = clampi(int(cfg.get_value("game", "ai_difficulty", 1)), 0, DIFFICULTY_NAMES.size() - 1)
-		combat_view = clampi(int(cfg.get_value("video", "combat_view", 0)), 0, COMBAT_VIEW_NAMES.size() - 1)
+		combat_view = clampi(int(cfg.get_value("video", "combat_view", COMBAT_VIEW_SPRITES)), 0, COMBAT_VIEW_NAMES.size() - 1)
+		if not cfg.has_section_key("video", "combat_view_v2"):   # rediseño v2: los sprites pasan a ser la vista por defecto
+			combat_view = COMBAT_VIEW_SPRITES
 		audio_style = clampi(int(cfg.get_value("audio", "style", 0)), 0, AUDIO_STYLE_NAMES.size() - 1)
 	for bus in BUSES:
 		_apply_volume(bus)
@@ -142,6 +146,7 @@ func save() -> void:
 	cfg.set_value("game", "auto_resolve_others", auto_resolve_others)
 	cfg.set_value("game", "ai_difficulty", ai_difficulty)
 	cfg.set_value("video", "combat_view", combat_view)
+	cfg.set_value("video", "combat_view_v2", true)
 	cfg.set_value("audio", "style", audio_style)
 	DirAccess.make_dir_recursive_absolute(settings_path.get_base_dir())
 	cfg.save(settings_path)

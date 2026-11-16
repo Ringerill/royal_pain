@@ -47,6 +47,7 @@ func record(kind: String, c: Character, s: Dictionary, dt: int = UNKNOWN, aff: i
 			e["w"] = int(s.get("weapon", 0))
 			e["armor"] = int(s.get("armor", 0))
 			e["shield"] = bool(s.get("shield", false))
+			e["wc"] = int(s.get("wclass", -1))
 			e.erase("aff")   # con la armadura conocida, las afinidades salen de la tabla
 	known[key] = e
 	if e != before:
@@ -63,17 +64,18 @@ func view(c: Character, s: Dictionary) -> Dictionary:
 	var weapon := int(s.get("weapon", 0))
 	var armor := int(s.get("armor", 0))
 	var shield := bool(s.get("shield", false))
+	var wc := int(s.get("wclass", -1))
 	if e.has("w"):
 		if int(e.w) == weapon:
 			out.weapon = weapon
 		else:
 			e.erase("w")
 	if e.has("armor"):
-		if int(e.armor) == armor and bool(e.get("shield", false)) == shield:
+		if int(e.armor) == armor and bool(e.get("shield", false)) == shield and int(e.get("wc", wc)) == wc:
 			out.armor = armor
 			out.shield = shield
 			for dt in 4:
-				out.aff[dt] = RpgStats.affinity(dt, armor, shield)
+				out.aff[dt] = RpgStats.affinity_for(dt, wc, shield)
 		else:
 			e.erase("armor")
 			e.erase("shield")
@@ -81,7 +83,7 @@ func view(c: Character, s: Dictionary) -> Dictionary:
 		var a: Dictionary = e.aff
 		for k in a.keys():
 			var dt := int(k)
-			if int(a[k]) == RpgStats.affinity(dt, armor, shield):
+			if int(a[k]) == RpgStats.affinity_for(dt, wc, shield):
 				out.aff[dt] = int(a[k])
 			else:
 				a.erase(k)
@@ -104,6 +106,8 @@ func load_state(data: Dictionary) -> void:
 		if src.has("armor"):
 			e["armor"] = int(src.armor)
 			e["shield"] = bool(src.get("shield", false))
+			if src.has("wc"):
+				e["wc"] = int(src.wc)
 		if src.has("aff"):
 			var a := {}
 			for dt in (src.aff as Dictionary).keys():

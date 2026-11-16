@@ -66,12 +66,12 @@ func _run() -> void:
 		func(_bm, t): return t.hp > t.max_hp / 2 and not t.has("sangrado"))
 	_use("pan_vino", func(_bm, t): t.pt = 0, func(_bm, t): return t.pt > 0)
 	_use("cerveza", func(bm, t): t.morale = 40, func(_bm, t): return t.morale > 40 and t.has("ebrio"))
-	_use("aceite", func(_bm, _t): pass, func(_bm, t): return t.hp < t.max_hp and t.has("ardiendo"), true)
+	_use("aceite", func(_bm, _t): pass, func(_bm, t): return t.hp < t.max_hp and t.has("veneno"), true)
 	_use("piedra", func(_bm, _t): pass, func(_bm, t): return t.has("afilado"))
-	_use("agua_bendita", func(bm, t): bm._add_status(t, "aturdido", 2, null), func(_bm, t): return not t.has("aturdido"))
+	_use("agua_bendita", func(bm, t): bm._add_status(t, "aturdido", 2, null), func(_bm, t): return not t.has("paralisis"))
 	_use("humo", func(_bm, _t): pass, func(bm, _t): return bm.active_of(0).all(func(o): return o.has("humo")))
 	_use("red", func(_bm, _t): pass, func(_bm, _t): return true, true)
-	_use("hierbas", func(bm, t): bm._add_status(t, "debilitado", 3, null), func(_bm, t): return not t.has("debilitado"))
+	_use("hierbas", func(bm, t): bm._add_status(t, "debilitado", 3, null), func(_bm, t): return not t.has("agotamiento"))
 	# Afilado y ebrio cambian daño y puntería; el humo, la evasión.
 	var bm := _battle({})
 	var a: RpgBattleManager.Fighter = bm.current
@@ -90,8 +90,8 @@ func _run() -> void:
 		b2.rng.seed = i
 		var tgt: RpgBattleManager.Fighter = b2.active_of(1)[0]
 		b2.act(b2.current, {"type": "objeto", "item": "red", "target": tgt})
-		nets += 1 if tgt.has("derribado") else 0
-	check(nets >= 6, "la Red de caza derriba a menudo (%d/12)" % nets)
+		nets += 1 if tgt.has("paralisis") else 0
+	check(nets >= 6, "la Red de caza paraliza a menudo (%d/12)" % nets)
 	var empty := _battle({})
 	var cur := empty.current
 	empty.act(cur, {"type": "objeto", "item": "venda", "target": cur})

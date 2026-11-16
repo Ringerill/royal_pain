@@ -16,7 +16,7 @@ func _run() -> void:
 	for k in KingdomEnums.Kingdom.values():
 		var b: String = BB.biome_of_kingdom(k)
 		check(BB.texture_for(b) != null, "reino %d → %s con fondo" % [k, b])
-	check(BB.texture_for("torneo").resource_path.ends_with("Trining_Ground.png"), "torneo → patio de armas")
+	check(BB.texture_for("torneo").resource_path.ends_with("training_ground.png"), "torneo → patio de armas")
 	# En partida: el fondo sigue al castillo donde está el jugador.
 	var GM = root.get_node("GameManager")
 	var MD = root.get_node("MapData")

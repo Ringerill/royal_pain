@@ -96,7 +96,22 @@ var party_row: HBoxContainer
 var log_label: RichTextLabel   # registro con iconos (daño, oro, honor…)
 var log_panel: PanelContainer
 # Vistas (Settings.combat_view): los mismos combatientes, colocados de otra forma (ver _apply_view).
-enum View { ESCENARIO, CLASICA, ENFOCADA, PRIMERA }
+enum View { ESCENARIO, CLASICA, ENFOCADA, PRIMERA, SPRITES }
+# Sprites (rediseño v2): vista lateral; enemigos a la izquierda, tu grupo a la derecha, en dos columnas
+# escalonadas de hasta 4 (8 por bando). Las figuras se animan con SpriteAnim.
+const SPR_MAX := 8
+const SPR_FRONT := [0.66, 0.34]      # x del centro de la columna delantera (por bando: grupo, enemigos)
+const SPR_BACK := [0.87, 0.13]       # x de la trasera
+const SPR_STAGGER := 0.045           # escalonado: filas alternas, algo más atrás
+const SPR_TOP := 0.42                # los pies de la primera fila (fracción del alto del escenario)
+const SPR_BOTTOM := 1.0              # los de la última (menos lo que ocupan nombre y barras)
+const SPR_SIZE_MIN := 96.0
+const SPR_SIZE_MAX := 230.0
+const SPR_SHADE := 0.18
+const SPR_BAR_W := 104.0
+const SPR_BOTTOM_H := 184.0
+var _sprite_layer: Control
+var _shade: ColorRect
 # Primera persona: enemigos arriba (75% del alto), comandos abajo (25%) y, a la derecha, el retrato de
 # quien tiene el turno o es objetivo, con el resto de tu grupo en una franja bajo él.
 const FP_ENEMY_SHARE := 4.0     # enemigos : comandos en alto
@@ -200,6 +215,8 @@ func _begin() -> void:
 			for r in PartyData.reserve():
 				if not r in a:
 					a.append(r)
+			if is_campaign and player_character.soldiers > 0:   # 1 figura por cada 10 soldados (máx. 4)
+				a.append_array(RankCatalog.soldier_party(player_character.soldiers, player_character.level))
 		else:
 			a = [player_character]
 	var b: Array = side_b.duplicate()
@@ -212,7 +229,8 @@ func _begin() -> void:
 	var keeper: Character = _owner if _owner != null else player_character
 	var bag: Dictionary = {} if keeper == null else (keeper.consumables.duplicate() if _practice else keeper.consumables)
 	var opts := {"to_the_death": CombatSetup.duel_to_death and is_campaign and not _practice, "can_flee": true,
-		"bag": bag, "enemy_bag": ConsumableCatalog.enemy_bag(), "intel_hook": IntelData.record}
+		"bag": bag, "enemy_bag": ConsumableCatalog.enemy_bag(), "intel_hook": IntelData.record,
+		"max_active": RpgBattleManager.MAX_ACTIVE_V2 if Settings.combat_view == View.SPRITES else RpgBattleManager.MAX_ACTIVE}
 	if is_campaign and not _practice:
 		opts["loot_hook"] = func(r: Dictionary) -> void: ConsumableCatalog.grant_loot(bag, r)
 	mgr.setup(a, b, opts)
@@ -226,6 +244,7 @@ func _begin() -> void:
 	_log("¡Comienza el combate!")
 	mgr.battle_ended.connect(_on_battle_ended)
 	mgr.fighter_down.connect(_on_fighter_down)
+	mgr.dismounted.connect(_on_dismounted)
 	for f in mgr.fighters:
 		var card := _make_card(f, f.side == 1)
 		(enemy_row if f.side == 1 else party_row).add_child(card.root)
@@ -282,6 +301,7 @@ func _build_ui() -> void:
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
 	var shade := ColorRect.new()
+	_shade = shade
 	shade.color = Color(0.03, 0.02, 0.01, 0.55)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -498,6 +518,9 @@ func _make_card(f, enemy: bool) -> Dictionary:
 		tag.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 		d.portrait = tex
 		d.enemy = enemy
+		if SpriteSheets.has_sheet(f.c):
+			d.anim = SpriteAnim.attach(tex, f.c)
+			d.anim.set_mounted(f.mounted)
 		d.full_tex = tex.texture
 		d.bust_tex = _upper_body(f.c).texture if not enemy else tex.texture
 		var name_row := HBoxContainer.new()
@@ -548,14 +571,20 @@ func _intel(f) -> Dictionary:
 	if f.side == 0:
 		var aff := []
 		for dt in 4:
-			aff.append(RpgStats.affinity(dt, int(f.s.armor), bool(f.s.shield)))
+			aff.append(RpgStats.affinity_for(dt, int(f.s.get("wclass", -1)), bool(f.s.shield)))
 		return {"weapon": int(f.s.weapon), "armor": int(f.s.armor), "shield": bool(f.s.shield), "aff": aff}
 	return IntelData.view(f.c, f.s)
 
 func _card_tip(f) -> String:
 	var v := _intel(f)
 	var lines := ["%s · Nv %d" % [f.c.full_name(), f.c.level]]
+	var wc := int(f.s.get("wclass", -1))
+	if v.weapon >= 0 and wc >= 0:
+		var beats := [RpgStats.WCLASS_NAMES[(wc + 1) % 5], RpgStats.WCLASS_NAMES[(wc + 2) % 5]]
+		lines.append("Clase: %s (gana a %s y %s)" % [RpgStats.WCLASS_NAMES[wc], beats[0], beats[1]])
 	lines.append("Arma: %s" % (RpgStats.DAMAGE_NAMES[v.weapon] if v.weapon >= 0 else "?"))
+	if f.mounted:
+		lines.append("A caballo: %d/%d" % [f.horse_hp, f.horse_max])
 	var armor := "?"
 	if v.armor >= 0:
 		armor = RpgStats.ARMOR_NAMES[v.armor] + (" + escudo" if v.shield else "")
@@ -664,7 +693,8 @@ func _refresh() -> void:
 	if mgr == null:
 		return
 	for side in 2:
-		var shown := _shown(side, ENEMY_MAX if side == 1 else PARTY_MAX)
+		var cap: int = SPR_MAX if _view == View.SPRITES else maxi(ENEMY_MAX if side == 1 else PARTY_MAX, mgr.max_active)
+		var shown := _shown(side, cap)
 		var row := enemy_row if side == 1 else party_row
 		for f in mgr.side_fighters(side):
 			_cards[f].root.visible = f in shown
@@ -693,6 +723,8 @@ func _refresh() -> void:
 		elif f.side == 1 and not f.active:
 			st = "En reserva"
 		d.status.text = st
+		if _view == View.SPRITES:
+			d.status.visible = not st.is_empty()
 		d.status.tooltip_text = st
 		if f.up() and (_dying.has(f) or _gone.has(f)):   # volvió a levantarse (lo reanimaron)
 			_revive_card(f)
@@ -703,6 +735,12 @@ func _refresh() -> void:
 		d.style.border_color = CLASSIC_BORDER if _view == View.CLASICA else CARD_BORDER
 		if _targeting.is_empty() or not f in _targeting.targets:
 			d.tag.text = ""
+	for f in mgr.fighters:
+		var d: Dictionary = _cards[f]
+		if d.has("anim"):
+			d.anim.tired = f.up() and (f.has("agotamiento") or f.hp_ratio() < 0.25)
+	if _view == View.SPRITES:
+		_place_sprites.call_deferred()
 	if not _targeting.is_empty():
 		_mark_targets()
 	_update_focus()
@@ -752,7 +790,7 @@ func _advance() -> void:
 		_refresh()
 		if f == null:
 			break
-		if f.side == 0 and not test_auto:
+		if f.side == 0 and not test_auto and not f.c.has_meta("ally_soldier"):   # tus soldados los mueve la IA
 			_acting = f
 			_show_main_menu()
 			_busy = false
@@ -810,7 +848,7 @@ func _set_menu_big(on: bool) -> void:
 	if _bottom == null or _menu_big == on:
 		return
 	_menu_big = on
-	var normal := CLASSIC_BOTTOM_H if _view == View.CLASICA else (FP_BOTTOM_MIN if _view == View.PRIMERA else BOTTOM_H)
+	var normal: float = CLASSIC_BOTTOM_H if _view == View.CLASICA else (FP_BOTTOM_MIN if _view == View.PRIMERA else (SPR_BOTTOM_H if _view == View.SPRITES else BOTTOM_H))
 	var big := maxf(normal, get_viewport_rect().size.y * MENU_BIG_SHARE)
 	_bottom.custom_minimum_size.y = big if on else normal
 
@@ -1183,8 +1221,11 @@ func _on_settings_changed() -> void:
 func _apply_view(view: int) -> void:
 	_view = view
 	_menu_big = false   # cada vista pone su alto normal
+	_reset_sprites()
 	_reset_first_person()
-	if view == View.PRIMERA:
+	if view == View.SPRITES:
+		_layout_sprites_view()
+	elif view == View.PRIMERA:
 		_layout_first_person()
 	elif view == View.CLASICA:
 		_stage.visible = false
@@ -1218,6 +1259,91 @@ func _apply_view(view: int) -> void:
 	_focus = []
 	_apply_compact()
 	_refresh()
+
+## Vista de sprites: las figuras salen de las filas y se colocan a mano sobre una capa del escenario.
+func _layout_sprites_view() -> void:
+	if _sprite_layer == null:
+		_sprite_layer = Control.new()
+		_sprite_layer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_sprite_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_root_box.add_child(_sprite_layer)
+		_root_box.move_child(_sprite_layer, _stage.get_index())
+		_sprite_layer.resized.connect(_place_sprites)
+	_sprite_layer.visible = true
+	_stage.visible = false
+	for f in _cards:
+		var r: Control = _cards[f].root
+		if r.get_parent() != _sprite_layer:
+			r.reparent(_sprite_layer, false)
+	log_panel.reparent(_bottom, false)
+	_bottom.move_child(log_panel, 0)
+	_bottom.custom_minimum_size.y = SPR_BOTTOM_H
+	if _shade != null:
+		_shade.color.a = SPR_SHADE
+
+func _reset_sprites() -> void:
+	if _shade != null:
+		_shade.color.a = 0.55
+	for f in _cards:
+		if _cards[f].has("pad"):
+			_cards[f].pad.custom_minimum_size.y = 0.0
+	if _sprite_layer == null or not _sprite_layer.visible:
+		return
+	for f in _cards:
+		var r: Control = _cards[f].root
+		var row: Control = enemy_row if f.side == 1 else party_row
+		if r.get_parent() == _sprite_layer:
+			r.reparent(row, false)
+	_sprite_layer.visible = false
+	_stage.visible = true
+
+## Coloca las figuras visibles: dos columnas escalonadas por bando, los de abajo por delante.
+func _place_sprites() -> void:
+	if _view != View.SPRITES or _sprite_layer == null or mgr == null:
+		return
+	var area := _sprite_layer.size
+	if area.x <= 0.0 or area.y <= 0.0:
+		return
+	var order: Array = []
+	var most := maxi(_shown(0, SPR_MAX).size(), _shown(1, SPR_MAX).size())
+	var sz := clampf(area.y * 0.62 / (ceili(most / 2.0) * 0.45 + 0.55), SPR_SIZE_MIN, SPR_SIZE_MAX)   # mismo tamaño en ambos bandos
+	sz = minf(sz, area.x * 0.2)
+	for side in 2:
+		var shown := _shown(side, SPR_MAX)
+		var rows := maxi(1, ceili(shown.size() / 2.0))   # zigzag: columnas alternas, filas escalonadas
+		for i in shown.size():
+			var f = shown[i]
+			var d: Dictionary = _cards[f]
+			var col := i % 2
+			var row := i / 2
+			var in_col := rows
+			var dir := -1.0 if side == 1 else 1.0   # hacia atrás: enemigos hacia la izquierda, grupo hacia la derecha
+			var cx: float = (SPR_FRONT[side] if col == 0 else SPR_BACK[side]) * area.x
+			cx += dir * row * SPR_STAGGER * area.x * 0.5
+			var tex: TextureRect = d.portrait
+			var w := sz * (1.0 if d.has("anim") else 0.6)
+			tex.custom_minimum_size = Vector2(w, sz)
+			if not d.has("pad"):   # hueco para las patas del caballo bajo el jinete
+				var pad := Control.new()
+				pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				tex.get_parent().add_child(pad)
+				tex.get_parent().move_child(pad, tex.get_index() + 1)
+				d.pad = pad
+			var lift := sz * SpriteAnim.MOUNT_LIFT if f.mounted else 0.0
+			d.pad.custom_minimum_size.y = lift
+			var r: Control = d.root
+			r.custom_minimum_size = Vector2(w, 0)
+			r.size = r.get_combined_minimum_size()
+			var info_h := r.size.y - sz - lift   # nombre y barras bajo los pies
+			var t := (float(row) + (0.5 if col == 1 else 0.0)) / maxf(1.0, float(in_col) - 0.5)
+			if shown.size() == 1:
+				t = 0.6
+			var feet := lerpf(SPR_TOP * area.y, SPR_BOTTOM * area.y - info_h, t)
+			r.position = Vector2(cx - r.size.x * 0.5, feet - sz - lift)
+			order.append([feet, r])
+	order.sort_custom(func(a, b): return a[0] < b[0])
+	for e in order:   # los de más abajo, delante
+		_sprite_layer.move_child(e[1], -1)
 
 ## Vuelve a la disposición base (escenario + franja inferior) antes de aplicar otra vista.
 func _reset_first_person() -> void:
@@ -1293,6 +1419,29 @@ func _style_card(d: Dictionary) -> void:
 	d.style.bg_color = CLASSIC_BG if classic else Color(0, 0, 0, 0)
 	panel.size_flags_stretch_ratio = 1.0
 	tex.visible = true
+	var spr := _view == View.SPRITES
+	if d.has("level"):
+		d.level.get_parent().visible = not spr
+	if d.has("anim"):
+		d.anim.active = spr
+	if spr:
+		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		tex.size_flags_vertical = Control.SIZE_FILL
+		tex.clip_contents = false
+		if not d.has("anim"):   # sin hoja: su retrato de cuerpo entero
+			tex.texture = d.full_tex
+		tex.flip_h = enemy and d.has("anim")   # las hojas miran a la izquierda; los enemigos, a la derecha
+		for k in ["hp", "pt"]:
+			if d.has(k):
+				d[k].get_parent().size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+				d[k].get_parent().custom_minimum_size.x = SPR_BAR_W
+		return
+	for k in ["hp", "pt"]:
+		if d.has(k):
+			d[k].get_parent().size_flags_horizontal = Control.SIZE_FILL
+			d[k].get_parent().custom_minimum_size.x = 0
+	tex.clip_contents = true
 	if d.has("face"):
 		d.face.visible = false
 	if d.has("fp_big"):
@@ -1409,7 +1558,7 @@ func _fp_place(d: Dictionary) -> void:
 func _apply_compact() -> void:
 	for f in _cards:
 		var d: Dictionary = _cards[f]
-		var compact: bool = _view == View.ENFOCADA and not _focus.is_empty() and not f in _focus
+		var compact: bool = (_view == View.ENFOCADA and not _focus.is_empty() and not f in _focus) or _view == View.SPRITES
 		if d.has("intel"):
 			d.intel.visible = not compact
 		d.hp_label.visible = not compact
@@ -1462,7 +1611,10 @@ func _play_fx(info: Dictionary, before: Dictionary) -> void:
 		var dir: Vector2 = Vector2.DOWN if actor.side == 1 else Vector2.UP
 		if first != actor and _cards[first].root.visible:
 			dir = _center(first) - _center(actor)
-		CombatFx.lunge(_cards[actor].portrait, dir, LUNGE_DISTANCE)
+		var ranged: bool = int(actor.s.get("wclass", -1)) == RpgStats.WeaponClass.ARCO
+		_anim(actor, "distancia" if ranged else "ataque")
+		if not (ranged and _cards[actor].has("anim")):
+			CombatFx.lunge(_cards[actor].portrait, dir, LUNGE_DISTANCE)
 		if _pace(STRIKE_DELAY) > 0.0:
 			await get_tree().create_timer(_pace(STRIKE_DELAY)).timeout
 			if not is_inside_tree():
@@ -1471,9 +1623,17 @@ func _play_fx(info: Dictionary, before: Dictionary) -> void:
 		var t = h.target
 		covered[t] = true
 		if not h.hit:
+			if h.get("blocked", false):
+				Sfx.play("guard")
+				_anim(t, "defensa")
+				_float(t, "¡Bloquea!", CombatFx.INFO_COLOR, 26)
+				continue
 			Sfx.play("whoosh")
+			_anim(t, "dash")
 			_float(t, "Falla", CombatFx.MISS_COLOR, 26)
 			continue
+		if t.up():
+			_anim(t, "golpe")
 		var tier := mini(CombatFx.tier_for(int(h.dmg)) + (2 if h.crit else 0), CombatFx.Tier.BIG)
 		if h.crit:
 			Sfx.play("crit")
@@ -1495,6 +1655,7 @@ func _play_fx(info: Dictionary, before: Dictionary) -> void:
 		_float(t, text, color, 28 + tier * 6)
 	match str(info.type):
 		"defender":
+			_anim(actor, "defensa")
 			Sfx.play("guard")
 			_glow(actor, GLOW_BUFF, 0.45)
 			_float(actor, "En guardia", CombatFx.INFO_COLOR, 22)
@@ -1652,6 +1813,22 @@ func _update_act_glow() -> void:
 	_glow_tw.tween_property(body, "modulate", GLOW_ACT, 0.2).set_trans(Tween.TRANS_SINE)
 	_glow_tw.tween_property(body, "modulate", Color.WHITE, 0.5).set_trans(Tween.TRANS_SINE)
 
+## Acción del sprite de un combatiente (si tiene hoja y la vista es la de sprites).
+func _anim(f, action: String, hold := false) -> void:
+	if _view == View.SPRITES and _cards.has(f) and _cards[f].has("anim"):
+		_cards[f].anim.play(action, hold)
+
+func _on_dismounted(f) -> void:
+	if not _cards.has(f):
+		return
+	if _cards[f].has("anim"):
+		_cards[f].anim.set_mounted(false)
+	_anim(f, "caida")
+	_float(f, "¡Cae del caballo!", CombatFx.MISS_COLOR, 26)
+	Sfx.play("hit")
+	if _view == View.SPRITES:
+		_place_sprites.call_deferred()
+
 func _on_fighter_down(f) -> void:
 	_float(f, "Muere" if f.dead else "Cae", CombatFx.MISS_COLOR, 30)
 	_ko_anim(f)
@@ -1683,6 +1860,12 @@ func _ko_anim(f) -> void:
 	var tex: TextureRect = d.portrait
 	tex.pivot_offset = Vector2(tex.size.x * 0.5, tex.size.y)   # cae desde los pies
 	var back := -1.0 if f.side == 0 else 1.0   # hacia atrás (los tuyos miran a la derecha)
+	var sprite_ko: bool = _view == View.SPRITES and d.has("anim")
+	if sprite_ko:
+		if d.anim.mounted:
+			d.anim.set_mounted(false)
+		d.anim.play("derrota", true)
+		back = 0.0   # la hoja ya cae
 	var tw := create_tween()
 	tw.tween_property(mark, "modulate:a", 1.0, KO_IN_TIME)
 	# Se desploma: se inclina y se hunde mientras se oscurece.
@@ -1717,6 +1900,8 @@ func _revive_card(f) -> void:
 	d.erase("ko_mark")
 	d.root.modulate = Color.WHITE
 	(d.portrait as Control).rotation = 0.0
+	if d.has("anim"):
+		d.anim.active = _view == View.SPRITES
 	(d.root as Container).queue_sort()   # vuelve a su sitio
 
 # --- Final ---

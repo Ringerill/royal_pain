@@ -42,7 +42,7 @@ const ITEMS := {
 	"piedra": {"name": "Piedra de afilar", "price": 25, "tgt": "ally", "market": 0, "desc": "+%d%% de daño unos turnos." % roundi(SHARPEN_DMG * 100)},
 	"agua_bendita": {"name": "Agua bendita", "price": 40, "tgt": "ally", "market": 2, "desc": "Quita Aturdido y Provocado; da moral."},
 	"humo": {"name": "Bomba de humo", "price": 45, "tgt": "allies", "market": 2, "desc": "El grupo esquiva más y huye mejor."},
-	"red": {"name": "Red de caza", "price": 30, "tgt": "enemy", "market": 1, "desc": "Puede derribar al objetivo."},
+	"red": {"name": "Red de caza", "price": 30, "tgt": "enemy", "market": 1, "desc": "Puede paralizar al objetivo."},
 	"tomo_olvido": {"name": "Tomo del olvido", "price": 260, "tgt": "none", "market": 3, "rare": true,
 		"desc": "Fuera de combate (en Habilidades): olvidas lo aprendido en tus árboles, recuperas los puntos y eliges vía de nuevo."},
 	"hierbas": {"name": "Hierbas", "price": 18, "tgt": "ally", "market": 0, "desc": "Purgan Debilitado, Cegado y Ardiendo; curan algo."},
@@ -155,8 +155,9 @@ static func use(mgr: RpgBattleManager, f, action: Dictionary) -> bool:
 			t.hp = mini(t.max_hp, t.hp + maxi(1, roundi(t.max_hp * frac)))
 			if id == "unguento":
 				t.statuses.erase("sangrado")
+				t.statuses.erase("veneno")
 			if id == "hierbas":
-				for st in ["debilitado", "cegado", "ardiendo"]:
+				for st in ["debilitado", "cegado", "ardiendo", "veneno", "miedo", "agotamiento"]:
 					t.statuses.erase(st)
 		"pan_vino":
 			t.pt = mini(t.max_pt, t.pt + maxi(1, roundi(t.max_pt * PT_RESTORE)))
@@ -176,13 +177,15 @@ static func use(mgr: RpgBattleManager, f, action: Dictionary) -> bool:
 		"agua_bendita":
 			t.statuses.erase("aturdido")
 			t.statuses.erase("provocado")
+			t.statuses.erase("paralisis")
+			t.statuses.erase("miedo")
 			t.morale = mini(100, t.morale + HOLY_MORALE)
 		"humo":
 			for o in mgr.active_of(f.side):
 				mgr._add_status(o, "humo", SMOKE_TURNS, null)
 		"red":
-			if mgr._try_status(f, t, "derribado", NET_CHANCE, 1):
-				mgr._log("  %s cae enredado." % t.name())
+			if mgr._try_status(f, t, "paralisis", NET_CHANCE, 1):
+				mgr._log("  %s queda enredado." % t.name())
 			else:
 				mgr._log("  %s esquiva la red." % t.name())
 	return true

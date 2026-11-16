@@ -98,6 +98,7 @@ const FAME_MAX := 100
 # --- Rediseño v2 (docs/REDISENO.md) ---
 # Conviven con los campos antiguos hasta que cada sistema migre; -1 = se deduce del campo antiguo.
 @export var status_rank: int = -1   # RankCatalog.Rank (estatus: inafiliado … rey)
+@export var soldiers: int = 0        # soldados que te siguen (rediseño v2; RankCatalog.max_soldiers)
 @export var via: int = -1           # ViaCatalog.Via (motivación; cambia por los actos)
 @export var persona: int = -1       # PersonaCatalog.Persona (9 personalidades nuevas)
 @export var max_energy: int = 100

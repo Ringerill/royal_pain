@@ -81,6 +81,9 @@ static func decode(value: Variant) -> Variant:
 	return value
 
 static func _decode_texture(path: String) -> Texture2D:
+	# Guardados anteriores a la reorganización de assets: las carpetas ahora llevan mayúscula.
+	path = path.replace("/portraits/characters/female/", "/portraits/Characters/Female/") \
+			.replace("/portraits/characters/male/", "/portraits/Characters/Male/")
 	if not path.begins_with(TEXTURE_PREFIX) or path.contains("..") or not ResourceLoader.exists(path):
 		return null
 	var tex = load(path)

@@ -142,10 +142,10 @@ func _run() -> void:
 	check(RpgStats.compute(npc).pv > p0, "una pasiva cambia las estadísticas")
 	print("[enemigos]")
 	var bandit := EnemyCatalog.make_enemy("bandido", 5)
-	# Con imágenes en su carpeta usa una de ellas; si la carpeta estuviera vacía, el retrato del rol.
+	# Con retratos de su tipo usa uno de ellos; si no hubiera ninguno, el retrato del rol.
 	var bandit_path := str(bandit.get_meta("portrait_path"))
-	var has_folder := DirAccess.get_files_at("res://assets/portraits/enemies/bandido/").size() > 0
-	check(bandit.portrait != null and bandit_path.begins_with("res://assets/portraits/enemies/bandido/" if has_folder else "res://assets/portraits/roles/bandido"), "retrato: carpeta del tipo o, si falta, el del rol")
+	var has_folder := not EnemyCatalog.portraits_of("bandido").is_empty()
+	check(bandit.portrait != null and (bandit_path in EnemyCatalog.portraits_of("bandido") if has_folder else bandit_path.begins_with("res://assets/portraits/roles/bandido")), "retrato: carpeta del tipo o, si falta, el del rol")
 	var boss := EnemyCatalog.make_enemy("capitan_bandido", 5)
 	check(RpgStats.compute(boss).actions == 2 and RpgStats.compute(boss).pv > RpgStats.compute(bandit).pv * 1.5, "mini jefe: 2 acciones y más PV")
 	EnemyCatalog._folder_cache["prueba"] = ["x1", "x2"]

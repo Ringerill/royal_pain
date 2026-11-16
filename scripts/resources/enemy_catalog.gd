@@ -4,12 +4,12 @@ extends RefCounted
 # make_enemy(tipo, nivel, rango) → Character listo para RpgBattleManager (armadura, arma, acciones y
 # técnicas fijadas con metadatos de RpgStats y learned_skills).
 #
-# Retratos: varias imágenes por tipo en assets/portraits/enemies/<tipo>/ (PNG 1024×1536 transparentes).
-# Se elige una al azar; dentro de un mismo encuentro (diccionario `used` compartido) no se repite
-# imagen mientras queden libres. La lista de cada carpeta se lee una sola vez (caché). Si la carpeta
-# falta o está vacía, se usa assets/portraits/roles/<fallback>.png.
+# Retratos: cada tipo usa varias imágenes de assets/portraits/Enemies/ (E-Male y E-Female, PNG
+# transparentes), listadas en PORTRAIT_SETS por su nombre. Se elige una al azar; dentro de un mismo
+# encuentro (diccionario `used` compartido) no se repite imagen mientras queden libres. La lista de
+# cada tipo se resuelve una sola vez (caché). Si no hay ninguna, se usa assets/portraits/roles/<fallback>.png.
 
-const ENEMY_DIR := "res://assets/portraits/enemies/%s/"
+const ENEMY_FILES := ["res://assets/portraits/Enemies/E-Male/E-M-%s.png", "res://assets/portraits/Enemies/E-Female/E-W-%s.png"]
 const ROLE_FALLBACK := "res://assets/portraits/roles/%s.png"
 const ATTR_PER_LEVEL := 0.48         # Combate/Defensa ganados por nivel
 const MINOR_ATTR_PER_LEVEL := 0.2    # Estrategia/Liderazgo/Carisma
@@ -90,30 +90,42 @@ const TEMPLATES := {
 	"escaramuza": [[["soldado", "piquero", "arquero", "miliciano"], 0], [["infanteria_pesada", "ballestero", "soldado"], 0], [["caballero_montado", "caballero_pesado", "soldado", "arquero", "miliciano", "miliciano"], -2]],
 }
 
+# tipo -> nombres de retrato (sin el prefijo E-M-/E-W-); cada nombre existe en las dos carpetas.
+const PORTRAIT_SETS := {
+	"miliciano": ["Farmer01", "Farmer02", "commoner", "commoner2", "Beggar01"],
+	"bandido": ["Bandit01", "Bandit02", "Pirate-1"],
+	"soldado": ["Soldier-Mid01", "Soldier-Mid02"],
+	"infanteria_pesada": ["Soldier-Heavy01", "Soldier-Mid01"],
+	"arquero": ["Explorer01", "Bandit02"],
+	"ballestero": ["Soldier-Mid02", "Explorer01"],
+	"piquero": ["Soldier-Mid01", "Soldier-Mid02"],
+	"caballero_montado": ["Soldier-Leader01", "Soldier-Mid02"],
+	"caballero_pesado": ["Soldier-Heavy01", "Old-Hero"],
+	"explorador": ["Explorer01", "Assassin02"],
+	"capellan": ["Mage-Healer01"],
+	"capitan_bandido": ["Bandit-Leader01", "Pirate-leader"],
+	"sargento_veterano": ["Soldier-Leader01", "Soldier-Boss01"],
+	"campeon_torneo": ["Boss01", "Old-Hero"],
+	"caballero_orden": ["Soldier-Boss01", "Boss01"],
+	"jefe_descalzos": ["Berserker", "Beggar01"],
+	"guardian_torre": ["Soldier-Heavy01", "Executoner"],
+}
+
 static var _folder_cache := {}   # tipo -> Array[String] con las rutas de sus retratos
 
 static func is_boss(type_id: String) -> bool:
 	return TYPES.get(type_id, {}).get("boss", false)
 
-## Retratos del tipo (leídos una vez). En el juego exportado las imágenes aparecen como .import.
+## Retratos del tipo (resueltos una vez). Solo cuentan las imágenes que Godot ya importó.
 static func portraits_of(type_id: String) -> Array:
 	if _folder_cache.has(type_id):
 		return _folder_cache[type_id]
 	var out := []
-	var path := ENEMY_DIR % type_id
-	var dir := DirAccess.open(path)
-	if dir != null:
-		dir.list_dir_begin()
-		var f := dir.get_next()
-		while f != "":
-			var img := f.trim_suffix(".import")
-			var full := path + img
-			if not dir.current_is_dir() and img.get_extension().to_lower() in ["png", "jpg", "jpeg", "webp"] \
-					and not full in out and ResourceLoader.exists(full):
+	for stem in PORTRAIT_SETS.get(type_id, []):
+		for pattern in ENEMY_FILES:
+			var full: String = pattern % stem
+			if ResourceLoader.exists(full):
 				out.append(full)
-			f = dir.get_next()
-		dir.list_dir_end()
-	out.sort()
 	_folder_cache[type_id] = out
 	return out
 

@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bryq811po74j4"
-path="res://.godot/imported/TurnFight-Desert.png-e8bdaf0e8f82ba202dc80d5d0e0400b0.ctex"
+path="res://.godot/imported/desert.png-4e6cb4a3e0f2b228a5f75ec2da619cf5.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/battle/backgrounds/desert.png"
-dest_files=["res://.godot/imported/TurnFight-Desert.png-e8bdaf0e8f82ba202dc80d5d0e0400b0.ctex"]
+dest_files=["res://.godot/imported/desert.png-4e6cb4a3e0f2b228a5f75ec2da619cf5.ctex"]
 
 [params]
 

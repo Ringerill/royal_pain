@@ -142,7 +142,7 @@ Comida: %d" % [
 		VictoryRules.goal_title(role), VictoryRules.goal_estimate(role)]
 
 	if available_paths.is_empty():
-		portrait.texture = preload("res://assets/portraits/placeholder_default.png")
+		portrait.texture = load("res://assets/portraits/placeholder_male.png")
 		character_info.text = "No hay personajes guardados.
 
 Crea uno y guárdalo para poder comenzar una partida."

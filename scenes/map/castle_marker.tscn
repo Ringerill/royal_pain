@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bernl7466g0i"]
 
 [ext_resource type="Script" uid="uid://djqxkue2aeap3" path="res://scenes/map/castle_marker.gd" id="1_svq12"]
-[ext_resource type="Texture2D" uid="uid://bbr7eraehe7fo" path="res://assets/castle.png" id="2_mpmhf"]
+[ext_resource type="Texture2D" path="res://assets/icons/map_tiles/castle.png" id="2_mpmhf"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_sat2g"]
 radius = 25.0

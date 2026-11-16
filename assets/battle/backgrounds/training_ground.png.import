@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddp5jumithj2k"
-path="res://.godot/imported/TurnFight-Trining_Ground.png-b99c3c6321fddca642b43e72299b5b98.ctex"
+path="res://.godot/imported/training_ground.png-67373568ed6a5a8e5e570e2b1d2b425e.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/battle/backgrounds/training_ground.png"
-dest_files=["res://.godot/imported/TurnFight-Trining_Ground.png-b99c3c6321fddca642b43e72299b5b98.ctex"]
+dest_files=["res://.godot/imported/training_ground.png-67373568ed6a5a8e5e570e2b1d2b425e.ctex"]
 
 [params]
 

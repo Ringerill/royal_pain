@@ -1,8 +1,8 @@
 class_name PortraitGallery
 
 static func get_portraits_for_gender(gender: int) -> Array[String]:
-	var folder := "male" if gender == CharacterEnums.Gender.MASCULINO else "female"
-	var path := "res://assets/portraits/characters/%s/" % folder
+	var folder := "Male" if gender == CharacterEnums.Gender.MASCULINO else "Female"
+	var path := "res://assets/portraits/Characters/%s/" % folder
 	var result: Array[String] = []
 
 	var dir := DirAccess.open(path)

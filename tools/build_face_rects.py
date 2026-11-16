@@ -46,7 +46,8 @@ def face_rect(path):
 
 
 def main():
-    files = sorted(glob.glob(os.path.join(ROOT, "assets", "portraits", "**", "*.png"), recursive=True))
+    files = sorted(f for f in glob.glob(os.path.join(ROOT, "assets", "portraits", "**", "*.png"), recursive=True)
+                   if "Expressions" not in f.replace("\\", "/").split("/"))   # las hojas de expresiones no llevan recorte
     rects = {}
     for f in files:
         rel = "res://" + os.path.relpath(f, ROOT).replace("\\", "/")

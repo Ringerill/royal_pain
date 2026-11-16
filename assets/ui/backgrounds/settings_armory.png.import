@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bw7f6bl02u5lq"
-path="res://.godot/imported/Config.png-e2d06fa05bdc6acff194ab6fbce619d5.ctex"
+path="res://.godot/imported/settings_armory.png-35dd2df5d8ee3baae4f381be5c33b428.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/ui/backgrounds/settings_armory.png"
-dest_files=["res://.godot/imported/Config.png-e2d06fa05bdc6acff194ab6fbce619d5.ctex"]
+dest_files=["res://.godot/imported/settings_armory.png-35dd2df5d8ee3baae4f381be5c33b428.ctex"]
 
 [params]
 

@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://doqu1s7vfvqqs"
-path="res://.godot/imported/TurnFight-Seaside.png-6ab439ee45dfe77ae310d4037e8c086d.ctex"
+path="res://.godot/imported/seaside.png-aea6b038f2f79b8c095c114c6b6687d7.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/battle/backgrounds/seaside.png"
-dest_files=["res://.godot/imported/TurnFight-Seaside.png-6ab439ee45dfe77ae310d4037e8c086d.ctex"]
+dest_files=["res://.godot/imported/seaside.png-aea6b038f2f79b8c095c114c6b6687d7.ctex"]
 
 [params]
 

@@ -16,7 +16,7 @@ func _run() -> void:
 	print("JSON roto -> ", DC.from_json("{no es json"))
 
 	# 2. Ida y vuelta de un PNJ completo.
-	var npc: Character = CL.make_random_character(CH.Role.CABALLERO, 1, "res://assets/portraits/characters/female/woman3.png")
+	var npc: Character = CL.make_random_character(CH.Role.CABALLERO, 1, "res://assets/portraits/Characters/Female/woman3.png")
 	var back: Character = DC.from_json(DC.to_json(npc))
 	var same := back.full_name() == npc.full_name() and back.combat == npc.combat and back.personality == npc.personality \
 		and back.portrait == npc.portrait and back.combat_skills.size() == npc.combat_skills.size() \

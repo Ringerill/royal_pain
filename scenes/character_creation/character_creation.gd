@@ -186,7 +186,7 @@ func _populate_portrait_grid() -> void:
 
 	if paths.is_empty():
 		var lbl := Label.new()
-		lbl.text = "Aún no hay retratos disponibles para este sexo.\nAgrega imágenes en assets/portraits/characters/."
+		lbl.text = "Aún no hay retratos disponibles para este sexo.\nAgrega imágenes en assets/portraits/Characters/."
 		portrait_grid.add_child(lbl)
 		return
 
